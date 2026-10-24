@@ -130,7 +130,7 @@ describe('依存の計画: base は製品の Dockerfile が固定した digest �
         await editDockerfile(
             root,
             'Dockerfile.alpine',
-            text => `FROM node:24-trixie@sha256:${'0'.repeat(64)} AS stray\n${text}`,
+            text => `FROM node:24-trixie-slim@sha256:${'0'.repeat(64)} AS stray\n${text}`,
         );
         expect(planFailure(root)).toMatchObject({ name: 'DependencyImagePlanError', reason: 'base-digest-conflict' });
     });
@@ -146,7 +146,7 @@ describe('依存の計画: base は製品の Dockerfile が固定した digest �
 
     it('[AR-10.2] 先に定義した stage を FROM に使う行は固定の対象にしない', async () => {
         const root = await fixtureRoot();
-        await editDockerfile(root, 'Dockerfile.debian', text => `${text}\nFROM server-builder\n`);
+        await editDockerfile(root, 'Dockerfile.debian', text => `${text}\nFROM server-deps\n`);
         expect(planFailure(root)).toBeUndefined();
     });
 });
@@ -174,17 +174,25 @@ describe('依存の計画: 層は製品の Dockerfile から導く', () => {
         expect(dependencyImageTags(root)).toEqual(plan.images.map(image => image.tag));
     });
 
-    it('[AR-10.2] 層の Dockerfile は、FROM から最初の COPY . の直前までの comment と空行を除いた行を、そのまま持つ', async () => {
+    it('[AR-10.2] 層の Dockerfile は、FROM から最初の npm ci の行までの comment と空行を除いた行を、そのまま持つ', async () => {
         const root = await fixtureRoot();
         const plan = planDependencyImages(root);
         for (const flavor of ['debian', 'alpine']) {
             const product = (await readFile(join(root, `Dockerfile.${flavor}`), 'utf8')).split('\n');
             for (const kind of ['client', 'server']) {
-                const from = product.findIndex(line => line.includes(` AS ${kind}-builder`));
-                const copy = product.findIndex((line, index) => index > from && line.startsWith('COPY . '));
-                expect(copy, `${flavor} ${kind}`).toBeGreaterThan(from);
+                const from = product.findIndex(line =>
+                    line.endsWith(` AS ${kind === 'client' ? 'client-builder' : 'server-deps'}`),
+                );
+                const npmCi = product.findIndex(
+                    (line, index) => index > from && /^RUN (?:--mount=\S+ )?npm ci /u.test(line),
+                );
+                expect(npmCi, `${flavor} ${kind}`).toBeGreaterThan(from);
+                let end = npmCi + 1;
+                while (product[end - 1].endsWith('\\')) {
+                    end += 1;
+                }
                 const dependency = product
-                    .slice(from + 1, copy)
+                    .slice(from + 1, end)
                     .filter(line => line.trim() !== '' && !/^\s*#/u.test(line));
                 const layers = plan.images.filter(image => image.kind === `${flavor}-${kind}`);
                 const joined = layers
@@ -198,6 +206,18 @@ describe('依存の計画: 層は製品の Dockerfile から導く', () => {
         }
     });
 
+    it('[AR-10.2] npm ci の行が \\ で続くときは、続く行までを依存の部分にする', async () => {
+        const root = await fixtureRoot();
+        const plan = planDependencyImages(root);
+        const client = plan.images.find(image => image.kind === 'debian-client' && image.layer === 'npm')!;
+        expect(client.dockerfile).toMatch(/ npm ci --loglevel=info \\\n {4}--fetch-retries=10 [^\n]*\n$/u);
+        const stage = plan.stages.find(
+            entry => entry.file === 'Dockerfile.debian' && entry.stage === 'client-builder',
+        )!;
+        const lines = (await readFile(join(root, 'Dockerfile.debian'), 'utf8')).split('\n');
+        expect(lines[stage.rest - 1]).toMatch(/^ {4}--fetch-retries=10 /u);
+    });
+
     it('[AR-10.6] OS の層は最初の WORKDIR の直前までで manifest に触れず、npm の層は OS の層の tag の上に npm ci する', async () => {
         const root = await fixtureRoot();
         const plan = planDependencyImages(root);
@@ -208,7 +228,7 @@ describe('依存の計画: 層は製品の Dockerfile から導く', () => {
         };
         const debianOs = image('debian-server', 'os');
         const debianNpm = image('debian-server', 'npm');
-        expect(debianOs.dockerfile).toContain('apt-get install -y build-essential python3');
+        expect(debianOs.dockerfile).toContain('build-essential python3');
         expect(debianOs.dockerfile).not.toMatch(/WORKDIR|npm ci|package(?:-lock)?\.json/u);
         expect(debianOs.manifests).toEqual([]);
         expect(debianNpm.dockerfile.startsWith(`FROM ${debianOs.tag}\nWORKDIR /app\n`)).toBe(true);
@@ -217,7 +237,7 @@ describe('依存の計画: 層は製品の Dockerfile から導く', () => {
         expect(debianNpm.manifests.map(manifest => manifest.path)).toEqual(['package.json', 'package-lock.json']);
 
         const alpineOs = image('alpine-server', 'os');
-        expect(alpineOs.dockerfile).toContain('apk add --no-cache g++ make pkgconf python3 py3-pip');
+        expect(alpineOs.dockerfile).toContain('apk add --update-cache g++ make pkgconf python3 py3-pip');
         expect(alpineOs.dockerfile).toContain('pip install --break-system-pack setuptools');
         expect(alpineOs.dockerfile).not.toContain('npm ci');
         expect(image('alpine-server', 'npm').dockerfile.startsWith(`FROM ${alpineOs.tag}\n`)).toBe(true);
@@ -247,15 +267,18 @@ describe('依存の計画: 層は製品の Dockerfile から導く', () => {
         const plan = planDependencyImages(root);
         expect(plan.stages.map(stage => `${stage.flavor}/${stage.stage}`)).toEqual([
             'debian/client-builder',
-            'debian/server-builder',
+            'debian/server-deps',
             'alpine/client-builder',
-            'alpine/server-builder',
+            'alpine/server-deps',
         ]);
         const tags = tagsByKind(root);
         for (const stage of plan.stages) {
             const lines = (await readFile(join(root, stage.file), 'utf8')).split('\n');
             expect(lines[stage.from]).toContain(` AS ${stage.stage}`);
-            expect(lines[stage.copy].startsWith('COPY . ')).toBe(true);
+            expect(lines.slice(stage.from, stage.rest).some(line => /^RUN (?:--mount=\S+ )?npm ci /u.test(line))).toBe(
+                true,
+            );
+            expect(lines[stage.rest - 1].endsWith('\\')).toBe(false);
             expect(stage.npmTag).toBe(tags[`${stage.kind}/npm`]);
         }
     });
@@ -292,14 +315,14 @@ describe('依存の計画: 導けない形は終了 code 2 の入力の誤りに
         [
             'builder stage が無い',
             'Dockerfile.debian',
-            text => text.replace(' AS server-builder', ' AS renamed'),
+            text => text.replaceAll('server-deps', 'renamed'),
             'builder-stage-missing',
         ],
         [
-            '行頭の COPY . が無い',
+            'npm ci が comment の中にしか無い',
             'Dockerfile.alpine',
-            text => text.replace(/^COPY \. \/app\/$/mu, 'COPY client /app/client/'),
-            'source-copy-missing',
+            text => text.replace(/^(RUN .*npm ci .*\\)\n(.*)$/mu, '# $1\n# $2'),
+            'npm-ci-missing',
         ],
         [
             'server の依存の部分に WORKDIR が無い',
@@ -312,15 +335,15 @@ describe('依存の計画: 導けない形は終了 code 2 の入力の誤りに
             'Dockerfile.alpine',
             text =>
                 text
-                    .replace(/^RUN apk add .*$/mu, '')
-                    .replace(/^RUN pip install .*$/mu, '')
+                    .replace(/^RUN .*apk add .*$/mu, '')
+                    .replace(/^RUN .*pip install .*$/mu, '')
                     .replace(/^# node-sqlite3.*$/gmu, ''),
             'os-layer-missing',
         ],
         [
             'npm ci の行が無い',
             'Dockerfile.debian',
-            text => text.replace(/^RUN npm ci --loglevel=info$/mu, 'RUN echo no'),
+            text => text.replace(/^RUN .*npm ci .*\\\n.*$/mu, 'RUN echo no'),
             'npm-ci-missing',
         ],
     ];
@@ -335,7 +358,9 @@ describe('依存の計画: 導けない形は終了 code 2 の入力の誤りに
 
     it('[AR-10.2][AR-10.9] prepare の入口は、導けない形を INVALID-INPUT の終了 code 2 にし、docker を呼ばない', async () => {
         const root = await fixtureRoot();
-        await editDockerfile(root, 'Dockerfile.debian', text => text.replace(/^COPY \. \/app\/$/mu, 'COPY a /a'));
+        await editDockerfile(root, 'Dockerfile.debian', text =>
+            text.replace(/^RUN .*npm ci .*\\\n.*$/mu, 'RUN echo no'),
+        );
         const out: string[] = [];
         const err: string[] = [];
         const code = await prepareCliMain({
@@ -344,7 +369,7 @@ describe('依存の計画: 導けない形は終了 code 2 の入力の誤りに
             err: { write: (text: string) => void err.push(text) } as unknown as NodeJS.WritableStream,
         });
         expect(code).toBe(2);
-        expect(err.join('')).toContain('deps-prepare: INVALID-INPUT source-copy-missing');
+        expect(err.join('')).toContain('deps-prepare: INVALID-INPUT npm-ci-missing');
         expect(out.join('')).toBe('');
     });
 });
@@ -374,8 +399,8 @@ describe('依存の計画: lock file の変更で作り直す層', () => {
     it('[AR-10.7] server の base の digest の変更で、その flavor の server の OS の層と npm の層だけが変わる', async () => {
         const root = await fixtureRoot();
         const before = tagsByKind(root);
-        const pinned = pinnedBases(await readFile(join(root, 'Dockerfile.debian'), 'utf8')).get('node:24-trixie')!;
-        await editDockerfile(root, 'Dockerfile.debian', text => text.replace(pinned, `sha256:${'f'.repeat(64)}`));
+        const pinned = pinnedBases(await readFile(join(root, 'Dockerfile.debian'), 'utf8')).get('node:24-trixie-slim')!;
+        await editDockerfile(root, 'Dockerfile.debian', text => text.replaceAll(pinned, `sha256:${'f'.repeat(64)}`));
         expect(changed(before, tagsByKind(root))).toEqual(['debian-server/npm', 'debian-server/os']);
     });
 
@@ -842,35 +867,36 @@ describe('確認の本体: 製品の Dockerfile から導いた Dockerfile', () 
             const derived = deriveImageDockerfile({ root, flavor }).split('\n');
 
             const stages = plan.stages.filter(stage => stage.flavor === flavor);
-            expect(stages.map(stage => stage.stage)).toEqual(['client-builder', 'server-builder']);
+            expect(stages.map(stage => stage.stage)).toEqual(['client-builder', 'server-deps']);
             const expected: string[] = [];
             let cursor = 0;
             for (const stage of stages) {
                 expected.push(...product.slice(cursor, stage.from), `FROM ${stage.npmTag} AS ${stage.stage}`);
-                cursor = stage.copy;
+                cursor = stage.rest;
             }
             expected.push(...product.slice(cursor));
             expect(derived).toEqual(expected);
 
-            // FROM が準備済みの npm の層の tag になった stage の後は、製品の行（COPY . 以降）がそのまま続く。
+            // FROM を準備済みの npm の層の tag に置き換えた行の次には、依存の部分の次の行から製品の行がそのまま続く。
             for (const stage of stages) {
                 const at = derived.indexOf(`FROM ${stage.npmTag} AS ${stage.stage}`);
                 expect(at, stage.stage).toBeGreaterThanOrEqual(0);
-                expect(derived[at + 1].startsWith('COPY . '), stage.stage).toBe(true);
-                expect(derived[at + 1]).toBe(product[stage.copy]);
+                expect(derived[at + 1]).toBe(product[stage.rest]);
             }
-            // 外から取る FROM は最終 stage の base だけ。依存を入れる行は残らない。
+            // 先に定義した stage を使う FROM を除くと、FROM は npm の層の tag と、最終 stage の base だけ
+            // （server-builder・server-prod-deps も最終 stage と同じ base を使う）。依存を入れる行は残らない。
             const text = derived.join('\n');
             expect(text).not.toMatch(/npm ci|apt-get|apk add|pip install/u);
-            expect(text).toContain('RUN npm run compile');
+            expect(text).toMatch(/^\s*npm run compile$/mu);
             expect(text).toContain('RUN npm run bundle');
-            expect(text).toContain('RUN rm -rf client');
+            expect(text).toContain('COPY . /app/');
             const productLastFrom = product.filter(line => line.startsWith('FROM ')).pop()!;
-            expect([...text.matchAll(/^FROM (\S+)/gmu)].map(match => match[1])).toEqual([
-                stages[0].npmTag,
-                stages[1].npmTag,
-                /^FROM (\S+)/u.exec(productLastFrom)![1],
-            ]);
+            const finalBase = /^FROM (\S+)/u.exec(productLastFrom)![1];
+            const froms = [...text.matchAll(/^FROM (\S+)(?: AS (\S+))?$/gmu)];
+            const names = new Set(froms.map(match => match[2]));
+            const external = froms.map(match => match[1]).filter(ref => !names.has(ref));
+            expect(external.slice(0, 2)).toEqual([stages[0].npmTag, stages[1].npmTag]);
+            expect(new Set(external.slice(2))).toEqual(new Set([finalBase]));
         },
     );
 

@@ -4,23 +4,21 @@
 FROM node:26-alpine@sha256:143494b1da2945f061539253adc65e4f1569ddf07da2d384c022c791a9d90a4a AS client-builder
 COPY client/package*.json /app/client/
 WORKDIR /app/client
-RUN npm config set fetch-retries 10 \
-    && npm config set fetch-retry-mintimeout 100000 \
-    && npm config set fetch-retry-maxtimeout 600000
-RUN npm ci --loglevel=info
-COPY . /app/
-WORKDIR /app/client
+RUN --mount=type=cache,target=/root/.npm npm ci --loglevel=info \
+    --fetch-retries=10 --fetch-retry-mintimeout=100000 --fetch-retry-maxtimeout=600000
+# client の bundle は client フォルダーの中だけで完結するので、client フォルダーだけをコピーする。
+# client 以外の変更では bundle を作り直さない。
+COPY client/ /app/client/
 # image build は組み立てだけを行う。lint、typecheck、unit test は CI の gate が実行する。
-# bundle の成果物は client/dist にある。最終 image は実行に要らない client の node_modules を
-# 含めないため、bundle のあとで削除する。
-RUN npm run bundle --loglevel=info \
-    && rm -rf node_modules
+# bundle の成果物は client/dist にあり、最終 stage はこれだけをコピーする。
+RUN npm run bundle --loglevel=info
 
-FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS server-builder
-RUN apk add --no-cache g++ make pkgconf python3 py3-pip
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS server-deps
+# apk が取得した package は cache mount に残し、OS の層を作り直すときに取得し直さない。
+RUN --mount=type=cache,target=/etc/apk/cache apk add --update-cache g++ make pkgconf python3 py3-pip
 # node-sqlite3 が依存する node-gyp が が依存する python3 の distutils 廃止に対応
 # node-sqlite3 が依存する node-gyp が v10 以上になれば不要になる
-RUN pip install --break-system-pack setuptools
+RUN --mount=type=cache,target=/root/.cache/pip pip install --break-system-pack setuptools
 WORKDIR /app
 COPY package*.json /app/
 ENV DOCKER="YES"
@@ -31,25 +29,44 @@ ENV DOCKER="YES"
 # 指定は npm_config_ 接頭辞ではなく npm_package_config_node_gyp_ の形にする。node-gyp の
 # README は npm_config_ 接頭辞を npm@11 で deprecated、npm@12 で削除としており、この形が推奨。
 ENV npm_package_config_node_gyp_nodedir=/usr/local
-RUN npm config set fetch-retries 10 \
-    && npm config set fetch-retry-mintimeout 100000 \
-    && npm config set fetch-retry-maxtimeout 600000
 # lockfile どおりに入れる。`npm install` は package.json とずれていれば解決し直すため、
 # 公開する image の依存が lockfile と一致する保証がない。`--no-save` はその書き換えを
 # 抑えるだけで、従わせる指定ではない。
-RUN npm ci --loglevel=info
-COPY . .
-RUN rm -rf client
+# npm が取得した package は cache mount（/root/.npm）に残し、lockfile が変わって npm ci をやり直すときに
+# 手元にある分を取得し直さない。cache mount の中身は image にも層にも入らない。
+RUN --mount=type=cache,target=/root/.npm npm ci --loglevel=info \
+    --fetch-retries=10 --fetch-retry-mintimeout=100000 --fetch-retry-maxtimeout=600000
+
+# compile と依存の整理に要るのは server-deps の node_modules だけで、OS の package は要らない。そのため
+# server-builder と server-prod-deps は最終 stage と同じ base の上に作り、node_modules を bind mount か
+# コピーで受け取る。bind mount もコピーも中身で cache を判定するので、OS の package の行が変わっても、
+# node_modules が同じならこの 2 つの stage は作り直さない。
 # 同じく組み立てだけを行う。lint、format、静的検査は CI の gate が実行する。
-# compile のあとで開発用の package（devDependencies）を取り除く。lockfile で入れた node_modules から
-# 消すだけで、外部へは取りに行かない。
-RUN npm run compile \
-    && npm prune --omit=dev
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS server-builder
+WORKDIR /app
+COPY package.json tsconfig.json api.d.ts /app/
+COPY src/ /app/src/
+RUN --mount=type=bind,from=server-deps,source=/app/node_modules,target=/app/node_modules \
+    npm run compile
+
+# 開発用の package（devDependencies）を取り除く。lockfile で入れた node_modules から消すだけで、
+# 外部へは取りに行かない。package を消すので、node_modules は読み取り専用の bind mount ではなく
+# コピーで受け取る。
+FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1 AS server-prod-deps
+WORKDIR /app
+COPY package*.json /app/
+COPY --from=server-deps /app/node_modules /app/node_modules/
+RUN npm prune --omit=dev
 
 FROM node:24-alpine@sha256:ebfe2f90462722a7a4de65e91990e97fe0d401c70e0e762c5b53302f905ec1c1
 LABEL maintainer="l3tnun"
-COPY --from=server-builder /app /app/
-COPY --from=client-builder /app/client /app/client/
+# 実行時に読むファイル（api.yml、img、config の template など）は、一覧を持たずに build context ごと
+# コピーする。一覧を持つと、ファイルを追加するたびに Dockerfile の変更が要る。node_modules は
+# .dockerignore で除かれるので、依存と build の成果物はこのあとで各 stage から重ねる。
+COPY . /app/
+COPY --from=server-prod-deps /app/node_modules /app/node_modules/
+COPY --from=server-builder /app/dist /app/dist/
+COPY --from=client-builder /app/client/dist /app/client/dist/
 EXPOSE 8888
 WORKDIR /app
 ENTRYPOINT ["npm"]
