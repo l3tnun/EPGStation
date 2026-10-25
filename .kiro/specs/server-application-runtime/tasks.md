@@ -955,7 +955,7 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
         `test/server/application-runtime/service-child-crash-cleanup.integration.test.ts`_
     -   _Depends: 15.1_
 
--   [ ] 16. preflightの構成を、実行する環境のCPUとmemoryから決める
+-   [x] 16. preflightの構成を、実行する環境のCPUとmemoryから決める
 
 -   [x] 16.1 構成の決め方、最低限と指定の誤り、道具の確認のtestを書く
 
@@ -985,7 +985,7 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
     -   _Boundary: Preflight Steps_
     -   _Depends: 16.1_
 
--   [ ] 16.3 CPUとmemoryを絞った条件で`--all`を通す
+-   [x] 16.3 CPUとmemoryを絞った条件で`--all`を通す
 
     -   `taskset -c 0-3`、`EPGS_PREFLIGHT_MEMORY=7680m`、hostのprocessへのmemoryの上限（user scopeの`MemoryMax=7680M`）で
         4 CPU・8 GBの機械を模し、`npm run preflight -- --all`の全stepが`exit=0`になることを確かめる。`taskset -c 0-7`の8 CPUでも確かめる。
