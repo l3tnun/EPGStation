@@ -1224,7 +1224,7 @@ server container の中で `docker exec <id> node -e "fetch('http://127.0.0.1:88
 
 #### Image Content Inspector
 
-応答の確認のあと、同じ server container の中で `docker exec <id> node -e ...` を実行して image の中身を調べる（10.13）。`/app/package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules/<名前>` に無いこと、`dependencies` の `express` が在ること、`/app/client/node_modules` が無いこと、`/app/client/dist/index.html` が在ること、`/app/.git` と `/app/.github` が無いことを確かめ、満たさなければ `image-content-invalid`。製品の Dockerfile は、server の build（`npm run compile`）のあとに `npm prune --omit=dev` で開発用の package を除き、client の build（`npm run bundle`）のあとに client の `node_modules` を削除する。どちらも network を使わない（`--network=none` の構築で通る）。git の管理情報（`.git`）と GitHub の設定（`.github`）は、`.dockerignore` で build context から除く（`COPY . ` で image に入れない）。
+応答の確認のあと、同じ server container の中で `docker exec <id> node -e ...` を実行して image の中身を調べる（10.13）。`/app/package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules/<名前>` に無いこと、`dependencies` の `express` が在ること、`/app/client/node_modules` が無いこと、`/app/client/dist/index.html` が在ること、`/app/.git` と `/app/.github` が無いことを確かめ、満たさなければ `image-content-invalid`。製品の Dockerfile は、`server-prod-deps` の stage で `npm prune --omit=dev` を実行して開発用の package を除いた `node_modules` を、最終 stage へ重ねる。client は build（`npm run bundle`）の成果物の `client/dist` だけを最終 stage へ重ね、build context の client の `node_modules` は `.dockerignore`（`**/node_modules/`）で除く。どちらも network を使わない（`--network=none` の構築で通る）。git の管理情報（`.git`）と GitHub の設定（`.github`）は、`.dockerignore` で build context から除く（`COPY . ` で image に入れない）。
 
 #### Resource Cleaner
 
@@ -1489,7 +1489,7 @@ Docker Hub への実際の公開、ARM の runner での構築、artifact での
 | 10.10 | 揃っていなければ取らず「準備されていない」で失敗 | Prepared Verifier | DC-1 |
 | 10.11 | registry へ公開しない | docker 実行 helper の argv ledger | DC-8 |
 | 10.12 | 成功・失敗どちらでも container と構築した image を片付け、依存は残す | Resource Cleaner | DC-9 |
-| 10.13 | image に開発用 package、client の node_modules、`.git`・`.github` を含めない | 製品の Dockerfile（`npm prune --omit=dev`、client の `node_modules` の削除）、`.dockerignore`、Image Content Inspector | DC-10 |
+| 10.13 | image に開発用 package、client の node_modules、`.git`・`.github` を含めない | 製品の Dockerfile（`npm prune --omit=dev`、最終 stage へ重ねる client の成果物は `client/dist` だけ）、`.dockerignore`、Image Content Inspector | DC-10 |
 | 11.1 | master への push・tag で、両 Dockerfile から構築して Docker Hub へ公開 | `docker.yml` | 実装時の確認（構文）、最初の実行 |
 | 11.2 | Debian・Alpine の platform の一覧 | `docker.yml` の `build-arch` job の matrix（distro × arch） | 実装時の確認（手元の registry）、最初の実行 |
 | 11.3 | master の push の tag | `docker.yml` の `Docker tags`（`docker/metadata-action`） | 実装時の確認（tag の計算の 4 通り） |
