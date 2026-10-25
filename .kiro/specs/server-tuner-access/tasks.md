@@ -147,10 +147,11 @@ group 完了後に本 spec を実行し、共有 foundation を重複せず、�
         coordinatorを起動後要求だけへ適用する。
     -   番組・放送局stream要求を組み立て、accepted responseとReadable取得時にdeadline資源を解除して冪等close可能なhandle
         を返す。確立後へ同じdeadline、自動再開、競合判断、接続先resource解放完了resultを追加しない。
+    -   番組・放送局stream要求へ`Connection: close`を付け、streamの応答が終わった接続を次の要求へ再利用しない。
     -   完了時には、既存characterizationと境界・race・cleanup・録画／ライブstream targetが通り、起動確認は無期限
         のまま、残留timer・listenerが0件になる。
-    -   _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 6.3, 7.1, 7.2, 7.3, 7.4,
-        7.5, 7.6, 7.7_
+    -   _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 6.3, 7.1, 7.2,
+        7.3, 7.4, 7.5, 7.6, 7.7_
     -   _Boundary: deadline coordinator・stream gateway・stream handle_
     -   _Depends: 1.4, 1.5, 2.1, 2.2_
 
@@ -256,14 +257,14 @@ group 完了後に本 spec を実行し、共有 foundation を重複せず、�
 -   [x] 8. チューナーアクセス固有testを共有server品質gateへ接続する
 -   [x] 8.1 正式な機能固有test inventoryを作り`unittest/spec`を完成させる
 
-    -   `test/server/tuner-access/tuner-access.spec.test.ts`にRequirements 1から7の全53 ACと主case、補助case、合成
+    -   `test/server/tuner-access/tuner-access.spec.test.ts`にRequirements 1から7の全55 ACと主case、補助case、合成
         fixture、期待する戻り値・error・状態・effectを一意に対応付け、未割当ACを0件にする。
     -   同fileで、最低対応版と以降の版、HTTP・Unix domain socketの接続意味、named pipeの既存parser・request optionの
         best-effortなcharacterization、製品非依存DTO、change feed、録画・ライブstream、logo、有限な一回の要求、および無
         期限の起動確認barrierを外部契約として検証する。
     -   `test/server/fixtures/tuner-access/`には実endpoint、credential、実socket・pipe、実番組情報を含めず、Mirakurun
         3.8.0、mirakc 3.1.10、未知の追加field、それ以降の版文字列を合成fixtureとして配置する。
-    -   完了時には、正式inventoryから全53 ACを成功したnamed caseへ逆引きでき、未割当、根拠のないskip、実環境依存、および
+    -   完了時には、正式inventoryから全55 ACを成功したnamed caseへ逆引きでき、未割当、根拠のないskip、実環境依存、および
         補助planned caseの正式trace混入がいずれも0件である。
     -   _Depends: 2.1, 2.2, 2.3, 2.4, 6.1, 6.2, 6.3, 6.4_
     -   _Requirements: 8.1_
@@ -309,6 +310,8 @@ group 完了後に本 spec を実行し、共有 foundation を重複せず、�
     -   `test/server/tuner-access/transport.integration.test.ts`で合成HTTP serverとtemporary Unix domain socketへ
         REST、redirect、Mirakurun change stream、mirakc SSE、録画・ライブstream、logo、abortを接続し、成功・失敗・
         timeout・closeのwire結果とcleanupを検証する。
+    -   同fileで、streamを閉じるときに応答のlistenerを外す合成serverへ録画・ライブstreamを接続し、streamの応答が終わった
+        後の次のstream要求が新しい接続で応答を受けることを検証する。
     -   named pipeは既存parser・request option seamを`implementation.posix.test.ts`（`unittest/imp`）でbest-effortに
         characterizeし、Windows上の実接続は`transport.win32.integration.test.ts`だけが確認する。非Windowsの結果を
         実接続PASSへ代替しない。Windows host OSはserver正式対応外のため、名前付きパイプ実接続の未実行・skip・failureを

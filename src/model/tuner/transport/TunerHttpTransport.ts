@@ -147,6 +147,8 @@ export default class TunerHttpTransport {
     /**
      * 視聴/録画用のストリーム配信を開く。`X-Mirakurun-Priority`ヘッダーで優先度を伝え、
      * 応答を読み切らずに保持したまま、明示的に`close`されるまで開いたままにする。
+     * `Connection: close`を付け、応答が終わった接続を次の要求へ再利用しない。Mirakurunはstreamを閉じるとき、
+     * 応答を終えた直後に応答のlistenerをすべて外すため、その接続へ送った次の要求には応答が返らない。
      * @param path 要求path。
      * @param priority チューナー割り当ての優先度（`X-Mirakurun-Priority`ヘッダーの値）。
      * @param options 中断用の`signal`等の共通オプション。
@@ -157,7 +159,7 @@ export default class TunerHttpTransport {
             path,
             'stream',
             options,
-            { 'X-Mirakurun-Priority': String(priority) },
+            { 'X-Mirakurun-Priority': String(priority), Connection: 'close' },
             true,
         )) as TunerStreamHandle;
     }

@@ -498,6 +498,59 @@ describe.each(['http', 'unix'] as const)('tuner %s transport integration', trans
         await exerciseFailureOperations(server, target, state);
     });
 
+    it('[TA-8.4] answers the next recording and live stream on a new connection after the server ends a stream and drops its response listeners', async () => {
+        // Mirakurun ends a stream with response.end() followed by response.removeAllListeners(), which also drops the
+        // Node.js listener that releases the connection. A request sent on that connection is never answered.
+        const ending = new Map<string, ServerResponse>();
+        const requestSockets = new Map<string, Socket>();
+        const [server, target] = await startServer(transportKind, (request, response) => {
+            const path = request.url ?? '';
+            requestSockets.set(path, request.socket);
+            response.writeHead(200);
+            response.write('synthetic-ts');
+            if (path.endsWith('/1/stream?decode=1')) ending.set(path, response);
+        });
+        const access = new TunerServerAccessModel(target, 'epgstation/synthetic', undefined, {
+            tunerStreamEstablishmentTimeoutMs: connectionDeadlineMs,
+        });
+        const handles: Array<{ stream: IncomingMessage; close(): void }> = [];
+        try {
+            for (const [open, firstPath, nextPath] of [
+                [
+                    (id: number) => access.openProgramStream({ priority: 1, programId: id }),
+                    '/base/api/programs/1/stream?decode=1',
+                    '/base/api/programs/2/stream?decode=1',
+                ],
+                [
+                    (id: number) => access.openServiceStream({ priority: 1, serviceId: id }),
+                    '/base/api/services/1/stream?decode=1',
+                    '/base/api/services/2/stream?decode=1',
+                ],
+            ] as const) {
+                const first = await open(1);
+                handles.push(first);
+                const ended = new Promise<void>(resolve => first.stream.once('end', resolve));
+                first.stream.resume();
+                const firstResponse = ending.get(firstPath);
+                expect(firstResponse).toBeDefined();
+                firstResponse!.end();
+                firstResponse!.removeAllListeners();
+                await ended;
+
+                const next = await open(2);
+                handles.push(next);
+
+                expect(requestSockets.get(nextPath)).not.toBe(requestSockets.get(firstPath));
+                await vi.waitFor(() => expect(requestSockets.get(firstPath)?.destroyed).toBe(true));
+                expect(next.stream.destroyed).toBe(false);
+            }
+        } finally {
+            for (const handle of handles) handle.close();
+            await server.close();
+            servers.delete(server);
+        }
+    });
+
     it('[TA-7.1] returns a sanitized network failure after the synthetic endpoint is closed', async () => {
         const [server, target] = await startServer(transportKind, commonHandler);
         await server.close();

@@ -95,7 +95,9 @@ describe('tuner access implementation baseline (POSIX named-pipe seam)', () => {
                 }),
                 headers: {
                     'User-Agent': 'epgstation/synthetic',
-                    ...(operation.priority === undefined ? {} : { 'X-Mirakurun-Priority': operation.priority }),
+                    ...(operation.priority === undefined
+                        ? {}
+                        : { Connection: 'close', 'X-Mirakurun-Priority': operation.priority }),
                 },
             });
             expect(requestOptions[index]).not.toHaveProperty('host');

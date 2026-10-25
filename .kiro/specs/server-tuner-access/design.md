@@ -423,10 +423,14 @@ serviceへの次回要求も新しいREST要求となる。
 2. Unix標準形式はsocket部分をpercent-decodeし、legacy形式は互換parserでsocketとbaseを分ける。
 3. network形式は`http`だけを受理し、host、port、pathnameを取得する。
 4. target base pathと固定route templateをjoinし、query parameterはURL encoderで生成する。
-5. requestへ`EPGStation/<自身の版>`形式のUser-Agentを設定する。stream要求だけはcaller priorityを互換headerへ設定する。
+5. requestへ`EPGStation/<自身の版>`形式のUser-Agentを設定する。stream要求だけはcaller priorityを互換headerへ設定し、
+   `Connection: close`を付ける。
    REST、logo、product probe、change feed、録画・ライブstreamとredirect後の要求は、transport instanceをまたいで
    一つの専用`http.Agent`を共有する。`keepAlive: true`、`timeout: 5_000`、受信HWM（`readableHighWaterMark`）128 KiB
    を設定し、RESTからTSへの接続再利用を維持する。送信HWMは指定しない。
+   stream要求の応答が終わった接続は、`Connection: close`により閉じ、次の要求へ再利用しない。Mirakurunはstreamを閉じる
+   とき、応答を終えた直後に応答のlistenerをすべて外すため、Node.jsのHTTP serverはその接続の応答を完了として扱わない。
+   この接続へ送った次の要求には、Mirakurunの処理が失敗して応答が返らず、要求は確立期限まで待つ。
 6. 301–399とroot-relativeな`Location`の組だけは同じconnection targetで追跡し、absoluteまたはroot-relativeでな
    い`Location`はrejectする。redirect後の最終responseについて、共通RESTとstreamは200–202を成功候補とし、JSON operationは
    bodyを期待shapeへ解析する。
@@ -669,9 +673,9 @@ fixtureを定義する。共有runner、C0・C1の判定は`server-application-r
 
 ### test層
 
--   Requirements 1から7の53 ACは下記canonical locatorで一行ずつ固定する。このうち1.4だけは本物のinstallとcompileを流すため
+-   Requirements 1から7の55 ACは下記canonical locatorで一行ずつ固定する。このうち1.4だけは本物のinstallとcompileを流すため
     `test/server/tuner-access/clean-install.integration.test.ts`（直列実行の一覧に載せ、他の重いtestと並行させない）で固定し、
-    残りの52 ACは`unittest/spec`が固定する。`unittest/spec`はR8.1の対応版・transport・共通
+    残りの54 ACは`unittest/spec`が固定する。`unittest/spec`はR8.1の対応版・transport・共通
     DTO・change feed・stream・logo・deadline・startup barrierの外部契約を証明する。
 -   implementation testはroute template、target parser、normalizer、product判定、deadline race、stream handle、Mirakurun
     の通常終了差を検証し、R8.2の内部値域と分岐を証明する。
@@ -688,7 +692,7 @@ fixtureを定義する。共有runner、C0・C1の判定は`server-application-r
 -   compatibility matrixはMirakurun 3.8.0、mirakc 3.1.10の契約fixtureに加え、未知の追加fieldとそれ以降の版文字列を通
     し、exact版allowlist拒否がないことを確認する。
 
-test名の`[TA-n.m]`のn.mはtasks.mdのtask番号であり、AC番号ではない。ACからtestを辿るときは、`unittest/spec`が53 ACを一行ずつ
+test名の`[TA-n.m]`のn.mはtasks.mdのtask番号であり、AC番号ではない。ACからtestを辿るときは、`unittest/spec`が55 ACを一行ずつ
 固定する`[TA-AC-<AC番号>]`（1.4は上記の`clean-install.integration.test.ts`）、または下記のcanonical locatorの表を正とする。
 
 通常の契約testは合成serverを使う。本物のserverとの比較integrationは隔離したDocker fixtureを使い、setupと全観測を
@@ -701,7 +705,7 @@ test名の`[TA-n.m]`のn.mはtasks.mdのtask番号であり、AC番号ではな�
 | 対象                         | `unittest/spec`で固定する観測結果                                                                                                                            | `unittest/imp`で固定する内部値域・分岐                                                                                                   |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | 対応版と共通結果             | 最低対応版とそれ以降の版文字列を許容し、status・tuner・service・programを同じEPGStation DTOで返す                                                            | required field欠落・不正型・非finite値を拒否し、未知fieldを許容する。`audios`／`audio`と`extended`の正規化分岐                           |
-| connection targetと共通route | HTTPとUnix socketで同じoperation結果を返し、禁止された接続optionを公開しない。全要求と複数transport instanceで同じ専用Agentを使うことをrequest factoryで確認する。named pipeは既存parser・request optionのbest-effort characterizationに限定する | target分類、標準・legacy Unix形式、base path結合、ID encode、redirect、200–202境界、route、priority header、共有AgentのkeepAlive・timeout 5秒・受信HWM 128 KiBを確認する。実際のresponse/socketの受信HWM、REST→TS接続再利用とclose/abortの独立性はHTTP・Unix socketのintegrationで確認する。named pipe実接続は検証しない |
+| connection targetと共通route | HTTPとUnix socketで同じoperation結果を返し、禁止された接続optionを公開しない。全要求と複数transport instanceで同じ専用Agentを使うことをrequest factoryで確認する。named pipeは既存parser・request optionのbest-effort characterizationに限定する | target分類、標準・legacy Unix形式、base path結合、ID encode、redirect、200–202境界、route、priority header、stream要求だけの`Connection: close`、共有AgentのkeepAlive・timeout 5秒・受信HWM 128 KiBを確認する。実際のresponse/socketの受信HWM、REST→TS接続再利用とclose/abortの独立性、およびstreamを閉じるときに応答のlistenerを外す接続先でstreamの応答が終わった後の次のstream要求が新しい接続で応答を受けることは、HTTP・Unix socketのintegrationで確認する。named pipe実接続は検証しない |
 | RESTとlogo                   | 各operationのDTO／Buffer、個別失敗のreject、logo失敗をnot-foundへ変換しないこと、再要求で新しいHTTP requestを行う                                            | 空body、JSON不正、status、body全量受信、deadline、request・response・timer・listenerのcleanup                                            |
 | product判定とchange feed     | Mirakurun／mirakcのstarted・changed・aborted・completion、およびMirakurun通常終了差を観測する                                                                | 最終200 object／最終404／その他status・network・timeout・parse、成功時だけのcache、frame分割、初期通知抑止、program・service以外のresourceの読み飛ばし、実装不整合                   |
 | 録画・ライブstream           | ID・priorityを渡したReadable引渡し、確立失敗、冪等close、確立後terminal伝播、再開なし、総継続時間の上限なし                                                  | header受領とhandle生成の確立境界、deadline直前・到達・超過、abort race、late settlement、request・response destroy一回                   |
@@ -797,6 +801,7 @@ OSがserver正式対応外であるため、本機能の完了判定を妨げな
 | 4.5  | インターフェース、stream確立と破棄                                     | recording close・idempotence test                                                                                                                                                                              |
 | 4.6  | 録画・ライブstream、deadline規則                                       | 確立後長時間継続test                                                                                                                                                                                           |
 | 4.7  | 録画・ライブstream、失敗契約                                           | terminal後request再発行なしtest                                                                                                                                                                                |
+| 4.8  | connection target構築、録画・ライブstream                              | recording stream要求の`Connection: close`と、応答の終わった接続を再利用しないtest                                                                                                                              |
 | 5.1  | インターフェース、録画・ライブstream、チューナーサーバー REST API 契約 | live service ID・priority test                                                                                                                                                                                 |
 | 5.2  | インターフェース、stream確立と破棄                                     | deliveryへReadable受渡しtest                                                                                                                                                                                   |
 | 5.3  | 失敗契約、応答時間                                                     | live failure・30秒境界test                                                                                                                                                                                     |
@@ -804,6 +809,7 @@ OSがserver正式対応外であるため、本機能の完了判定を妨げな
 | 5.5  | 録画・ライブstream、deadline規則                                       | live確立後長時間継続test                                                                                                                                                                                       |
 | 5.6  | 責任境界、失敗契約                                                     | upstream競合結果透過test                                                                                                                                                                                       |
 | 5.7  | インターフェース、失敗契約                                             | close resultに解放確認なしtest                                                                                                                                                                                 |
+| 5.8  | connection target構築、録画・ライブstream                              | live stream要求の`Connection: close`と、応答の終わった接続を再利用しないtest                                                                                                                                   |
 | 6.1  | ロゴ、インターフェース、チューナーサーバー REST API 契約               | `hasLogoData=true／undefined`のlogo request test                                                                                                                                                               |
 | 6.2  | ロゴ、正規化DTO                                                        | Buffer受渡し・public wire test                                                                                                                                                                                 |
 | 6.3  | 失敗契約、応答時間                                                     | logo failure・timeout非404 test                                                                                                                                                                                |
@@ -816,7 +822,7 @@ OSがserver正式対応外であるため、本機能の完了判定を妨げな
 | 7.5  | 起動barrier、deadline規則                                              | availability failure settle後1秒の新status request test                                                                                                                                                        |
 | 7.6  | 起動barrier                                                            | barrier前consumer未開始test                                                                                                                                                                                    |
 | 7.7  | 起動barrier                                                            | 一回pending・試行回数・総待機の上限なしtest                                                                                                                                                                    |
-| 8.1  | test層、spec・imp契約matrix                                            | Requirements 1から7の53 ACを`unittest/spec`で検証                                                                                                                                                              |
+| 8.1  | test層、spec・imp契約matrix                                            | Requirements 1から7の55 ACを`unittest/spec`で検証                                                                                                                                                              |
 | 8.2  | spec・imp契約matrix、必須Test Matrixの入力と外部境界                   | target・route・status・normalizer・product・deadline分岐、ID・priority代表値の伝達                                                                                                                             |
 | 8.3  | 状態・資源・失敗matrix                                                 | lifecycle、race、late settlement、所有権移転、transport test資源cleanup                                                                                                                                        |
 | 8.4  | 必須Test Matrixの入力と外部境界、transport integrationと互換確認       | HTTP・Unix socketの実接続とtemporary資源の後始末。named pipeはbest-effort characterization                                                                                                                     |
@@ -826,7 +832,7 @@ OSがserver正式対応外であるため、本機能の完了判定を妨げな
 
 | test file                                                         | 責任                                                                                                              |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `test/server/tuner-access/tuner-access.spec.test.ts`              | Requirements 1から7の53 ACのcanonical契約                                                                         |
+| `test/server/tuner-access/tuner-access.spec.test.ts`              | Requirements 1から7の55 ACのcanonical契約                                                                         |
 | `test/server/tuner-access/clean-install.integration.test.ts`      | `[TA-AC-1.4]`。clean directoryでの本物のinstallとcompile、import graphにMirakurun専用client packageが無いこと。直列実行 |
 | `test/server/tuner-access/implementation.test.ts`                 | target parser、route、DTO、package非依存、error分岐                                                               |
 | `test/server/tuner-access/implementation-target.test.ts`          | legacy Unix形式のtarget解釈、request失敗のsanitize、status objectと最低・以降版の正規化                           |

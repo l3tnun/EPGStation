@@ -677,6 +677,26 @@ const canonicalAcceptanceProbes: readonly CanonicalProbe[] = [
         },
     },
     {
+        id: '4.8',
+        label: 'asks for the recording stream connection to close once its response ends',
+        run: async () => {
+            const harness = makeRequestHarness([{ body: 'synthetic-ts', statusCode: 200 }]);
+            const transport = new TunerHttpTransport(
+                parseConnectionTarget('http://synthetic.invalid:40772'),
+                'epgstation/synthetic',
+                harness.request,
+            );
+            const handle = await access(transport).openProgramStream({ priority: 1, programId: 201 });
+            expect(harness.options).toEqual([
+                expect.objectContaining({
+                    headers: { Connection: 'close', 'User-Agent': 'epgstation/synthetic', 'X-Mirakurun-Priority': '1' },
+                    path: '/api/programs/201/stream?decode=1',
+                }),
+            ]);
+            handle.close();
+        },
+    },
+    {
         id: '5.1',
         label: 'requests a live service stream with the caller-selected priority',
         run: async () => {
@@ -765,6 +785,26 @@ const canonicalAcceptanceProbes: readonly CanonicalProbe[] = [
             const fixture = streamTransport(new PassThrough());
             const handle = await access(fixture.transport).openServiceStream({ priority: 1, serviceId: 101 });
             expect(Object.keys(handle).sort()).toEqual(['close', 'stream']);
+            handle.close();
+        },
+    },
+    {
+        id: '5.8',
+        label: 'asks for the live stream connection to close once its response ends',
+        run: async () => {
+            const harness = makeRequestHarness([{ body: 'synthetic-ts', statusCode: 200 }]);
+            const transport = new TunerHttpTransport(
+                parseConnectionTarget('http://synthetic.invalid:40772'),
+                'epgstation/synthetic',
+                harness.request,
+            );
+            const handle = await access(transport).openServiceStream({ priority: 11, serviceId: 101 });
+            expect(harness.options).toEqual([
+                expect.objectContaining({
+                    headers: { Connection: 'close', 'User-Agent': 'epgstation/synthetic', 'X-Mirakurun-Priority': '11' },
+                    path: '/api/services/101/stream?decode=1',
+                }),
+            ]);
             handle.close();
         },
     },
@@ -2278,6 +2318,7 @@ describe('tuner request deadlines and stream handles', () => {
             {
                 agent: expect.objectContaining({ options: expect.objectContaining({ readableHighWaterMark: 128 * 1024 }) }),
                 headers: {
+                    Connection: 'close',
                     'User-Agent': 'epgstation/synthetic',
                     'X-Mirakurun-Priority': '11',
                 },
