@@ -1,6 +1,5 @@
 import type { RecordedListItem } from '@/features/recorded/recordedApi'
 import type { ReserveListItemModel } from '@/features/reserves'
-import type { SettingsConsumerValue } from '@/shared/settings'
 
 export function preventIOSScrollChainAtBounds(element: HTMLElement): () => void {
   let startY = 0
@@ -100,20 +99,6 @@ export function formatDashboardReserveTimeRange(item: ReserveListItemModel): str
   }
 
   return formatRange(item.startAt, item.endAt, '分')
-}
-
-export function recordedSecondaryText(
-  item: RecordedListItem,
-  settings: SettingsConsumerValue,
-): string {
-  if (settings.isShowDropInfoInsteadOfDescription && item.dropLogFile !== undefined) {
-    const totalSize = item.videoFiles?.reduce((sum, file) => sum + (file.size ?? 0), 0) ?? 0
-    const sizeText = totalSize > 0 ? ` ${totalSize} bytes` : ''
-
-    return `${item.dropLogFile.dropCnt}/${item.dropLogFile.errorCnt}/${item.dropLogFile.scramblingCnt}${sizeText}`
-  }
-
-  return item.description ?? item.extended ?? ''
 }
 
 export function recordedMetadataLines(item: RecordedListItem): readonly string[] {
