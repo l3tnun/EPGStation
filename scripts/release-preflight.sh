@@ -17,45 +17,15 @@ CANDIDATE=$(node scripts/server-test/worktree-content.mjs) || { echo "release-pr
 TREE=$CANDIDATE
 HEAD_TREE=$(git rev-parse --verify --quiet 'HEAD^{tree}' || echo unknown)
 LOG_DIR=${EPGS_PREFLIGHT_LOG_DIR:-$REPO_ROOT/test/server/.artifacts/preflight/${TREE:0:12}/$(date -u +%Y%m%dT%H%M%SZ)}
-# coverage mode の worker 数は 8 で calibrate されている。CPU がそれより少ない host では
-# 割り当てが過剰になり、real process と millisecond 境界を見る row が時間に追いつけず、
-# 走るたびに落ちる。node-matrix の Node 24 leg (run-coverage-gate-cli.mjs 経由の
-# test:server:coverage) にも同じ理由で渡す。availableParallelism は CPU affinity mask を見るので、
-# taskset で絞った実行でもその数になる。下げる方向にだけ効く。全 step の子 process に伝わるよう
-# export する（この変数を読むのは coverage mode の run-tests.mjs だけなので他 step には無害）。
-export EPGSTATION_TEST_MAX_WORKERS=$(node -e 'process.stdout.write(String(require("node:os").availableParallelism()))')
-
-# 16 thread 開発機での並列化: (server-check → docker-gate-node24) / (client → client-browser) は
-# 互いに依存せず、それぞれ別の container・別の CPU 帯を使うので同時に流せる。模擬 container は WS (/home/runner/work/EPGStation/EPGStation) が固定で
-# job ごとに初期化されるため、同じ container で 2 つの job を同時には流せない -- そこで
-# client/client-browser 用に 2 つ目の container (epgs-runner-rehearsal-b) を rehearsal-setup で
-# 追加で作る。2 系統が CPU を取り合わないよう、container A と B は互いに素な CPU 帯に固定する。
+# 模擬 container の CPU 帯と memory の上限、2 系統を同時に流すかどうか、test の worker 数は、選んだ step が決まった後に
+# scripts/preflight-resources.mjs が実行する環境の CPU と memory から決める（PREFLIGHT_* の変数。step の command は
+# それを実行時に読む）。模擬 container は WS (/home/runner/work/EPGStation/EPGStation) が固定で job ごとに初期化される
+# ため、同じ container で 2 つの job を同時には流せない。そこで client/client-browser 用に 2 つ目の container
+# (epgs-runner-rehearsal-b) を rehearsal-setup で作る。
 REHEARSAL_NAME_B=${EPGS_REHEARSAL_NAME_B:-epgs-runner-rehearsal-b}
-PREFLIGHT_CPUSET_A=${EPGS_PREFLIGHT_CPUSET_A:-0-3}
-PREFLIGHT_CPUSET_B=${EPGS_PREFLIGHT_CPUSET_B:-4-11}
-# container B の CPU 帯は container A と互いに素だが、docker-gate-node24 (image の build で
-# I/O・memory 帯域を使う) を同時に流すと、CPU pinning では隔離できない共有資源の競合が起きる。
-# 計測（実測、taskset での模擬ではなく実際に並列 group を流して確認。この値は host 側でも重い test を同時に
-# 流した条件で測ったもので、docker-gate-node24 と client の 2 系統だけを流した構成では測っていない。
-# 下の値は安全側に置く）: client/vite.config.ts の既定
-# coverageGateMaxWorkers(CPU 数と 8 の小さい方 = 8)のまま同時に流すと、327 file 中の
-# upload-submit.spec.test.tsx の重い test が 5000ms の既定 timeout を超えて落ちた
-# (単独では 327 file 全 pass だった)。worker 4 まで下げると timeout の失敗は
-# 再発しなかったが、最遅 test は目標の 60%(3000ms) を超えたまま(67%/73%)だった -- 3000ms 未達の
-# 主因は CPU pinning で分離できる範囲を越えた共有資源競合(disk I/O・メモリ帯域)と見ている。
-# worker を下げるほど安全側に効く一方で下げすぎるとcoverage:gate自体が遅くなるため、
-# `--all` の並列 group でだけ 4 に下げる(単独 `--only client` や client-check には影響しない)。
-PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS=${EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS:-4}
-# 同じ理由で client-browser の Playwright worker 数も並列 group でだけ下げる。実測: 並列
-# group で実際に docker-gate-node24 などと同時に client-browser (既定 6 workers、
-# client/playwright.config.ts の CPU 数由来の値) を流したところ、e2e の 2 test が locator の
-# 5000ms / click の 30000ms timeout で落ちた（孤立実行や taskset 単体での模擬では再現しなかった
-# 負荷）。coverage:gate と同じ根拠（共有 I/O・メモリ帯域競合）と見て、こちらも並列 group 中だけ
-# 下げる。
-PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS=${EPGS_PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS:-2}
 STEPS=(
   "stale-containers|remove epgs-docker-check-*, epgstation-docker-check-*, ar-9-17-* and epgstation-persistence-* leftovers (containers, plus the check networks and images) from killed runs|bash scripts/preflight-clean-stale-containers.sh"
-  "rehearsal-setup|hosted runner lookalike containers (once): container A ($PREFLIGHT_CPUSET_A CPUs) for server-check/docker-gate-node24, container B ($PREFLIGHT_CPUSET_B CPUs, $REHEARSAL_NAME_B) for client/client-browser|EPGS_REHEARSAL_CPUSET=$PREFLIGHT_CPUSET_A bash scripts/ci-rehearsal/setup.sh && EPGS_REHEARSAL_NAME=$REHEARSAL_NAME_B EPGS_REHEARSAL_CPUSET=$PREFLIGHT_CPUSET_B bash scripts/ci-rehearsal/setup.sh"
+  "rehearsal-setup|hosted runner lookalike containers (once): container A for server-check/docker-gate-node24, container B ($REHEARSAL_NAME_B) for client/client-browser, on the CPU bands and memory limit preflight-resources.mjs decided|EPGS_REHEARSAL_CPUSET=\$PREFLIGHT_CPUSET_A EPGS_REHEARSAL_MEMORY=\$PREFLIGHT_CONTAINER_MEMORY bash scripts/ci-rehearsal/setup.sh && EPGS_REHEARSAL_NAME=$REHEARSAL_NAME_B EPGS_REHEARSAL_CPUSET=\$PREFLIGHT_CPUSET_B EPGS_REHEARSAL_MEMORY=\$PREFLIGHT_CONTAINER_MEMORY bash scripts/ci-rehearsal/setup.sh"
   "deps-prepare|Docker image の確認の依存 image（base image の pull、OS package 層、npm の依存関係の層）を手元に揃える。外部へ取りに行くのはこの step だけ。container A の nested daemon と host の daemon（node-matrix の Node 24 の回が使う）の両方へ揃える。取得に失敗したら exit 75 で、test は始めない|scripts/ci-rehearsal/job.sh tree:$CANDIDATE 24.21.0 deps-prepare - && node scripts/server-test/prepare-dependency-images.mjs"
   "server-check|server static checks (lint, typecheck, format check; the same checks as the pull request server check job), in lookalike container A|scripts/ci-rehearsal/job.sh tree:$CANDIDATE 24.21.0 server-check -"
   "docker-gate-node24|Docker image check (build the production images from the prepared dependencies, start them against a stub, probe /api/version and /, clean up; Debian and Alpine), docker-image.integration.test.ts alone, Node 24, in lookalike container A|scripts/ci-rehearsal/job.sh tree:$CANDIDATE 24.21.0 serialized integration/application-runtime/docker-image.integration.test.ts"
@@ -75,7 +45,7 @@ STEPS=(
 ALL_DEFAULT=(stale-containers rehearsal-setup deps-prepare server-check docker-gate-node24 client client-browser node-matrix)
 usage() { sed -n 2,7p "$0"; }
 list() { for row in "${STEPS[@]}"; do IFS='|' read -r name desc cmd <<<"$row"; printf '%-24s %s\n    %s\n' "$name" "$desc" "$cmd"; done
-  printf '\n--all order: stale-containers, rehearsal-setup, deps-prepare, then in parallel [server-check -> docker-gate-node24] and [client -> client-browser], then node-matrix\n'; }
+  printf '\n--all order: stale-containers, rehearsal-setup, deps-prepare, then [server-check -> docker-gate-node24] and [client -> client-browser] (at once or one after the other, as preflight-resources.mjs decides), then node-matrix\n'; }
 run_step() {
   local wanted=$1 row name desc cmd
   for row in "${STEPS[@]}"; do
@@ -106,6 +76,15 @@ while [[ $# -gt 0 ]]; do
 done
 [[ ${#selected[@]} -gt 0 ]] || { usage; exit 2; }
 
+# 道具の確認と構成の決定。足りないもの・使えない指定があれば、step を 1 つも始めずに終わる。
+resources=$(node scripts/preflight-resources.mjs --steps "$(IFS=,; echo "${selected[*]}")") || exit 1
+eval "$resources"
+export PREFLIGHT_CPUSET_A PREFLIGHT_CPUSET_B PREFLIGHT_CONTAINER_MEMORY
+# node-matrix と coverage mode の run-tests.mjs が読む（下げる方向にだけ効く）。coverage mode の worker 数は 8 で
+# calibrate されていて、CPU や memory がそれに足りない host で 8 のまま流すと、real process と millisecond の境界を見る
+# test が時間に追いつかない。他の step には無害。
+export EPGSTATION_TEST_MAX_WORKERS=$PREFLIGHT_SERVER_WORKERS
+
 mkdir -p "$LOG_DIR"
 echo "log: $LOG_DIR"
 
@@ -113,6 +92,8 @@ echo "log: $LOG_DIR"
 if [[ $HEAD_TREE == "$CANDIDATE" ]]; then uncommitted=no; else uncommitted=yes; fi
 echo "candidate (worktree content tree): $CANDIDATE  HEAD tree: $HEAD_TREE  uncommitted changes: $uncommitted"
 echo "# candidate=$CANDIDATE head-tree=$HEAD_TREE uncommitted-changes=$uncommitted" >> "$LOG_DIR/summary.tsv"
+echo "$PREFLIGHT_RESOURCES_RECORD"
+echo "$PREFLIGHT_RESOURCES_RECORD" >> "$LOG_DIR/summary.tsv"
 failed=()
 # 最初の失敗で止めると、後続 step が捨てられ、「1 つ直す → --all 全体を回す → 別の step で落ちる →
 # また全体を回す」が繰り返される。そこで、失敗を即座に log と stderr へ出して外から見張る側が気づける
@@ -138,10 +119,10 @@ run_chain() { # failfile, step... : step を順に実行し、失敗しても ch
   done
 }
 
-# `--all` がそのまま ALL_DEFAULT を選んだときだけ、重い 2 系統
-# [server-check → docker-gate-node24] / [client → client-browser] を同時に流す (それぞれ別 container・
-# 別 CPU 帯を使うため干渉しない)。stale-containers と
-# rehearsal-setup は並列 group の前に単独で、node-matrix はその後に単独で実行する。`--only` で
+# `--all` がそのまま ALL_DEFAULT を選んだときは、重い 2 系統
+# [server-check → docker-gate-node24] / [client → client-browser] を、構成が同時と決めていれば同時に
+# (それぞれ別 container・別 CPU 帯を使う)、そうでなければ A の系統の後に B の系統を流す。stale-containers と
+# rehearsal-setup はその前に単独で、node-matrix はその後に単独で実行する。`--only` で
 # 個別に選ぶ通常の切り分け実行は単純な逐次実行になる。
 default_selected=0
 deps_prepare_failed=0
@@ -167,16 +148,22 @@ if [[ $default_selected -eq 1 ]]; then
   if [[ $deps_prepare_failed -eq 0 ]]; then
     fail_a=$(mktemp)
     fail_b=$(mktemp)
-    run_chain "$fail_a" server-check docker-gate-node24 &
-    pid_a=$!
-    # coverage:gate と Playwright の worker 上限を並列 group 中だけ下げる（上の
-    # PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS / PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS 定義のコメント
-    # 参照）。この subshell の export は親 shell や他の chain には伝わらない。
-    ( export EPGSTATION_COVERAGE_GATE_MAX_WORKERS=$PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS
-      export PLAYWRIGHT_WORKERS=$PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS
-      run_chain "$fail_b" client client-browser ) &
-    pid_b=$!
-    wait "$pid_a" "$pid_b"
+    if [[ $PREFLIGHT_PARALLEL -eq 1 ]]; then
+      run_chain "$fail_a" server-check docker-gate-node24 &
+      pid_a=$!
+      # 同時に流す間は、coverage:gate と Playwright の worker 数を同時に流すときの上限まで下げる
+      # (preflight-resources.mjs の PARALLEL_* 参照)。この subshell の export は親 shell や他の chain には伝わらない。
+      ( export EPGSTATION_COVERAGE_GATE_MAX_WORKERS=$PREFLIGHT_PARALLEL_CLIENT_COVERAGE_GATE_MAX_WORKERS
+        export PLAYWRIGHT_WORKERS=$PREFLIGHT_PARALLEL_CLIENT_PLAYWRIGHT_WORKERS
+        run_chain "$fail_b" client client-browser ) &
+      pid_b=$!
+      wait "$pid_a" "$pid_b"
+    else
+      run_chain "$fail_a" server-check docker-gate-node24
+      ( export EPGSTATION_COVERAGE_GATE_MAX_WORKERS=$PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS
+        export PLAYWRIGHT_WORKERS=$PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS
+        run_chain "$fail_b" client client-browser )
+    fi
     for failfile in "$fail_a" "$fail_b"; do
       while read -r step; do [[ -n $step ]] && failed+=("$step"); done < "$failfile"
       rm -f "$failfile"
@@ -185,6 +172,8 @@ if [[ $default_selected -eq 1 ]]; then
     run_step node-matrix || { record_failure node-matrix; failed+=(node-matrix); }
   fi
 else
+  export EPGSTATION_COVERAGE_GATE_MAX_WORKERS=$PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS
+  export PLAYWRIGHT_WORKERS=$PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS
   for step in "${selected[@]}"; do
     if ! run_step "$step"; then
       failed+=("$step")

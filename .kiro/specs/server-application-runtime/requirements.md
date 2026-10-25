@@ -249,6 +249,13 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
     とHEADとの違いの有無を結果の記録に残す
 17. When preflightを実行するとき, the preflight shall 開始時に一度だけ定めた中身をすべてのstepで検証し、その中身の識別子をstepごと
     の結果の記録に残す
+18. When preflightを開始するとき, the preflight shall 実行する環境で使えるCPUとmemoryの量から、模擬containerのCPU帯とmemoryの上限、
+    2系統を同時に流すかどうか、およびtestのworker数を決め、CPU帯を使えるCPUの中に、各containerのmemoryの上限を使えるmemory以下に
+    置き、決めた構成を結果の記録に残す
+19. If 使えるCPUが4個未満のとき、使えるmemoryが7 GiB未満のとき、または指定されたCPU帯が使えるCPUに収まらないとき, the preflight
+    shall stepを1つも始めずに、理由を示して失敗とする
+20. If 選ばれたstepが使う道具（rootfulのDocker、mise、python3とPyYAML）が無いとき, the preflight shall stepを1つも始めずに、
+    足りないものを示して失敗とする
 
 ### Requirement 10: 公開用 Docker image の構築と起動の手元での確認
 

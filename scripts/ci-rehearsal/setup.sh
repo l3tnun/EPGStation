@@ -1,6 +1,6 @@
 #!/bin/bash
 # Builds the rehearsal runner image and starts a container from it: ubuntu 24.04, 4 CPUs (cpuset),
-# 16 GiB, Docker-in-Docker with the runner image's Docker 28.0.4 and buildx 0.36.1 on the overlay2
+# 16 GiB (EPGS_REHEARSAL_CPUSET and EPGS_REHEARSAL_MEMORY change both), Docker-in-Docker with the runner image's Docker 28.0.4 and buildx 0.36.1 on the overlay2
 # store, user "runner", TZ=UTC. Requires a rootful Docker on the host.
 #
 # This is the only step that fetches mise, the Node toolchain, the dependency trees and the
@@ -14,6 +14,7 @@ HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$HERE/../.." && pwd)
 NAME=${EPGS_REHEARSAL_NAME:-epgs-runner-rehearsal}
 CPUSET=${EPGS_REHEARSAL_CPUSET:-0-3}
+MEMORY=${EPGS_REHEARSAL_MEMORY:-16g}
 IMAGE=${EPGS_REHEARSAL_IMAGE:-epgs-runner-rehearsal}
 DIGEST=$(node "$HERE/image-digest.mjs")
 SHORT=${DIGEST:0:12}
@@ -53,7 +54,7 @@ docker build \
 
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 docker run -d --init --privileged --name "$NAME" --hostname runner \
-    --cpuset-cpus="$CPUSET" --memory=16g \
+    --cpuset-cpus="$CPUSET" --memory="$MEMORY" \
     -v "$NAME-docker:/var/lib/docker" \
     -e TZ=UTC -e DEBIAN_FRONTEND=noninteractive \
     "$IMAGE:$SHORT" >/dev/null

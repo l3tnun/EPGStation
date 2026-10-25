@@ -7,7 +7,7 @@ EPGStation の build、test、静的な検査、全体の検査（preflight）�
 - Docker（rootful、buildx）。Docker image の確認と、hosted runner を模擬する container に使う。
 - mise。`mise.toml` が Node 24.21.0 / 26.11.1 を指定する。`mise install` で両方を入れておく（`node-matrix` は `mise exec node@26` を使う）。
 - host の `python3` と PyYAML（`import yaml`）。`scripts/ci-rehearsal/setup.sh` と `scripts/ci-rehearsal/job.sh` が `.github/workflows/*.yml` の step の `run` を取り出すのに使う。
-- `npm run preflight -- --all` を流す場合は、CPU が 12 以上（模擬 container の CPU 帯が既定で `0-3` と `4-11`。変えるには `EPGS_PREFLIGHT_CPUSET_A` / `EPGS_PREFLIGHT_CPUSET_B`）と、memory が container 2 つ分（模擬 container は 1 つにつき `--memory=16g`）。
+- `npm run preflight -- --all` を流す場合は、使える CPU が 4 個以上、memory が 7 GiB 以上（8 GB の機械）。模擬 container の CPU 帯と memory の上限、worker 数は、実行する環境から決まる（§「実行の構成」）。
 - `TZ=Asia/Tokyo`。server の test はこの時刻帯を前提にする。
 - git の `user.name` / `user.email`。server の test が一時 repository で git を呼ぶ。
 - DB の fixture image（`mysql:9.7`、`mariadb:12.3`。それぞれ最新の LTS を版で固定した tag）が pull 済みであること。DB の query の結合 test は SQLite・MySQL 9.7・MariaDB 12.3 で流れ、MySQL・MariaDB を使う他の結合 test も同じ版で流れる。
@@ -151,14 +151,14 @@ PR の `check` job（§7）が実行する検査と同じ。
 npm run preflight -- --all
 ```
 
-hosted CI が実行しない検査を含め、公開してよい状態かを手元で確かめる。**PR を受けるとき（merge の条件）と公開前に、これを流して全 step が `exit=0` であることを確かめる。** 16 thread の開発機向け。
+hosted CI が実行しない検査を含め、公開してよい状態かを手元で確かめる。**PR を受けるとき（merge の条件）と公開前に、これを流して全 step が `exit=0` であることを確かめる。** CPU 4 個・memory 8 GB の機械から流せる。
 
 ### step
 
 | 順 | step | 中身 |
 | --- | --- | --- |
 | 1 | `stale-containers` | 強制終了された run が残した `epgs-docker-check-*`・`ar-9-17-*`・`epgstation-persistence-*` の container、`epgs-docker-check-*` の network、`epgstation-docker-check-*` の image を削除する。長命の container A・B と `epgstation-deps-*` の依存 image は残す |
-| 2 | `rehearsal-setup` | hosted runner を模擬する container を 2 つ作る（ubuntu 24.04 / Docker 28.0.4〈overlay2〉/ 新規 user / `TZ=UTC`）。container A（`epgs-runner-rehearsal`、0-3 CPU）は `server-check` と `docker-gate-node24` 用、container B（`epgs-runner-rehearsal-b`、4-11 CPU）は `client` と `client-browser` 用 |
+| 2 | `rehearsal-setup` | hosted runner を模擬する container を 2 つ作る（ubuntu 24.04 / Docker 28.0.4〈overlay2〉/ 新規 user / `TZ=UTC`）。container A（`epgs-runner-rehearsal`）は `server-check` と `docker-gate-node24` 用、container B（`epgs-runner-rehearsal-b`）は `client` と `client-browser` 用。CPU 帯と memory の上限は「実行の構成」で決まる |
 | 3 | `deps-prepare` | Docker image の確認に使う依存 image（base image の pull、OS package の層、npm の依存関係の層）を container A の nested daemon と host の daemon に揃える。外部へ取りに行くのはこの step だけ。揃っていれば `docker image inspect` だけで終わる。取得に失敗したら exit 75 で止まり、test は 1 つも始めない |
 | 4 | `server-check` | root の lint・typecheck・format check（PR の server `check` job と同じ検査）を container A で実行する |
 | 5 | `docker-gate-node24` | Docker image の確認（§5）を container A で単独に実行する。Node 24 |
@@ -168,11 +168,36 @@ hosted CI が実行しない検査を含め、公開してよい状態かを手�
 
 ### 実行の構成
 
+step を始める前に、`scripts/preflight-resources.mjs` が選んだ step の道具（rootful の Docker、`rehearsal-setup` なら `python3` と PyYAML、`node-matrix` なら mise）を確かめ、使える CPU（`taskset` などで絞った実行ではその範囲）と memory（host は `MemTotal` と cgroup の `memory.max` の最小、Docker は `docker info` の `MemTotal`）から構成を決める。道具が足りないとき、CPU が 4 個未満・memory が 7 GiB 未満のとき、指定が使えないときは、理由を出して step を 1 つも始めずに終わる。
+
 1. 1〜3（`stale-containers`・`rehearsal-setup`・`deps-prepare`）を順に単独で実行する。
-2. 2 つの系統を同時に流す。container A の系統は `server-check` → `docker-gate-node24`、container B の系統は `client` → `client-browser`。系統ごとに CPU 帯が分かれているので互いの CPU を取り合わない。
+2. container A の系統（`server-check` → `docker-gate-node24`）と container B の系統（`client` → `client-browser`）を流す。CPU が 8 個以上かつ Docker の memory が 24 GiB 以上なら 2 系統を同時に、それ以外は A の系統の後に B の系統を流す。
 3. 2 系統がすべて終わってから `node-matrix` を単独で実行する。
 
-並列の系統の中で `client` の `coverage:gate`（`EPGSTATION_COVERAGE_GATE_MAX_WORKERS`）と `client-browser` の Playwright（`PLAYWRIGHT_WORKERS`）の worker 数は、それぞれ 4 と 2 に下げてある。`docker-gate-node24` は CPU の pinning では隔離できない I/O・メモリ帯域の重い job で、client の系統と同時に走るため、単独実行の既定値（`coverage:gate` は 8 workers、Playwright は 6 workers）のままだと timeout する。`--only client` / `--only client-browser` の単独実行にはこの上限は掛からない。
+| 項目 | 2 系統を同時に流すとき | 順に流すとき |
+| --- | --- | --- |
+| container A の CPU 帯 | 使える CPU の先頭 4 個 | 使える CPU の先頭 4 個 |
+| container B の CPU 帯 | A の次から最大 8 個 | 使える CPU の先頭から最大 8 個 |
+| 各 container の memory の上限 | 16 GiB と Docker の memory の小さい方 | 同じ |
+
+worker 数は、CPU の数と、memory から求めた上限（(memory − 1 GiB) ÷ 1 worker の量。1 未満にはしない）の小さい方になる。
+
+| 対象 | CPU からの上限 | 1 worker の量 | 同時に流すときの上限 |
+| --- | --- | --- | --- |
+| `node-matrix` の server test（`EPGSTATION_TEST_MAX_WORKERS`） | 使える CPU の数 | host の memory から 2 GiB | 同じ |
+| `client` の `coverage:gate`（`EPGSTATION_COVERAGE_GATE_MAX_WORKERS`） | container B の CPU 数と 8 の小さい方 | container B の上限から 1.5 GiB | 4 |
+| `client-browser` の Playwright（`PLAYWRIGHT_WORKERS`） | container B の CPU 数 − 2 を 4〜6 に収めた数 | container B の上限から 1 GiB | 2 |
+
+同時に流すときの上限は、`docker-gate-node24`（CPU の pinning では隔離できない I/O・メモリ帯域の重い job）と client の系統が同時に走るときに timeout しない値である。`--only` で選んだ step は 1 つずつ流し、この上限を掛けない。
+
+決めた構成は開始時に表示し、`summary.tsv` の 2 行目（`# resources`）に記録する。次の環境変数で決め打ちできる。
+
+| 変数 | 内容 |
+| --- | --- |
+| `EPGS_PREFLIGHT_CPUSET_A` / `EPGS_PREFLIGHT_CPUSET_B` | container A / B の CPU 帯（例: `0-3`、`4-7,12`）。使える CPU の外を含むとき、同時に流すのに A と B が重なるときは失敗する |
+| `EPGS_PREFLIGHT_PARALLEL` | `1` で 2 系統を同時に、`0` で順に流す |
+| `EPGS_PREFLIGHT_MEMORY` | host と Docker の memory をこの値以下として扱う（例: `8g`、`7680m`） |
+| `EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS` / `EPGS_PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS` | 同時に流すときの上限 |
 
 各 step の失敗は並列に流れていてもその場で stderr と `summary.tsv` に記録され、ほかの系統と後続の step は打ち切らずに走り切る。最後に失敗した step がまとめて報告される。`deps-prepare` が失敗したときだけは、test の step を始めない。
 

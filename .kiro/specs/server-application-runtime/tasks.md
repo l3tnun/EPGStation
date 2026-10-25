@@ -955,6 +955,47 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
         `test/server/application-runtime/service-child-crash-cleanup.integration.test.ts`_
     -   _Depends: 15.1_
 
+-   [ ] 16. preflightの構成を、実行する環境のCPUとmemoryから決める
+
+-   [x] 16.1 構成の決め方、最低限と指定の誤り、道具の確認のtestを書く
+
+    -   新規`test/server/application-runtime/spec/preflight-resources.spec.test.ts`で、`scripts/preflight-resources.mjs`の構成の決め方を
+        CPUの並び（16個、8個、4個、番号の飛んだ並び）とmemory（32 GiB、16 GiB、8 GiB）の組み合わせで確かめる。同時か順か、AとBの
+        CPU帯、containerのmemoryの上限、各worker数をassertする。CPU 3個、memory 7 GiB未満、範囲外・書式誤り・重なるCPU帯の指定が
+        理由付きの失敗になること、道具の確認が選んだstepの道具だけを確かめ、足りないものを示すことをassertする。
+    -   新規`test/server/application-runtime/release-preflight-resources.integration.test.ts`で、実物の`release-preflight.sh`を
+        模擬runner・`setup.sh`・node-matrix・Dockerの記録用scriptと組み合わせて流し、`--all`での構成の受け渡し（CPU帯、memoryの上限、
+        worker数）、順に流すときにAの系統が終わってからBの系統が始まること、`summary.tsv`の`# resources`、使えないCPU帯の指定と
+        rootlessのDockerでstepを1つも始めずに失敗することをassertする。
+    -   `test/server/application-runtime/release-preflight-content.integration.test.ts`を、構成の道具とDockerの記録用scriptを使い、
+        `summary.tsv`の2行目の`# resources`を読み飛ばす形に合わせる。
+    -   実装の前に流し、新しいcaseが道具の無いことと構成を受け渡さないことで失敗するのを確かめる。
+    -   _Requirements: 9.18, 9.19, 9.20_
+    -   _Boundary: Preflight Steps_
+
+-   [x] 16.2 構成の道具を実装し、preflightと模擬containerの作成へつなぐ
+
+    -   新規`scripts/preflight-resources.mjs`に、道具の確認、使える資源の求め方、構成の決め方（design §12.3.4）を置く。
+    -   `scripts/release-preflight.sh`は、stepを始める前にこの道具を実行し、CPU帯とmemoryの上限を`rehearsal-setup`へ、worker数を
+        各stepへ渡し、順に流すときは2系統を順に流し、`summary.tsv`の2行目へ構成を書く。
+    -   `scripts/ci-rehearsal/setup.sh`は`EPGS_REHEARSAL_MEMORY`でcontainerのmemoryの上限を受け取る（既定16 GiB）。
+    -   `docs/testing.md`と`AGENTS.md`のpreflightの前提と構成の説明を、§12.3.4の構成に合わせる。
+    -   完了時には、16.1のtestがすべて通る。
+    -   _Requirements: 9.18, 9.19, 9.20_
+    -   _Boundary: Preflight Steps_
+    -   _Depends: 16.1_
+
+-   [ ] 16.3 CPUとmemoryを絞った条件で`--all`を通す
+
+    -   `taskset -c 0-3`、`EPGS_PREFLIGHT_MEMORY=7680m`、hostのprocessへのmemoryの上限（user scopeの`MemoryMax=7680M`）で
+        4 CPU・8 GBの機械を模し、`npm run preflight -- --all`の全stepが`exit=0`になることを確かめる。`taskset -c 0-7`の8 CPUでも確かめる。
+    -   1 workerの量（§12.3.4）は、この条件で全stepが通る値にする。
+    -   完了時には、4 CPU・8 GB、8 CPU、16 CPUのそれぞれの`summary.tsv`の全stepが`exit=0`である。
+    -   _Requirements: 9.18_
+    -   _Boundary: Preflight Steps_
+    -   _Verification: `npm run preflight -- --all`_
+    -   _Depends: 16.2_
+
 ## Leaf execution contract
 
 | Leaf | Concrete target                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Test type                                                                                                                      | Local Depends                | Verification command                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -1012,6 +1053,9 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
 | 14.3 | `scripts/server-test/run-node-acceptance-matrix.mjs`<br>`test/server/application-runtime/spec/coverage-command-terminal.test.ts` | `unittest/spec` | `14.1` | `npm run test:server:spec -- test/server/application-runtime/spec/coverage-command-terminal.test.ts` |
 | 14.4 | `scripts/release-preflight.sh`<br>`scripts/ci-rehearsal/job.sh`<br>`scripts/ci-rehearsal/image-digest.mjs`<br>`test/server/application-runtime/spec/image-digest.spec.test.ts` | preflightのstepと模擬runnerの実行 | `14.1, 14.3` | `bash scripts/release-preflight.sh --only deps-prepare`<br>`scripts/ci-rehearsal/job.sh tree:<CANDIDATE> 24.21.0 server-check -` |
 | 14.5 | なし（判定のみ） | Node.js 24・26のcell | `13.4, 14.2, 14.3` | `node scripts/server-test/run-node-acceptance-matrix.mjs` |
+| 16.1 | `test/server/application-runtime/spec/preflight-resources.spec.test.ts`<br>`test/server/application-runtime/release-preflight-resources.integration.test.ts`<br>`test/server/application-runtime/release-preflight-content.integration.test.ts` | `unittest/spec`、`integration` | `14.4` | `npm run test:server:spec -- test/server/application-runtime/spec/preflight-resources.spec.test.ts`<br>`npm run test:server:integration -- 'test/server/application-runtime/release-preflight-*.integration.test.ts'` |
+| 16.2 | `scripts/preflight-resources.mjs`<br>`scripts/release-preflight.sh`<br>`scripts/ci-rehearsal/setup.sh`<br>`docs/testing.md`<br>`AGENTS.md` | 16.1のtest | `16.1` | 16.1と同じ |
+| 16.3 | なし（判定のみ） | preflightの実行 | `16.2` | `npm run preflight -- --all`（4 CPU・8 GB、8 CPU、16 CPU） |
 
 ## Implementation Notes
 

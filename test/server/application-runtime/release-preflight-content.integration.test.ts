@@ -11,7 +11,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
  * git repository with the real `worktree-content.mjs`. The two steps use the lookalike runner container
  * only through `scripts/ci-rehearsal/job.sh` and the image preparation script, which are replaced here by
  * recording scripts (this environment has no runner container to start); the tree each step receives is
- * exactly what the container would be told to check out.
+ * exactly what the container would be told to check out. The `docker` command the resource decision asks is a
+ * recording script that reports a rootful daemon with 32 GiB.
  */
 
 const repositoryRoot = fileURLToPath(new URL('../../../', import.meta.url));
@@ -44,6 +45,20 @@ beforeEach(async () => {
         join(repositoryRoot, 'scripts', 'server-test', 'worktree-content.mjs'),
         join(fixture, 'scripts', 'server-test', 'worktree-content.mjs'),
     );
+    await cp(join(repositoryRoot, 'scripts', 'preflight-resources.mjs'), join(fixture, 'scripts', 'preflight-resources.mjs'));
+    await mkdir(join(fixture, 'bin'));
+    await writeFile(
+        join(fixture, 'bin', 'docker'),
+        [
+            '#!/bin/bash',
+            'case "$*" in',
+            '  *SecurityOptions*) echo \'["name=seccomp,profile=builtin"]\' ;;',
+            `  *MemTotal*) echo ${32 * 1024 ** 3} ;;`,
+            'esac',
+            '',
+        ].join('\n'),
+    );
+    await chmod(join(fixture, 'bin', 'docker'), 0o755);
     await writeFile(join(fixture, '.gitignore'), 'test/server/.artifacts/\n');
     await writeFile(join(fixture, 'tracked.txt'), 'committed\n');
     // The first runner call (deps-prepare) rewrites a tracked file while the run is in progress.
@@ -81,6 +96,7 @@ const runPreflight = (): Promise<{ code: number | null; stdout: string }> =>
                 GIT_CONFIG_GLOBAL: '/dev/null',
                 GIT_CONFIG_NOSYSTEM: '1',
                 GIT_CONFIG_SYSTEM: '/dev/null',
+                PATH: `${join(fixture, 'bin')}:${process.env.PATH}`,
             },
             stdio: ['ignore', 'pipe', 'pipe'],
         });
@@ -127,7 +143,8 @@ describe('[AR-9.17] release-preflight.sh verifies the content fixed when it star
             .trim()
             .split('\n');
         expect(summary[0]).toBe(`# candidate=${startContent} head-tree=${headTree} uncommitted-changes=yes`);
-        const rows = summary.slice(1).map(row => row.split('\t'));
+        expect(summary[1]).toMatch(/^# resources /);
+        const rows = summary.slice(2).map(row => row.split('\t'));
         expect(rows.map(row => row[2])).toEqual(['deps-prepare', 'server-check']);
         for (const row of rows) {
             expect(row[3]).toBe('exit=0');

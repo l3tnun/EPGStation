@@ -811,6 +811,77 @@ hosted CIの`check`を手元で通す用途）と`<40桁のsha>`（push済みの
 | `test/server/application-runtime/spec/coverage-command-terminal.test.ts`     | coverageのrunとnode-matrix CLIのcase                                                                       |
 | `test/server/application-runtime/spec/worktree-content.spec.test.ts`        | 作業場所の中身の記録のcase                                                                                 |
 
+#### 12.3.4 実行する環境に合わせたpreflightの構成（Requirement 9 Acceptance Criteria 18〜20）
+
+`scripts/release-preflight.sh`は、候補のtreeを求めた後、stepを始める前に`node scripts/preflight-resources.mjs --steps <選んだstep>`を
+実行し、その出力で構成を決める。この道具は、選んだstepが使う道具の有無を確かめ、使えるCPUとmemoryを求め、構成を決める。
+足りないもの・最低限に届かないもの・使えない指定があれば、理由をstderrへ出して非0で終わり、preflightはstepを1つも始めずに失敗する。
+
+**道具の確認（AC 20）。**
+
+| 道具 | 確かめ方 | 使うstep |
+| --- | --- | --- |
+| rootfulのDocker | `docker info`が成功し、`SecurityOptions`に`rootless`が無い | すべて |
+| python3とPyYAML | `python3 -c 'import yaml'`が成功する | `rehearsal-setup` |
+| mise | `mise --version`が成功する | `node-matrix` |
+
+**使える資源の求め方。**
+
+-   CPU: `/proc/self/status`の`Cpus_allowed_list`（`taskset`などで絞った実行ではその範囲）。
+-   hostのmemory: `/proc/meminfo`の`MemTotal`と、自分のcgroupとその祖先の`memory.max`の最小。node-matrixのworker数に使う。
+-   Dockerのmemory: `docker info`の`MemTotal`。模擬containerの上限と、2系統を同時に流すかどうかに使う。
+-   `EPGS_PREFLIGHT_MEMORY`（`8g`・`7680m`のような数と単位、またはbyte数）を指定すると、hostとDockerのmemoryをそれぞれその値以下にする。
+
+**最低限（AC 19）。** 使えるCPUが4個（hosted runnerのCPU数）以上、hostとDockerのmemoryがどちらも7 GiB（8 GBの機械が報告する
+量）以上であることを求める。
+
+**構成（AC 18）。** 使えるCPUを番号の順に並べ、先頭から割り当てる。`n`は使えるCPUの数、`M`はDockerのmemoryである。
+
+| 項目 | 2系統を同時に流すとき | 順に流すとき |
+| --- | --- | --- |
+| 選び方 | `n ≥ 8`かつ`M ≥ 24 GiB` | それ以外 |
+| container AのCPU帯 | 先頭の4個 | 先頭の4個 |
+| container BのCPU帯 | container Aの次から最大8個 | 先頭から最大8個 |
+| 各containerのmemoryの上限 | 16 GiBと`M`の小さい方 | 16 GiBと`M`の小さい方 |
+| 実行の順 | `stale-containers` → `rehearsal-setup` → `deps-prepare` → [A: `server-check` → `docker-gate-node24`] と [B: `client` → `client-browser`] を同時 → `node-matrix` | 同じ並びで、Aの系統が終わってからBの系統を流す |
+
+worker数は、CPUの数とmemoryから求めた上限の小さい方にする（1未満にはしない）。memoryから求める上限は「(memory − 1 GiB) ÷ 1 worker
+の量」の切り捨てである。
+
+| 対象 | 変数 | CPUからの上限 | memoryと1 workerの量 | 同時に流すときの上限 |
+| --- | --- | --- | --- | --- |
+| node-matrixのserver test | `EPGSTATION_TEST_MAX_WORKERS` | `n` | hostのmemory、2 GiB | 同じ |
+| `client`の`coverage:gate` | `EPGSTATION_COVERAGE_GATE_MAX_WORKERS` | container BのCPU数と8の小さい方 | container Bの上限、1.5 GiB | 4 |
+| `client-browser`のPlaywright | `PLAYWRIGHT_WORKERS` | container BのCPU数−2を4〜6に収めた数 | container Bの上限、1 GiB | 2 |
+
+同時に流すときの上限は、`docker-gate-node24`と`client`の系統が同時に走るときのdisk I/O・memory帯域の競合を避ける値で、
+CPU帯の分離では避けられない。`--only`で選んだstepは指定の順に1つずつ流し、同時に流すときの上限を掛けない。
+
+**指定による上書き。** `EPGS_PREFLIGHT_CPUSET_A`・`EPGS_PREFLIGHT_CPUSET_B`（CPU帯）、`EPGS_PREFLIGHT_PARALLEL`（`1`で同時、`0`で順）、
+`EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS`・`EPGS_PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS`（同時に流すときの上限）で決め打ちできる。
+CPU帯の指定が使えるCPUの外を含むとき、書式が誤っているとき、同時に流す指定でAとBのCPU帯が重なるときは、AC 19の失敗とする。
+
+**記録。** `summary.tsv`の2行目に、`# resources`に続けて、使えるCPU、hostとDockerのmemory、同時か順か、AとBのCPU帯、containerの
+memoryの上限、各worker数を書く。
+
+**決定。**
+
+| ID     | 決定 | 理由 | 採らなかった案と理由 |
+| ------ | ---- | ---- | -------------------- |
+| PRES-1 | 構成は開始時に1度だけ求め、全stepで使う | 途中で他のprocessが資源を使っても、step間で構成が揃い、記録が全stepを表す | stepごとに求める: 記録とstepの構成が食い違う |
+| PRES-2 | 資源が足りない環境では2系統を順に流し、worker数をmemoryで絞る | 時間は延びるが、CPUとmemoryの少ない機械でも同じstepをすべて流せる | stepを省く: 検査が環境で変わり、合格の意味が揃わない |
+| PRES-3 | hostのmemoryとDockerのmemoryを分けて求める | 模擬containerはDockerのcgroupで動き、node-matrixはpreflightのcgroupで動く。片方の上限でもう片方を絞らない | 1つの値にまとめる: preflightのcgroupの上限で、その上限が掛からないcontainerまで絞る |
+
+#### 12.3.5 §12.3.4が関わるfile
+
+| File | 責任 |
+| --- | --- |
+| `scripts/preflight-resources.mjs` | 道具の確認、資源の求め方、構成の決め方（§12.3.4） |
+| `scripts/release-preflight.sh` | 構成に沿ったcontainerの作成、系統の並べ方、worker数の受け渡し、`summary.tsv`への記録 |
+| `scripts/ci-rehearsal/setup.sh` | `EPGS_REHEARSAL_MEMORY`でcontainerのmemoryの上限を受け取る（既定16 GiB） |
+| `test/server/application-runtime/spec/preflight-resources.spec.test.ts` | 構成の決め方、最低限と指定の誤りの失敗、道具の確認のcase |
+| `test/server/application-runtime/release-preflight-resources.integration.test.ts` | 実物の`release-preflight.sh`での構成の受け渡し、系統の並べ方、記録、stepを始めない失敗のcase |
+
 ### 12.4 Node.js acceptance
 
 Node.js 24と26の各matrix cellは、独立したfresh workspace（linked worktree）で次のsequenceを実行する。入口は
@@ -892,8 +963,8 @@ C0・C1の判定は`R9.9` / `AR-9.9`が表し、本機能の共有foundationが�
 
 ## 13. Numeric requirements traceability
 
-Runtimeが所有するRequirements 1から9の全70 Acceptance Criteriaを一行ずつ追跡する。R1からR8の53行は機能canonical case、R9の17行
-（9.1〜9.17）はRuntimeのfoundation/品質layerである。Requirements 10・11は§17.10で追跡する。
+Runtimeが所有するRequirements 1から9の全73 Acceptance Criteriaを一行ずつ追跡する。R1からR8の53行は機能canonical case、R9の20行
+（9.1〜9.20）はRuntimeのfoundation/品質layerである。Requirements 10・11は§17.10で追跡する。
 
 | Requirement ID | Design owner | Primary evidence |
 | -------------- | ------------ | ---------------- |
@@ -967,13 +1038,16 @@ Runtimeが所有するRequirements 1から9の全70 Acceptance Criteriaを一行
 | R9.15          | 12.3.2      | AR-9.15         |
 | R9.16          | 12.3.2、12.4 | AR-9.16         |
 | R9.17          | 12.3.2      | AR-9.17         |
+| R9.18          | 12.3.4      | AR-9.18         |
+| R9.19          | 12.3.4      | AR-9.19         |
+| R9.20          | 12.3.4      | AR-9.20         |
 
 ## 14. Feature Test Matrix
 
-以下の70 IDはすべて一意である。locatorは各IDを確かめるtest、または実行・レビューの手順を指す。R1からR8は53 canonical case、R9は17 quality layer
-（9.1〜9.17）である。
+以下の73 IDはすべて一意である。locatorは各IDを確かめるtest、または実行・レビューの手順を指す。R1からR8は53 canonical case、R9は20 quality layer
+（9.1〜9.20）である。
 
-AR-1.1〜AR-1.3と、AR-9.4・AR-9.6・AR-9.17以外のAR-9.xは、`[AR-n.m]`を題に持つtest caseが無い。
+AR-1.1〜AR-1.3と、AR-9.4・AR-9.6・AR-9.17〜AR-9.20以外のAR-9.xは、`[AR-n.m]`を題に持つtest caseが無い。
 locator列に書いたfile・実行手順・commandの結果が判定である。
 
 | AR ID   | Requirement | Layer | Canonical locator                                                              | 値・状態・時間・資源・境界              |
@@ -1048,6 +1122,9 @@ locator列に書いたfile・実行手順・commandの結果が判定である�
 | AR-9.15 | R9.15       | T     | `coverage-command-terminal.test.ts`と`compiled-snapshot-coverage.test.ts`の未commitの変更があるrunのcase | 失敗0、binding sidecarに`worktreeContent` |
 | AR-9.16 | R9.16       | T/N   | `coverage-command-terminal.test.ts`のnode-matrix CLIのcaseと、未commitの変更がある作業場所でのNode.js matrixの実行 | 候補の出所`worktree`・`argument`、artifactの`candidate`の記録 |
 | AR-9.17 | R9.17       | P     | `bash scripts/release-preflight.sh --only deps-prepare`を未commitの変更がある作業場所で実行（§12.3.2） | `summary.tsv`の`tree=`が開始時の`CANDIDATE`、containerの`HEAD^{tree}`が一致 |
+| AR-9.18 | R9.18       | T/G/P | `preflight-resources.spec.test.ts`の構成のcase、`release-preflight-resources.integration.test.ts`の受け渡しと並べ方のcase、`npm run preflight -- --all`（§12.3.4） | CPU帯が使えるCPUの中、containerの上限がmemory以下、同時か順か、worker数、`summary.tsv`の`# resources` |
+| AR-9.19 | R9.19       | T/G   | `preflight-resources.spec.test.ts`の最低限と指定の誤りのcase、`release-preflight-resources.integration.test.ts`の使えないCPU帯のcase | CPU 3個・memory 7 GiB未満・範囲外のCPU帯・重なるCPU帯で非0、stepを1つも始めない |
+| AR-9.20 | R9.20       | T/G   | `preflight-resources.spec.test.ts`の道具の確認のcase、`release-preflight-resources.integration.test.ts`のrootlessのDockerのcase | 選んだstepが使う道具だけを確かめ、足りないものを示して非0、stepを1つも始めない |
 
 記号は`S=unittest/spec`、`I=unittest/imp`、`G=integration`、`N=Node.js matrixの実行`、`R=設定・設計のレビュー確認`、
 `M=本表そのもの`、`T=coverageの計測の道具とtest基盤のtest`、`Q=品質判定`、`P=preflightの実行`である。AR-9.7はRuntime行のfeature-level completionを表し、
@@ -1263,7 +1340,7 @@ test/server/application-runtime/
 - `scripts/ci-rehearsal/job.sh` — `serialized` の locator は `<layer>/<test/server 配下の path>` の形で対応する。
 - `scripts/ci-rehearsal/setup.sh`、`scripts/preflight-clean-stale-containers.sh` — 残骸の pattern は `epgstation-docker-check-*`・`epgs-docker-check-*` で、network と container も回収する。
 - `scripts/release-preflight.sh` — `docker-gate-node24`・`deps-prepare` の説明文は確認の内容を示す。
-- `scripts/release-preflight.sh` — `--all` は `server-check`（root の lint・typecheck・format check を container A で実行）を `deps-prepare` の後・`docker-gate-node24` の前に持つ。`--all` の並列 group は container A の `server-check` → `docker-gate-node24` と container B の `client` → `client-browser` の 2 系統とし、その後に node-matrix を単独で流す。`CANDIDATE` は node-matrix へ `--candidate`、模擬 runner を使う step（`deps-prepare`・`server-check`・`docker-gate-node24`・`client`・`client-browser`）へ `tree:$CANDIDATE` で渡す。
+- `scripts/release-preflight.sh` — `--all` は `server-check`（root の lint・typecheck・format check を container A で実行）を `deps-prepare` の後・`docker-gate-node24` の前に持つ。`--all` の系統は container A の `server-check` → `docker-gate-node24` と container B の `client` → `client-browser` の 2 つとし（同時か順かは §12.3.4）、その後に node-matrix を単独で流す。`CANDIDATE` は node-matrix へ `--candidate`、模擬 runner を使う step（`deps-prepare`・`server-check`・`docker-gate-node24`・`client`・`client-browser`）へ `tree:$CANDIDATE` で渡す。
 
 ### 17.6 確認の流れ
 
@@ -1289,10 +1366,10 @@ sequenceDiagram
 | step | 内容 | 実行場所 |
 | --- | --- | --- |
 | `deps-prepare` | base・OS の package の層・npm の層を揃える。外部取得はこの step だけ。失敗は 75 で、test の step は始めない | container A の nested daemon と host の daemon |
-| `server-check` | root の lint・typecheck・format check（PR の server `check` job と同じ検査） | container A（hosted runner 模擬、0-3 CPU） |
-| `docker-gate-node24` | `docker-image.integration.test.ts` を単独で実行。Debian・Alpine の構築・起動・応答・片付け | container A（hosted runner 模擬、0-3 CPU） |
+| `server-check` | root の lint・typecheck・format check（PR の server `check` job と同じ検査） | container A（hosted runner 模擬、CPU 帯は §12.3.4） |
+| `docker-gate-node24` | `docker-image.integration.test.ts` を単独で実行。Debian・Alpine の構築・起動・応答・片付け | container A（hosted runner 模擬、CPU 帯は §12.3.4） |
 
-- `--all` の並列 group は 2 系統で、container A の `server-check` → `docker-gate-node24` と、container B の `client` → `client-browser`。container A の系統は並列 group の中でクリティカルパス（client → client-browser、続く node-matrix）の外にある。node-matrix は各 cell が各 test を一度ずつ流す構造である（§12.4）。
+- `--all` の系統は 2 つで、container A の `server-check` → `docker-gate-node24` と、container B の `client` → `client-browser`。2 系統を同時に流すか順に流すかは §12.3.4 の構成で決まる。同時に流すとき、container A の系統はクリティカルパス（client → client-browser、続く node-matrix）の外にある。node-matrix は各 cell が各 test を一度ずつ流す構造である（§12.4）。
 - `docker-image.integration.test.ts` は integration の一部として node-matrix の Node 24 の回でも host の daemon で流れ、Node 26 の回では除外 env で外す。
 - `--only docker-gate-node24` の前に `--only deps-prepare` が要る運用は変えない。
 
