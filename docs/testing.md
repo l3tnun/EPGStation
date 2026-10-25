@@ -184,8 +184,8 @@ worker 数は、CPU の数と、memory から求めた上限（(memory − 1 GiB
 
 | 対象 | CPU からの上限 | 1 worker の量 | 同時に流すときの上限 |
 | --- | --- | --- | --- |
-| `node-matrix` の server test（`EPGSTATION_TEST_MAX_WORKERS`） | 使える CPU の数 | host の memory から 2 GiB | 同じ |
-| `client` の `coverage:gate`（`EPGSTATION_COVERAGE_GATE_MAX_WORKERS`） | container B の CPU 数と 8 の小さい方 | container B の上限から 1.5 GiB | 4 |
+| `node-matrix` の server test（`EPGSTATION_TEST_MAX_WORKERS`） | 使える CPU の数 | host の memory から 0.75 GiB | 同じ |
+| `client` の `coverage:gate`（`EPGSTATION_COVERAGE_GATE_MAX_WORKERS`） | container B の CPU 数と 8 の小さい方 | container B の上限から 0.75 GiB | 4 |
 | `client-browser` の Playwright（`PLAYWRIGHT_WORKERS`） | container B の CPU 数 − 2 を 4〜6 に収めた数 | container B の上限から 1 GiB | 2 |
 
 同時に流すときの上限は、`docker-gate-node24`（CPU の pinning では隔離できない I/O・メモリ帯域の重い job）と client の系統が同時に走るときに timeout しない値である。`--only` で選んだ step は 1 つずつ流し、この上限を掛けない。

@@ -201,12 +201,12 @@ describe('[AR-9.18] release-preflight.sh passes the decided resources to every s
             'end client-static',
             'start client-browser coverage=4 playwright=4',
             'end client-browser',
-            'node-matrix workers=3',
+            'node-matrix workers=4',
         ]);
         const lines = await summary();
         expect(lines[1]).toBe(
             `# resources cpus=${band} host-memory=${MACHINE_MEMORY} docker-memory=${MACHINE_MEMORY} chains=serial ` +
-                `cpuset-a=${band} cpuset-b=${band} container-memory=${MACHINE_MEMORY} server-workers=3 ` +
+                `cpuset-a=${band} cpuset-b=${band} container-memory=${MACHINE_MEMORY} server-workers=4 ` +
                 'client-coverage-workers=4 playwright-workers=4 parallel-client-coverage-workers=4 parallel-playwright-workers=2',
         );
         expect(lines.slice(2).map(line => line.split('\t')[3])).toEqual(Array(8).fill('exit=0'));
@@ -233,7 +233,7 @@ describe('[AR-9.18] release-preflight.sh passes the decided resources to every s
         expect(recorded).toContain('start client-static coverage=2 playwright=2');
         expect(recorded).toContain('start client-browser coverage=2 playwright=2');
         expect(recorded.indexOf('start client-static coverage=2 playwright=2')).toBeLessThan(recorded.indexOf('end server-check'));
-        expect(recorded.at(-1)).toBe('node-matrix workers=3');
+        expect(recorded.at(-1)).toBe('node-matrix workers=4');
         expect((await summary())[1]).toContain(' chains=parallel ');
     }, 60_000);
 });

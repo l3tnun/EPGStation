@@ -47,7 +47,7 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
             cpusetA: '0-3',
             cpusetB: '4-11',
             containerMemory: 16 * GIB,
-            serverWorkers: 8,
+            serverWorkers: 16,
             clientCoverageWorkers: 8,
             playwrightWorkers: 6,
             parallelClientCoverageWorkers: 4,
@@ -75,7 +75,7 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
             cpusetA: '0-3',
             cpusetB: '0-3',
             containerMemory: 7.5 * GIB,
-            serverWorkers: 3,
+            serverWorkers: 4,
             clientCoverageWorkers: 4,
             playwrightWorkers: 4,
         });
@@ -99,9 +99,10 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
         ).toMatchObject({ cpus: '2-3,5-14', parallel: true, cpusetA: '2-3,5-6', cpusetB: '7-14' });
     });
 
-    it('caps the server test workers by host memory and never goes below one worker', () => {
-        expect(plan({ cpus: range(0, 15), hostMemory: 11 * GIB, dockerMemory: 32 * GIB }).serverWorkers).toBe(5);
-        expect(plan({ cpus: range(0, 15), hostMemory: 7 * GIB, dockerMemory: 32 * GIB }).serverWorkers).toBe(3);
+    it('caps the server test workers by host memory and by the allowed CPUs', () => {
+        expect(plan({ cpus: range(0, 15), hostMemory: 7 * GIB, dockerMemory: 32 * GIB }).serverWorkers).toBe(8);
+        expect(plan({ cpus: range(0, 15), hostMemory: 8 * GIB, dockerMemory: 32 * GIB }).serverWorkers).toBe(9);
+        expect(plan({ cpus: range(0, 15), hostMemory: 11 * GIB, dockerMemory: 32 * GIB }).serverWorkers).toBe(13);
         expect(plan({ cpus: range(0, 3), hostMemory: 64 * GIB, dockerMemory: 64 * GIB }).serverWorkers).toBe(4);
     });
 
@@ -113,7 +114,9 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
             dockerMemory: 8 * GIB,
             parallel: false,
             containerMemory: 8 * GIB,
-            serverWorkers: 3,
+            serverWorkers: 9,
+            clientCoverageWorkers: 8,
+            playwrightWorkers: 6,
         });
         expect(
             plan({ cpus: range(0, 3), hostMemory: 8 * GIB, dockerMemory: 8 * GIB }, { EPGS_PREFLIGHT_MEMORY: '7680m' }),
@@ -152,7 +155,7 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
             'PREFLIGHT_CPUSET_A=0-3',
             'PREFLIGHT_CPUSET_B=4-11',
             `PREFLIGHT_CONTAINER_MEMORY=${16 * GIB}`,
-            'PREFLIGHT_SERVER_WORKERS=8',
+            'PREFLIGHT_SERVER_WORKERS=16',
             'PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS=8',
             'PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS=6',
             'PREFLIGHT_PARALLEL_CLIENT_COVERAGE_GATE_MAX_WORKERS=4',
@@ -161,7 +164,7 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
         ]);
         expect(planRecord(decided)).toBe(
             `# resources cpus=0-15 host-memory=${18 * GIB} docker-memory=${30 * GIB} chains=parallel cpuset-a=0-3 cpuset-b=4-11 ` +
-                `container-memory=${16 * GIB} server-workers=8 client-coverage-workers=8 playwright-workers=6 ` +
+                `container-memory=${16 * GIB} server-workers=16 client-coverage-workers=8 playwright-workers=6 ` +
                 'parallel-client-coverage-workers=4 parallel-playwright-workers=2',
         );
     });

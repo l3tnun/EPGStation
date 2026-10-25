@@ -20,8 +20,11 @@ const CONTAINER_B_MAX_CPUS = 8;
 const CONTAINER_MEMORY_LIMIT = 16 * GIB;
 // worker 数の memory からの上限は (memory − MEMORY_RESERVE) ÷ 1 worker の量。
 const MEMORY_RESERVE = 1 * GIB;
-const SERVER_WORKER_MEMORY = 2 * GIB;
-const CLIENT_COVERAGE_WORKER_MEMORY = 1.5 * GIB;
+// host の memory の上限 8 GiB・swap 無しで、server test の 8 workers の peak は 4.0〜4.3 GB だった。
+const SERVER_WORKER_MEMORY = 0.75 * GIB;
+// CPU 8 個・16 GiB の container B で、coverage:gate の 8 workers を含む client の job の peak は 4.65 GB、
+// Playwright の 6 workers を含む client-browser の job の peak は 6.28 GB だった。
+const CLIENT_COVERAGE_WORKER_MEMORY = 0.75 * GIB;
 const PLAYWRIGHT_WORKER_MEMORY = 1 * GIB;
 // docker-gate-node24 と client の系統を同時に流すときの上限。docker-gate-node24 は image の build で disk I/O と memory 帯域を
 // 使い、その競合は CPU 帯の分離では避けられない。同時に流すと、coverage:gate の既定（8 workers）では

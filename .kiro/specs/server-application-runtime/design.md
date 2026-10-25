@@ -850,8 +850,8 @@ worker数は、CPUの数とmemoryから求めた上限の小さい方にする�
 
 | 対象 | 変数 | CPUからの上限 | memoryと1 workerの量 | 同時に流すときの上限 |
 | --- | --- | --- | --- | --- |
-| node-matrixのserver test | `EPGSTATION_TEST_MAX_WORKERS` | `n` | hostのmemory、2 GiB | 同じ |
-| `client`の`coverage:gate` | `EPGSTATION_COVERAGE_GATE_MAX_WORKERS` | container BのCPU数と8の小さい方 | container Bの上限、1.5 GiB | 4 |
+| node-matrixのserver test | `EPGSTATION_TEST_MAX_WORKERS` | `n` | hostのmemory、0.75 GiB | 同じ |
+| `client`の`coverage:gate` | `EPGSTATION_COVERAGE_GATE_MAX_WORKERS` | container BのCPU数と8の小さい方 | container Bの上限、0.75 GiB | 4 |
 | `client-browser`のPlaywright | `PLAYWRIGHT_WORKERS` | container BのCPU数−2を4〜6に収めた数 | container Bの上限、1 GiB | 2 |
 
 同時に流すときの上限は、`docker-gate-node24`と`client`の系統が同時に走るときのdisk I/O・memory帯域の競合を避ける値で、
