@@ -113,7 +113,7 @@ describe('Dashboard item routes and thumbnails', () => {
       'data-dashboard-recorded-card',
       'true',
     )
-    expect(screen.getByText('2/1/0 1024 bytes')).toBeVisible()
+    expect(screen.getByText('2/1/0 1.0KB')).toBeVisible()
     expect(screen.queryByText('Recorded description')).not.toBeInTheDocument()
 
     fireEvent.click(recordingButton)
