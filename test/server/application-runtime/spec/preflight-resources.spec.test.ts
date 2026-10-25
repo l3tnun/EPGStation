@@ -19,53 +19,73 @@ const GIB = 1024 ** 3;
 const range = (first: number, last: number): number[] =>
     Array.from({ length: last - first + 1 }, (_, index) => first + index);
 
-const plan = (
-    machine: { cpus: number[]; hostMemory: number; dockerMemory: number },
-    env: Record<string, string> = {},
-) => {
+type Machine = { cpus: number[]; cores?: number[][]; hostMemory: number; dockerMemory: number };
+
+const plan = (machine: Machine, env: Record<string, string> = {}) => {
     const result = planPreflightResources(machine, env);
     if (!result.ok) throw new Error(`unexpected failure: ${result.errors.join(' / ')}`);
     return result.plan;
 };
 
-const failure = (
-    machine: { cpus: number[]; hostMemory: number; dockerMemory: number },
-    env: Record<string, string> = {},
-): string[] => {
+const failure = (machine: Machine, env: Record<string, string> = {}): string[] => {
     const result = planPreflightResources(machine, env);
     if (result.ok) throw new Error('unexpected success');
     return result.errors;
 };
 
+// 8 core・16 thread の機械で、CPU i と i+8 が同じ物理 core の thread であるときの core の組。
+const smtCores = range(0, 7).map(core => [core, core + 8]);
+
 describe('[AR-9.18] preflight resources are decided from the CPUs and memory of the machine it runs on', () => {
-    it('runs both chains at once on 16 CPUs and 30 GiB, with container A on the first 4 CPUs and container B on the next 8', () => {
-        expect(plan({ cpus: range(0, 15), hostMemory: 18 * GIB, dockerMemory: 30 * GIB })).toEqual({
+    it('runs the chains at once on 8 cores with SMT, keeping container B off the cores of container A and one Playwright worker per core', () => {
+        expect(plan({ cpus: range(0, 15), cores: smtCores, hostMemory: 18 * GIB, dockerMemory: 30 * GIB })).toEqual({
             cpus: '0-15',
             hostMemory: 18 * GIB,
             dockerMemory: 30 * GIB,
             parallel: true,
             cpusetA: '0-3',
-            cpusetB: '4-11',
+            cpusetB: '4-7,12-15',
+            cpusetBrowser: '0-15',
             containerMemory: 16 * GIB,
             serverWorkers: 16,
             clientCoverageWorkers: 8,
-            playwrightWorkers: 6,
             parallelClientCoverageWorkers: 4,
-            parallelPlaywrightWorkers: 2,
+            playwrightWorkers: 8,
         });
     });
 
-    it('runs both chains at once on 8 CPUs, giving container B the 4 CPUs after container A', () => {
+    it('gives container B every CPU after container A when each CPU is its own core', () => {
+        expect(plan({ cpus: range(0, 15), hostMemory: 32 * GIB, dockerMemory: 32 * GIB })).toMatchObject({
+            parallel: true,
+            cpusetA: '0-3',
+            cpusetB: '4-15',
+            cpusetBrowser: '0-15',
+            playwrightWorkers: 15,
+        });
+    });
+
+    it('runs the chains at once on 8 cores and gives client-browser all 8 CPUs', () => {
         expect(plan({ cpus: range(0, 7), hostMemory: 32 * GIB, dockerMemory: 32 * GIB })).toMatchObject({
             parallel: true,
             cpusetA: '0-3',
             cpusetB: '4-7',
+            cpusetBrowser: '0-7',
             containerMemory: 16 * GIB,
             serverWorkers: 8,
-            clientCoverageWorkers: 4,
-            playwrightWorkers: 4,
+            clientCoverageWorkers: 8,
             parallelClientCoverageWorkers: 4,
-            parallelPlaywrightWorkers: 2,
+            playwrightWorkers: 8,
+        });
+    });
+
+    it('runs the chains one after the other when every core is shared with container A', () => {
+        const cores = range(0, 3).map(core => [core, core + 4]);
+        expect(plan({ cpus: range(0, 7), cores, hostMemory: 32 * GIB, dockerMemory: 32 * GIB })).toMatchObject({
+            parallel: false,
+            cpusetA: '0-3',
+            cpusetB: '0-7',
+            cpusetBrowser: '0-7',
+            playwrightWorkers: 4,
         });
     });
 
@@ -74,17 +94,22 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
             parallel: false,
             cpusetA: '0-3',
             cpusetB: '0-3',
+            cpusetBrowser: '0-3',
             containerMemory: 7.5 * GIB,
             serverWorkers: 4,
             clientCoverageWorkers: 4,
+            parallelClientCoverageWorkers: 4,
             playwrightWorkers: 4,
         });
     });
 
     it('runs the chains one after the other when Docker has less than 24 GiB, even with 16 CPUs', () => {
-        expect(
-            plan({ cpus: range(0, 15), hostMemory: 32 * GIB, dockerMemory: 24 * GIB - 1 }),
-        ).toMatchObject({ parallel: false, cpusetA: '0-3', cpusetB: '0-7', containerMemory: 16 * GIB });
+        expect(plan({ cpus: range(0, 15), hostMemory: 32 * GIB, dockerMemory: 24 * GIB - 1 })).toMatchObject({
+            parallel: false,
+            cpusetA: '0-3',
+            cpusetB: '0-15',
+            containerMemory: 16 * GIB,
+        });
         expect(plan({ cpus: range(0, 15), hostMemory: 32 * GIB, dockerMemory: 24 * GIB })).toMatchObject({
             parallel: true,
         });
@@ -96,7 +121,13 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
     it('assigns CPUs in number order when the allowed CPUs are not contiguous', () => {
         expect(
             plan({ cpus: [14, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13], hostMemory: 32 * GIB, dockerMemory: 32 * GIB }),
-        ).toMatchObject({ cpus: '2-3,5-14', parallel: true, cpusetA: '2-3,5-6', cpusetB: '7-14' });
+        ).toMatchObject({
+            cpus: '2-3,5-14',
+            parallel: true,
+            cpusetA: '2-3,5-6',
+            cpusetB: '7-14',
+            cpusetBrowser: '2-3,5-14',
+        });
     });
 
     it('caps the server test workers by host memory and by the allowed CPUs', () => {
@@ -116,7 +147,7 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
             containerMemory: 8 * GIB,
             serverWorkers: 9,
             clientCoverageWorkers: 8,
-            playwrightWorkers: 6,
+            playwrightWorkers: 7,
         });
         expect(
             plan({ cpus: range(0, 3), hostMemory: 8 * GIB, dockerMemory: 8 * GIB }, { EPGS_PREFLIGHT_MEMORY: '7680m' }),
@@ -126,63 +157,81 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
         ).toMatchObject({ hostMemory: 8 * GIB, dockerMemory: 8 * GIB });
     });
 
-    it('follows the CPU bands, the chain order and the parallel worker caps given by the environment', () => {
+    it('follows the CPU bands, the chain order and the parallel coverage cap given by the environment', () => {
         expect(
-            plan({ cpus: range(0, 15), hostMemory: 32 * GIB, dockerMemory: 32 * GIB }, { EPGS_PREFLIGHT_PARALLEL: '0' }),
-        ).toMatchObject({ parallel: false, cpusetA: '0-3', cpusetB: '0-7' });
+            plan(
+                { cpus: range(0, 15), hostMemory: 32 * GIB, dockerMemory: 32 * GIB },
+                { EPGS_PREFLIGHT_PARALLEL: '0' },
+            ),
+        ).toMatchObject({ parallel: false, cpusetA: '0-3', cpusetB: '0-15', cpusetBrowser: '0-15' });
         expect(
             plan(
                 { cpus: range(0, 3), hostMemory: 8 * GIB, dockerMemory: 8 * GIB },
                 { EPGS_PREFLIGHT_PARALLEL: '1', EPGS_PREFLIGHT_CPUSET_A: '0-1', EPGS_PREFLIGHT_CPUSET_B: '2-3' },
             ),
-        ).toMatchObject({ parallel: true, cpusetA: '0-1', cpusetB: '2-3', clientCoverageWorkers: 2, playwrightWorkers: 4 });
+        ).toMatchObject({
+            parallel: true,
+            cpusetA: '0-1',
+            cpusetB: '2-3',
+            cpusetBrowser: '0-3',
+            clientCoverageWorkers: 4,
+            parallelClientCoverageWorkers: 2,
+            playwrightWorkers: 4,
+        });
         expect(
             plan(
                 { cpus: range(0, 15), hostMemory: 32 * GIB, dockerMemory: 32 * GIB },
-                {
-                    EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS: '3',
-                    EPGS_PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS: '1',
-                },
+                { EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS: '3' },
             ),
-        ).toMatchObject({ parallelClientCoverageWorkers: 3, parallelPlaywrightWorkers: 1 });
+        ).toMatchObject({ parallelClientCoverageWorkers: 3 });
     });
 
     it('writes the decision as shell assignments and as the record line of summary.tsv', () => {
-        const decided = plan({ cpus: range(0, 15), hostMemory: 18 * GIB, dockerMemory: 30 * GIB });
+        const decided = plan({ cpus: range(0, 15), cores: smtCores, hostMemory: 18 * GIB, dockerMemory: 30 * GIB });
 
         expect(planShellAssignments(decided).split('\n')).toEqual([
             'PREFLIGHT_PARALLEL=1',
             'PREFLIGHT_CPUSET_A=0-3',
-            'PREFLIGHT_CPUSET_B=4-11',
+            'PREFLIGHT_CPUSET_B=4-7,12-15',
+            'PREFLIGHT_CPUSET_BROWSER=0-15',
             `PREFLIGHT_CONTAINER_MEMORY=${16 * GIB}`,
             'PREFLIGHT_SERVER_WORKERS=16',
             'PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS=8',
-            'PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS=6',
             'PREFLIGHT_PARALLEL_CLIENT_COVERAGE_GATE_MAX_WORKERS=4',
-            'PREFLIGHT_PARALLEL_CLIENT_PLAYWRIGHT_WORKERS=2',
+            'PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS=8',
             `PREFLIGHT_RESOURCES_RECORD='${planRecord(decided)}'`,
         ]);
         expect(planRecord(decided)).toBe(
-            `# resources cpus=0-15 host-memory=${18 * GIB} docker-memory=${30 * GIB} chains=parallel cpuset-a=0-3 cpuset-b=4-11 ` +
-                `container-memory=${16 * GIB} server-workers=16 client-coverage-workers=8 playwright-workers=6 ` +
-                'parallel-client-coverage-workers=4 parallel-playwright-workers=2',
+            `# resources cpus=0-15 host-memory=${18 * GIB} docker-memory=${30 * GIB} chains=parallel cpuset-a=0-3 ` +
+                `cpuset-b=4-7,12-15 cpuset-b-browser=0-15 container-memory=${16 * GIB} server-workers=16 ` +
+                'client-coverage-workers=8 parallel-client-coverage-workers=4 playwright-workers=8',
         );
     });
 
-    it('reads the allowed CPUs, the smallest memory limit on the cgroup path and the Docker memory', () => {
+    it('reads the allowed CPUs, their physical cores, the smallest memory limit on the cgroup path and the Docker memory', () => {
         const files: Record<string, string> = {
-            '/proc/self/status': 'Name:\tnode\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-3,8-11\nMems_allowed_list:\t0\n',
+            '/proc/self/status':
+                'Name:\tnode\nCpus_allowed:\tffff\nCpus_allowed_list:\t0-3,8-11\nMems_allowed_list:\t0\n',
             '/proc/meminfo': 'MemTotal:       32000000 kB\nMemFree:        1000 kB\n',
             // cgroup v2 の行（`0` と空の controller と path を `:` でつなぐ）。
             '/proc/self/cgroup': `${['0', '', '/user.slice/work.slice/run.service'].join(':')}\n`,
             '/sys/fs/cgroup/user.slice/work.slice/run.service/memory.max': 'max\n',
             '/sys/fs/cgroup/user.slice/work.slice/memory.max': `${18 * GIB}\n`,
             '/sys/fs/cgroup/user.slice/memory.max': `${20 * GIB}\n`,
+            // CPU 0 と 8、1 と 9 は同じ物理 core。CPU 2・3・10 は 1 core に 1 thread、CPU 11 は読めない。
+            '/sys/devices/system/cpu/cpu0/topology/thread_siblings_list': '0,8\n',
+            '/sys/devices/system/cpu/cpu8/topology/thread_siblings_list': '0,8\n',
+            '/sys/devices/system/cpu/cpu1/topology/thread_siblings_list': '1,9\n',
+            '/sys/devices/system/cpu/cpu9/topology/thread_siblings_list': '1,9\n',
+            '/sys/devices/system/cpu/cpu2/topology/thread_siblings_list': '2\n',
+            '/sys/devices/system/cpu/cpu3/topology/thread_siblings_list': '3\n',
+            '/sys/devices/system/cpu/cpu10/topology/thread_siblings_list': '10\n',
         };
         const readText = (path: string): string | undefined => files[path];
 
         expect(detectResources({ readText, dockerMemory: () => 30 * GIB })).toEqual({
             cpus: [0, 1, 2, 3, 8, 9, 10, 11],
+            cores: [[0, 8], [1, 9], [2], [3], [10], [11]],
             hostMemory: 18 * GIB,
             dockerMemory: 30 * GIB,
         });
@@ -190,8 +239,8 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
             detectResources({
                 readText: path => (path.startsWith('/sys/') ? undefined : readText(path)),
                 dockerMemory: () => 30 * GIB,
-            }).hostMemory,
-        ).toBe(32000000 * 1024);
+            }),
+        ).toMatchObject({ cores: [[0], [1], [2], [3], [8], [9], [10], [11]], hostMemory: 32000000 * 1024 });
     });
 });
 
@@ -217,9 +266,12 @@ describe('[AR-9.19] preflight refuses to start on a machine below the minimum or
     });
 
     it('fails when a given CPU band reaches outside the allowed CPUs or is malformed', () => {
-        expect(failure({ cpus: range(0, 7), hostMemory: 32 * GIB, dockerMemory: 32 * GIB }, { EPGS_PREFLIGHT_CPUSET_B: '4-11' })).toEqual([
-            'EPGS_PREFLIGHT_CPUSET_B=4-11 に、使える CPU（0-7）の外の CPU があります',
-        ]);
+        expect(
+            failure(
+                { cpus: range(0, 7), hostMemory: 32 * GIB, dockerMemory: 32 * GIB },
+                { EPGS_PREFLIGHT_CPUSET_B: '4-11' },
+            ),
+        ).toEqual(['EPGS_PREFLIGHT_CPUSET_B=4-11 に、使える CPU（0-7）の外の CPU があります']);
         expect(failure(machine, { EPGS_PREFLIGHT_CPUSET_A: 'zero' })).toEqual([
             'EPGS_PREFLIGHT_CPUSET_A=zero は CPU 帯の書式（例: 0-3,8）ではありません',
         ]);
@@ -233,7 +285,11 @@ describe('[AR-9.19] preflight refuses to start on a machine below the minimum or
             '2 系統を同時に流すのに、container A（0-3）と B（2-9）の CPU 帯が重なっています',
         ]);
         expect(
-            plan(machine, { EPGS_PREFLIGHT_PARALLEL: '0', EPGS_PREFLIGHT_CPUSET_A: '0-3', EPGS_PREFLIGHT_CPUSET_B: '2-9' }),
+            plan(machine, {
+                EPGS_PREFLIGHT_PARALLEL: '0',
+                EPGS_PREFLIGHT_CPUSET_A: '0-3',
+                EPGS_PREFLIGHT_CPUSET_B: '2-9',
+            }),
         ).toMatchObject({ parallel: false, cpusetA: '0-3', cpusetB: '2-9' });
     });
 
@@ -244,8 +300,8 @@ describe('[AR-9.19] preflight refuses to start on a machine below the minimum or
         expect(failure(machine, { EPGS_PREFLIGHT_PARALLEL: 'yes' })).toEqual([
             'EPGS_PREFLIGHT_PARALLEL=yes は 0 か 1 ではありません',
         ]);
-        expect(failure(machine, { EPGS_PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS: '0' })).toEqual([
-            'EPGS_PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS=0 は 1 以上の整数ではありません',
+        expect(failure(machine, { EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS: '0' })).toEqual([
+            'EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS=0 は 1 以上の整数ではありません',
         ]);
     });
 });
@@ -276,7 +332,9 @@ describe('[AR-9.20] preflight checks the tools of the selected steps before star
     });
 
     it('names each missing tool and the step that needs it', () => {
-        expect(missingTools(['rehearsal-setup', 'node-matrix'], probe({ python3Yaml: false, mise: false }).probe)).toEqual([
+        expect(
+            missingTools(['rehearsal-setup', 'node-matrix'], probe({ python3Yaml: false, mise: false }).probe),
+        ).toEqual([
             'python3 と PyYAML が使えません（rehearsal-setup が workflow の file を読むのに使います）',
             'mise が使えません（node-matrix が Node 24 と 26 を使うのに使います）',
         ]);

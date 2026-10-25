@@ -828,6 +828,8 @@ hosted CIの`check`を手元で通す用途）と`<40桁のsha>`（push済みの
 **使える資源の求め方。**
 
 -   CPU: `/proc/self/status`の`Cpus_allowed_list`（`taskset`などで絞った実行ではその範囲）。
+-   物理core: 各CPUの`/sys/devices/system/cpu/cpu<N>/topology/thread_siblings_list`。値が同じCPUは同じ物理coreの thread とみなす。
+    読めないCPUは、それだけで1つの物理coreとみなす。
 -   hostのmemory: `/proc/meminfo`の`MemTotal`と、自分のcgroupとその祖先の`memory.max`の最小。node-matrixのworker数に使う。
 -   Dockerのmemory: `docker info`の`MemTotal`。模擬containerの上限と、2系統を同時に流すかどうかに使う。
 -   `EPGS_PREFLIGHT_MEMORY`（`8g`・`7680m`のような数と単位、またはbyte数）を指定すると、hostとDockerのmemoryをそれぞれその値以下にする。
@@ -835,34 +837,43 @@ hosted CIの`check`を手元で通す用途）と`<40桁のsha>`（push済みの
 **最低限（AC 19）。** 使えるCPUが4個（hosted runnerのCPU数）以上、hostとDockerのmemoryがどちらも7 GiB（8 GBの機械が報告する
 量）以上であることを求める。
 
-**構成（AC 18）。** 使えるCPUを番号の順に並べ、先頭から割り当てる。`n`は使えるCPUの数、`M`はDockerのmemoryである。
+**構成（AC 18）。** 使えるCPUを番号の順に並べる。`n`は使えるCPUの数、`M`はDockerのmemoryである。2系統が同時に走るときは、
+物理coreを共有しないCPU帯を分け、それ以外のときは、走っているstepに使えるCPUをすべて渡す。
 
-| 項目 | 2系統を同時に流すとき | 順に流すとき |
-| --- | --- | --- |
-| 選び方 | `n ≥ 8`かつ`M ≥ 24 GiB` | それ以外 |
-| container AのCPU帯 | 先頭の4個 | 先頭の4個 |
-| container BのCPU帯 | container Aの次から最大8個 | 先頭から最大8個 |
-| 各containerのmemoryの上限 | 16 GiBと`M`の小さい方 | 16 GiBと`M`の小さい方 |
-| 実行の順 | `stale-containers` → `rehearsal-setup` → `deps-prepare` → [A: `server-check` → `docker-gate-node24`] と [B: `client` → `client-browser`] を同時 → `node-matrix` | 同じ並びで、Aの系統が終わってからBの系統を流す |
+| 項目 | 値 |
+| --- | --- |
+| container AのCPU帯 | 先頭の4個 |
+| 独立の帯 | container AのCPUと物理coreを共有しない、使えるCPUのすべて |
+| 2系統を同時に流す条件 | 独立の帯が4個以上、かつ`M ≥ 24 GiB` |
+| container Bの`client`のCPU帯 | 同時に流すときは独立の帯、順に流すときは使えるCPUのすべて |
+| container Bの`client-browser`のCPU帯 | 使えるCPUのすべて |
+| 各containerのmemoryの上限 | 16 GiBと`M`の小さい方 |
+
+`--all`の実行の順は、`stale-containers` → `rehearsal-setup` → `deps-prepare` → [A: `server-check` → `docker-gate-node24`] と
+[B: `client`]（同時に流すときは同時、順に流すときはAの系統の後にB） → `client-browser` → `node-matrix`である。
+`client-browser`は、Aの系統と`client`がともに終わってから始まる。container BのCPU帯は、`client`と`client-browser`の各stepの
+初めに、そのstepのCPU帯へ`docker update --cpuset-cpus`で合わせる。`--only`で選んだstepは指定の順に1つずつ流し、`client`にも
+使えるCPUのすべてを渡す。
 
 worker数は、CPUの数とmemoryから求めた上限の小さい方にする（1未満にはしない）。memoryから求める上限は「(memory − 1 GiB) ÷ 1 worker
 の量」の切り捨てである。
 
-| 対象 | 変数 | CPUからの上限 | memoryと1 workerの量 | 同時に流すときの上限 |
-| --- | --- | --- | --- | --- |
-| node-matrixのserver test | `EPGSTATION_TEST_MAX_WORKERS` | `n` | hostのmemory、0.75 GiB | 同じ |
-| `client`の`coverage:gate` | `EPGSTATION_COVERAGE_GATE_MAX_WORKERS` | container BのCPU数と8の小さい方 | container Bの上限、0.75 GiB | 4 |
-| `client-browser`のPlaywright | `PLAYWRIGHT_WORKERS` | container BのCPU数−2を4〜6に収めた数 | container Bの上限、1 GiB | 2 |
+| 対象 | 変数 | CPUからの上限 | memoryと1 workerの量 |
+| --- | --- | --- | --- |
+| node-matrixのserver test | `EPGSTATION_TEST_MAX_WORKERS` | `n` | hostのmemory、0.75 GiB |
+| `client`の`coverage:gate` | `EPGSTATION_COVERAGE_GATE_MAX_WORKERS` | `client`のCPU帯のCPU数と8の小さい方。同時に流すときは4以下 | container Bの上限、0.75 GiB |
+| `client-browser`のPlaywright | `PLAYWRIGHT_WORKERS` | 使えるCPUの物理coreの数 | container Bの上限、1 GiB |
 
-同時に流すときの上限は、`docker-gate-node24`と`client`の系統が同時に走るときのdisk I/O・memory帯域の競合を避ける値で、
-CPU帯の分離では避けられない。`--only`で選んだstepは指定の順に1つずつ流し、同時に流すときの上限を掛けない。
+同時に流すときの`coverage:gate`の上限4は、`docker-gate-node24`のimageのbuildとのdisk I/O・memory帯域の競合を避ける値で、
+CPU帯の分離では避けられない。
 
-**指定による上書き。** `EPGS_PREFLIGHT_CPUSET_A`・`EPGS_PREFLIGHT_CPUSET_B`（CPU帯）、`EPGS_PREFLIGHT_PARALLEL`（`1`で同時、`0`で順）、
-`EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS`・`EPGS_PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS`（同時に流すときの上限）で決め打ちできる。
-CPU帯の指定が使えるCPUの外を含むとき、書式が誤っているとき、同時に流す指定でAとBのCPU帯が重なるときは、AC 19の失敗とする。
+**指定による上書き。** `EPGS_PREFLIGHT_CPUSET_A`（container AのCPU帯）、`EPGS_PREFLIGHT_CPUSET_B`（同時に流すときのcontainer Bの
+`client`のCPU帯）、`EPGS_PREFLIGHT_PARALLEL`（`1`で同時、`0`で順）、`EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS`（同時に流す
+ときの`coverage:gate`の上限）で決め打ちできる。CPU帯の指定が使えるCPUの外を含むとき、書式が誤っているとき、同時に流す指定でAと
+BのCPU帯が重なるときは、AC 19の失敗とする。
 
-**記録。** `summary.tsv`の2行目に、`# resources`に続けて、使えるCPU、hostとDockerのmemory、同時か順か、AとBのCPU帯、containerの
-memoryの上限、各worker数を書く。
+**記録。** `summary.tsv`の2行目に、`# resources`に続けて、使えるCPU、hostとDockerのmemory、同時か順か、AのCPU帯、Bの`client`と
+`client-browser`のCPU帯、containerのmemoryの上限、各worker数を書く。
 
 **決定。**
 
@@ -871,6 +882,8 @@ memoryの上限、各worker数を書く。
 | PRES-1 | 構成は開始時に1度だけ求め、全stepで使う | 途中で他のprocessが資源を使っても、step間で構成が揃い、記録が全stepを表す | stepごとに求める: 記録とstepの構成が食い違う |
 | PRES-2 | 資源が足りない環境では2系統を順に流し、worker数をmemoryで絞る | 時間は延びるが、CPUとmemoryの少ない機械でも同じstepをすべて流せる | stepを省く: 検査が環境で変わり、合格の意味が揃わない |
 | PRES-3 | hostのmemoryとDockerのmemoryを分けて求める | 模擬containerはDockerのcgroupで動き、node-matrixはpreflightのcgroupで動く。片方の上限でもう片方を絞らない | 1つの値にまとめる: preflightのcgroupの上限で、その上限が掛からないcontainerまで絞る |
+| PRES-4 | `client-browser`はAの系統の後に、使えるCPUのすべてで流す | Aの系統（約2分）は`client`（約4分）より先に終わる。Aの系統と同時に走る間だけPlaywrightのworkerを絞ると、その後のCPUが空いたまま残る | Aの系統と同時に流し、Playwrightのworker数を絞る: 8 coreの機械で`client-browser`が約2倍の時間になる |
+| PRES-5 | 同時に走る2系統のCPU帯を物理coreで分ける | SMTの機械では、番号の離れたCPUが同じ物理coreを共有する。番号だけで分けると、2系統が同じcoreの演算器を取り合う | CPU番号の順で分ける: SMTの機械で帯が分かれず、同時に流す利点が消える |
 
 #### 12.3.5 §12.3.4が関わるfile
 
@@ -1122,7 +1135,7 @@ locator列に書いたfile・実行手順・commandの結果が判定である�
 | AR-9.15 | R9.15       | T     | `coverage-command-terminal.test.ts`と`compiled-snapshot-coverage.test.ts`の未commitの変更があるrunのcase | 失敗0、binding sidecarに`worktreeContent` |
 | AR-9.16 | R9.16       | T/N   | `coverage-command-terminal.test.ts`のnode-matrix CLIのcaseと、未commitの変更がある作業場所でのNode.js matrixの実行 | 候補の出所`worktree`・`argument`、artifactの`candidate`の記録 |
 | AR-9.17 | R9.17       | P     | `bash scripts/release-preflight.sh --only deps-prepare`を未commitの変更がある作業場所で実行（§12.3.2） | `summary.tsv`の`tree=`が開始時の`CANDIDATE`、containerの`HEAD^{tree}`が一致 |
-| AR-9.18 | R9.18       | T/G/P | `preflight-resources.spec.test.ts`の構成のcase、`release-preflight-resources.integration.test.ts`の受け渡しと並べ方のcase、`npm run preflight -- --all`（§12.3.4） | CPU帯が使えるCPUの中、containerの上限がmemory以下、同時か順か、worker数、`summary.tsv`の`# resources` |
+| AR-9.18 | R9.18       | T/G/P | `preflight-resources.spec.test.ts`の構成のcase、`release-preflight-resources.integration.test.ts`の受け渡しと並べ方のcase、`npm run preflight -- --all`（§12.3.4） | CPU帯が使えるCPUの中、同時に走る2系統のCPU帯が物理coreを共有しない、`client-browser`が使えるCPUのすべてでAの系統の後に走る、containerの上限がmemory以下、同時か順か、worker数、`summary.tsv`の`# resources` |
 | AR-9.19 | R9.19       | T/G   | `preflight-resources.spec.test.ts`の最低限と指定の誤りのcase、`release-preflight-resources.integration.test.ts`の使えないCPU帯のcase | CPU 3個・memory 7 GiB未満・範囲外のCPU帯・重なるCPU帯で非0、stepを1つも始めない |
 | AR-9.20 | R9.20       | T/G   | `preflight-resources.spec.test.ts`の道具の確認のcase、`release-preflight-resources.integration.test.ts`のrootlessのDockerのcase | 選んだstepが使う道具だけを確かめ、足りないものを示して非0、stepを1つも始めない |
 

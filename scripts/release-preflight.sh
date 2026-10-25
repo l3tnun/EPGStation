@@ -21,7 +21,8 @@ LOG_DIR=${EPGS_PREFLIGHT_LOG_DIR:-$REPO_ROOT/test/server/.artifacts/preflight/${
 # scripts/preflight-resources.mjs が実行する環境の CPU と memory から決める（PREFLIGHT_* の変数。step の command は
 # それを実行時に読む）。模擬 container は WS (/home/runner/work/EPGStation/EPGStation) が固定で job ごとに初期化される
 # ため、同じ container で 2 つの job を同時には流せない。そこで client/client-browser 用に 2 つ目の container
-# (epgs-runner-rehearsal-b) を rehearsal-setup で作る。
+# (epgs-runner-rehearsal-b) を rehearsal-setup で作る。container B の CPU 帯は、client と client-browser の各 step の
+# 初めに docker update でその step の帯へ合わせる（client は PREFLIGHT_CLIENT_CPUSET、client-browser は使える CPU のすべて）。
 REHEARSAL_NAME_B=${EPGS_REHEARSAL_NAME_B:-epgs-runner-rehearsal-b}
 STEPS=(
   "stale-containers|remove epgs-docker-check-*, epgstation-docker-check-*, ar-9-17-* and epgstation-persistence-* leftovers (containers, plus the check networks and images) from killed runs|bash scripts/preflight-clean-stale-containers.sh"
@@ -29,8 +30,8 @@ STEPS=(
   "deps-prepare|Docker image の確認の依存 image（base image の pull、OS package 層、npm の依存関係の層）を手元に揃える。外部へ取りに行くのはこの step だけ。container A の nested daemon と host の daemon（node-matrix の Node 24 の回が使う）の両方へ揃える。取得に失敗したら exit 75 で、test は始めない|scripts/ci-rehearsal/job.sh tree:$CANDIDATE 24.21.0 deps-prepare - && node scripts/server-test/prepare-dependency-images.mjs"
   "server-check|server static checks (lint, typecheck, format check; the same checks as the pull request server check job), in lookalike container A|scripts/ci-rehearsal/job.sh tree:$CANDIDATE 24.21.0 server-check -"
   "docker-gate-node24|Docker image check (build the production images from the prepared dependencies, start them against a stub, probe /api/version and /, clean up; Debian and Alpine), docker-image.integration.test.ts alone, Node 24, in lookalike container A|scripts/ci-rehearsal/job.sh tree:$CANDIDATE 24.21.0 serialized integration/application-runtime/docker-image.integration.test.ts"
-  "client|client static checks, unit tests, the 100% coverage gate, and the vite dev server check, in lookalike container B|EPGS_REHEARSAL_NAME=$REHEARSAL_NAME_B scripts/ci-rehearsal/job.sh tree:$CANDIDATE 24.21.0 client-static -"
-  "client-browser|client bundle, e2e and visual against real browsers, in lookalike container B|EPGS_REHEARSAL_NAME=$REHEARSAL_NAME_B scripts/ci-rehearsal/job.sh tree:$CANDIDATE 24.21.0 client-browser -"
+  "client|client static checks, unit tests, the 100% coverage gate, and the vite dev server check, in lookalike container B|docker update --cpuset-cpus \$PREFLIGHT_CLIENT_CPUSET $REHEARSAL_NAME_B >/dev/null && EPGS_REHEARSAL_NAME=$REHEARSAL_NAME_B scripts/ci-rehearsal/job.sh tree:$CANDIDATE 24.21.0 client-static -"
+  "client-browser|client bundle, e2e and visual against real browsers, in lookalike container B on every usable CPU|docker update --cpuset-cpus \$PREFLIGHT_CPUSET_BROWSER $REHEARSAL_NAME_B >/dev/null && EPGS_REHEARSAL_NAME=$REHEARSAL_NAME_B scripts/ci-rehearsal/job.sh tree:$CANDIDATE 24.21.0 client-browser -"
   "node-matrix|Node 24 / 26, each in its own fresh workspace: npm ci, build-server, then one server-test run (Node 24's run also measures src/**'s C0/C1 and requires both at 100%; a test failure, a broken measurement, or a well-formed C0/C1 under 100% all fail it; Node 26 runs the plain suite once)|node scripts/server-test/run-node-acceptance-matrix.mjs --candidate $CANDIDATE"
 )
 # node-matrix runs Node 24 and Node 26 each in their own fresh workspace: `npm ci` →
@@ -45,7 +46,7 @@ STEPS=(
 ALL_DEFAULT=(stale-containers rehearsal-setup deps-prepare server-check docker-gate-node24 client client-browser node-matrix)
 usage() { sed -n 2,7p "$0"; }
 list() { for row in "${STEPS[@]}"; do IFS='|' read -r name desc cmd <<<"$row"; printf '%-24s %s\n    %s\n' "$name" "$desc" "$cmd"; done
-  printf '\n--all order: stale-containers, rehearsal-setup, deps-prepare, then [server-check -> docker-gate-node24] and [client -> client-browser] (at once or one after the other, as preflight-resources.mjs decides), then node-matrix\n'; }
+  printf '\n--all order: stale-containers, rehearsal-setup, deps-prepare, then [server-check -> docker-gate-node24] and [client] (at once or one after the other, as preflight-resources.mjs decides), then client-browser, then node-matrix\n'; }
 run_step() {
   local wanted=$1 row name desc cmd
   for row in "${STEPS[@]}"; do
@@ -79,7 +80,9 @@ done
 # 道具の確認と構成の決定。足りないもの・使えない指定があれば、step を 1 つも始めずに終わる。
 resources=$(node scripts/preflight-resources.mjs --steps "$(IFS=,; echo "${selected[*]}")") || exit 1
 eval "$resources"
-export PREFLIGHT_CPUSET_A PREFLIGHT_CPUSET_B PREFLIGHT_CONTAINER_MEMORY
+export PREFLIGHT_CPUSET_A PREFLIGHT_CPUSET_B PREFLIGHT_CPUSET_BROWSER PREFLIGHT_CONTAINER_MEMORY
+# client の CPU 帯。docker-gate-node24 の系統と同時に流すときだけ PREFLIGHT_CPUSET_B に絞る。
+export PREFLIGHT_CLIENT_CPUSET=$PREFLIGHT_CPUSET_BROWSER
 # node-matrix と coverage mode の run-tests.mjs が読む（下げる方向にだけ効く）。coverage mode の worker 数は 8 で
 # calibrate されていて、CPU や memory がそれに足りない host で 8 のまま流すと、real process と millisecond の境界を見る
 # test が時間に追いつかない。他の step には無害。
@@ -119,11 +122,10 @@ run_chain() { # failfile, step... : step を順に実行し、失敗しても ch
   done
 }
 
-# `--all` がそのまま ALL_DEFAULT を選んだときは、重い 2 系統
-# [server-check → docker-gate-node24] / [client → client-browser] を、構成が同時と決めていれば同時に
-# (それぞれ別 container・別 CPU 帯を使う)、そうでなければ A の系統の後に B の系統を流す。stale-containers と
-# rehearsal-setup はその前に単独で、node-matrix はその後に単独で実行する。`--only` で
-# 個別に選ぶ通常の切り分け実行は単純な逐次実行になる。
+# `--all` がそのまま ALL_DEFAULT を選んだときは、[server-check → docker-gate-node24] と [client] を、構成が同時と
+# 決めていれば同時に (それぞれ別 container・物理 core を共有しない CPU 帯を使う)、そうでなければ A の系統の後に client を
+# 流す。client-browser は両方が終わってから、使える CPU のすべてで流す。stale-containers と rehearsal-setup はその前に
+# 単独で、node-matrix は最後に単独で実行する。`--only` で個別に選ぶ通常の切り分け実行は単純な逐次実行になる。
 default_selected=0
 deps_prepare_failed=0
 if [[ ${#selected[@]} -eq ${#ALL_DEFAULT[@]} ]]; then
@@ -151,19 +153,24 @@ if [[ $default_selected -eq 1 ]]; then
     if [[ $PREFLIGHT_PARALLEL -eq 1 ]]; then
       run_chain "$fail_a" server-check docker-gate-node24 &
       pid_a=$!
-      # 同時に流す間は、coverage:gate と Playwright の worker 数を同時に流すときの上限まで下げる
-      # (preflight-resources.mjs の PARALLEL_* 参照)。この subshell の export は親 shell や他の chain には伝わらない。
-      ( export EPGSTATION_COVERAGE_GATE_MAX_WORKERS=$PREFLIGHT_PARALLEL_CLIENT_COVERAGE_GATE_MAX_WORKERS
-        export PLAYWRIGHT_WORKERS=$PREFLIGHT_PARALLEL_CLIENT_PLAYWRIGHT_WORKERS
-        run_chain "$fail_b" client client-browser ) &
+      # 同時に流す間は、client を container A と物理 core を共有しない CPU 帯に置き、coverage:gate の worker 数を
+      # 同時に流すときの上限まで下げる (preflight-resources.mjs の PARALLEL_CLIENT_COVERAGE_WORKERS 参照)。
+      # この subshell の export は親 shell や他の chain には伝わらない。
+      ( export PREFLIGHT_CLIENT_CPUSET=$PREFLIGHT_CPUSET_B
+        export EPGSTATION_COVERAGE_GATE_MAX_WORKERS=$PREFLIGHT_PARALLEL_CLIENT_COVERAGE_GATE_MAX_WORKERS
+        export PLAYWRIGHT_WORKERS=$PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS
+        run_chain "$fail_b" client ) &
       pid_b=$!
       wait "$pid_a" "$pid_b"
     else
       run_chain "$fail_a" server-check docker-gate-node24
       ( export EPGSTATION_COVERAGE_GATE_MAX_WORKERS=$PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS
         export PLAYWRIGHT_WORKERS=$PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS
-        run_chain "$fail_b" client client-browser )
+        run_chain "$fail_b" client )
     fi
+    ( export EPGSTATION_COVERAGE_GATE_MAX_WORKERS=$PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS
+      export PLAYWRIGHT_WORKERS=$PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS
+      run_chain "$fail_b" client-browser )
     for failfile in "$fail_a" "$fail_b"; do
       while read -r step; do [[ -n $step ]] && failed+=("$step"); done < "$failfile"
       rm -f "$failfile"

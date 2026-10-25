@@ -996,6 +996,39 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
     -   _Verification: `npm run preflight -- --all`_
     -   _Depends: 16.2_
 
+-   [ ] 17. preflightのCPU帯を物理coreで分け、`client-browser`に使えるCPUのすべてを渡す
+
+-   [ ] 17.1 物理coreでの帯の分け方と、`client-browser`の帯と順のtestを書く
+
+    -   `preflight-resources.spec.test.ts`で、SMTの機械（CPU iとi+8が同じcore）でcontainer Bの`client`の帯がcontainer Aと
+        物理coreを共有しないこと、すべてのcoreがAと共有されるときは順に流すこと、`client-browser`の帯が使えるCPUのすべてであること、
+        Playwrightのworker数が使えるCPUの物理coreの数になること、`thread_siblings_list`から物理coreを読むことをassertする。
+    -   `release-preflight-resources.integration.test.ts`で、`client`と`client-browser`の初めにcontainer Bの帯を
+        `docker update --cpuset-cpus`で合わせること、`client-browser`がAの系統と`client`の両方が終わってから始まることをassertする。
+    -   実装の前に流し、物理coreを読まないことと`docker update`が無いことで失敗するのを確かめる。
+    -   _Requirements: 9.18_
+    -   _Boundary: Preflight Steps_
+
+-   [ ] 17.2 構成の道具と`release-preflight.sh`を§12.3.4に合わせる
+
+    -   `scripts/preflight-resources.mjs`に物理coreの読み取りと、独立の帯・`client-browser`の帯・worker数の決め方を置く。
+    -   `scripts/release-preflight.sh`は、`client`と`client-browser`の初めにcontainer Bの帯を合わせ、`client-browser`をAの系統と
+        `client`の後に単独で流す。
+    -   `docs/testing.md`、`AGENTS.md`、`client/playwright.config.ts`の構成の説明を§12.3.4に合わせる。
+    -   完了時には、17.1のtestがすべて通る。
+    -   _Requirements: 9.18_
+    -   _Boundary: Preflight Steps_
+    -   _Depends: 17.1_
+
+-   [ ] 17.3 CPUを増やすと`--all`が短くなることを確かめる
+
+    -   4 core（`taskset -c 0-3`、memory 7.5 GiB）、8 core（`taskset -c 0-7`）、8 core・16 thread（絞らない）で`--all`を流し、
+        全stepが`exit=0`であること、所要時間が4 core、8 core、8 core・16 threadの順に短くなることを確かめる。
+    -   _Requirements: 9.18_
+    -   _Boundary: Preflight Steps_
+    -   _Verification: `npm run preflight -- --all`_
+    -   _Depends: 17.2_
+
 ## Leaf execution contract
 
 | Leaf | Concrete target                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Test type                                                                                                                      | Local Depends                | Verification command                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -1056,6 +1089,9 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
 | 16.1 | `test/server/application-runtime/spec/preflight-resources.spec.test.ts`<br>`test/server/application-runtime/release-preflight-resources.integration.test.ts`<br>`test/server/application-runtime/release-preflight-content.integration.test.ts` | `unittest/spec`、`integration` | `14.4` | `npm run test:server:spec -- test/server/application-runtime/spec/preflight-resources.spec.test.ts`<br>`npm run test:server:integration -- 'test/server/application-runtime/release-preflight-*.integration.test.ts'` |
 | 16.2 | `scripts/preflight-resources.mjs`<br>`scripts/release-preflight.sh`<br>`scripts/ci-rehearsal/setup.sh`<br>`docs/testing.md`<br>`AGENTS.md` | 16.1のtest | `16.1` | 16.1と同じ |
 | 16.3 | なし（判定のみ） | preflightの実行 | `16.2` | `npm run preflight -- --all`（4 CPU・8 GB、8 CPU、16 CPU） |
+| 17.1 | `test/server/application-runtime/spec/preflight-resources.spec.test.ts`<br>`test/server/application-runtime/release-preflight-resources.integration.test.ts` | `unittest/spec`、`integration` | `16.3` | `npm run test:server:spec -- test/server/application-runtime/spec/preflight-resources.spec.test.ts`<br>`npm run test:server:integration -- test/server/application-runtime/release-preflight-resources.integration.test.ts` |
+| 17.2 | `scripts/preflight-resources.mjs`<br>`scripts/release-preflight.sh`<br>`docs/testing.md`<br>`AGENTS.md`<br>`client/playwright.config.ts` | 17.1のtest | `17.1` | 17.1と同じ |
+| 17.3 | なし（判定のみ） | preflightの実行 | `17.2` | `npm run preflight -- --all`（4 core・7.5 GiB、8 core、8 core・16 thread） |
 
 ## Implementation Notes
 

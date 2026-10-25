@@ -3,13 +3,12 @@ import { availableParallelism } from 'node:os'
 
 // CI (the ci-rehearsal container, where process.env.CI is always '1') does not force workers to 1:
 // a fixed 1 would keep the rehearsal container to a single core for e2e/visual regardless of how
-// many CPUs release-preflight.sh gives it. The
-// container gets 8 dedicated CPUs (release-preflight.sh's container B); e2e's mocks are
-// page.route-scoped per browser context and the one real listener (realtimeHarness.ts) binds with
-// listen(0) for an OS-assigned port, so nothing here collides across concurrently running workers.
-// PLAYWRIGHT_WORKERS overrides the CPU-derived count for manual tuning (e.g. isolating a flaky
-// file at 1 without touching this file); otherwise CI clamps to 4-6 workers based on CPU count,
-// matching what repeated e2e/visual runs were measured clean at on the 8-CPU container.
+// many CPUs release-preflight.sh gives it. e2e's mocks are page.route-scoped per browser context and
+// the one real listener (realtimeHarness.ts) binds with listen(0) for an OS-assigned port, so nothing
+// here collides across concurrently running workers. release-preflight.sh sets PLAYWRIGHT_WORKERS to
+// the number of physical cores it gives container B; PLAYWRIGHT_WORKERS also serves manual tuning
+// (e.g. isolating a flaky file at 1 without touching this file). Without it, CI clamps to 4-6
+// workers based on CPU count.
 const resolveWorkers = (): number | undefined => {
   if (process.env.CI === undefined || process.env.CI === '') return undefined
   const configured = process.env.PLAYWRIGHT_WORKERS

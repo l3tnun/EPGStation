@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 /**
  * [AR-9.18]〜[AR-9.20] The real `scripts/release-preflight.sh` and `scripts/preflight-resources.mjs` decide the
  * container CPU bands, memory limits, chain order and worker counts before any step starts, and pass them to the
- * steps. The steps (`job.sh`, `setup.sh`, the stale-container cleanup, the dependency preparation, node-matrix) and
+ * steps. Container B is moved to the CPU band of each of its steps with `docker update` when that step starts. The steps (`job.sh`, `setup.sh`, the stale-container cleanup, the dependency preparation, node-matrix) and
  * the `docker`, `python3` and `mise` commands are replaced by recording scripts, so the recorded calls are exactly
  * what the real steps would be told. The run is pinned with `taskset` to the first 4 CPUs this process may use, and
  * `EPGS_PREFLIGHT_MEMORY` stands for a machine with 7.5 GiB.
@@ -71,17 +71,26 @@ beforeEach(async () => {
     for (const directory of ['scripts/server-test', 'scripts/ci-rehearsal', 'bin']) {
         await mkdir(join(fixture, directory), { recursive: true });
     }
-    for (const file of ['scripts/release-preflight.sh', 'scripts/preflight-resources.mjs', 'scripts/server-test/worktree-content.mjs']) {
+    for (const file of [
+        'scripts/release-preflight.sh',
+        'scripts/preflight-resources.mjs',
+        'scripts/server-test/worktree-content.mjs',
+    ]) {
         await cp(join(repositoryRoot, file), join(fixture, file));
     }
     const record = 'echo "$*" >> "$(git rev-parse --show-toplevel)/calls.log"';
-    await script(join(fixture, 'scripts/preflight-clean-stale-containers.sh'), ['#!/bin/bash', 'set -- stale-containers', record]);
+    await script(join(fixture, 'scripts/preflight-clean-stale-containers.sh'), [
+        '#!/bin/bash',
+        'set -- stale-containers',
+        record,
+    ]);
     await script(join(fixture, 'scripts/ci-rehearsal/setup.sh'), [
         '#!/bin/bash',
         'set -- setup "name=${EPGS_REHEARSAL_NAME:-epgs-runner-rehearsal}" "cpuset=$EPGS_REHEARSAL_CPUSET" "memory=$EPGS_REHEARSAL_MEMORY"',
         record,
     ]);
     // server-check waits until client-static has started, so a run that does not start the chains at once fails it.
+    // serialized takes a moment, so a client-browser that does not wait for chain A starts before it ends.
     await script(join(fixture, 'scripts/ci-rehearsal/job.sh'), [
         '#!/bin/bash',
         'root=$(git rev-parse --show-toplevel)',
@@ -92,6 +101,7 @@ beforeEach(async () => {
         '  for _ in $(seq 1 100); do [ -e "$root/client-started" ] && break; sleep 0.1; done',
         '  [ -e "$root/client-started" ] || exit 1',
         'fi',
+        'if [ "$step" = serialized ] && [ "${WAIT_FOR_CLIENT:-}" = 1 ]; then sleep 1; fi',
         'echo "end $step" >> "$root/calls.log"',
     ]);
     await writeFile(join(fixture, 'scripts/server-test/prepare-dependency-images.mjs'), '');
@@ -103,6 +113,7 @@ beforeEach(async () => {
     await script(join(fixture, 'bin/docker'), [
         '#!/bin/bash',
         'case "$*" in',
+        '  update*) echo "docker $*" >> "$(git rev-parse --show-toplevel)/calls.log" ;;',
         '  *SecurityOptions*) echo "${FAKE_DOCKER_SECURITY:-[\\"name=seccomp,profile=builtin\\"]}" ;;',
         `  *MemTotal*) echo "${32 * GIB}" ;;`,
         'esac',
@@ -127,9 +138,7 @@ interface PreflightSettings {
     readonly WAIT_FOR_CLIENT?: string;
 }
 
-const runPreflight = (
-    settings: PreflightSettings,
-): Promise<{ code: number | null; stderr: string; stdout: string }> =>
+const runPreflight = (settings: PreflightSettings): Promise<{ code: number | null; stderr: string; stdout: string }> =>
     new Promise((resolve, reject) => {
         const child = spawn('taskset', ['-c', cpuBand(machineCpus), 'bash', 'scripts/release-preflight.sh', '--all'], {
             cwd: fixture,
@@ -148,7 +157,6 @@ const runPreflight = (
                 EPGS_PREFLIGHT_CPUSET_B: settings.EPGS_PREFLIGHT_CPUSET_B ?? '',
                 EPGS_PREFLIGHT_PARALLEL: settings.EPGS_PREFLIGHT_PARALLEL ?? '',
                 EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS: '',
-                EPGS_PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS: '',
                 FAKE_DOCKER_SECURITY: settings.FAKE_DOCKER_SECURITY ?? '',
                 WAIT_FOR_CLIENT: settings.WAIT_FOR_CLIENT ?? '',
             },
@@ -197,8 +205,10 @@ describe('[AR-9.18] release-preflight.sh passes the decided resources to every s
             'end server-check',
             'start serialized coverage= playwright=',
             'end serialized',
+            `docker update --cpuset-cpus ${band} epgs-runner-rehearsal-b`,
             'start client-static coverage=4 playwright=4',
             'end client-static',
+            `docker update --cpuset-cpus ${band} epgs-runner-rehearsal-b`,
             'start client-browser coverage=4 playwright=4',
             'end client-browser',
             'node-matrix workers=4',
@@ -206,13 +216,14 @@ describe('[AR-9.18] release-preflight.sh passes the decided resources to every s
         const lines = await summary();
         expect(lines[1]).toBe(
             `# resources cpus=${band} host-memory=${MACHINE_MEMORY} docker-memory=${MACHINE_MEMORY} chains=serial ` +
-                `cpuset-a=${band} cpuset-b=${band} container-memory=${MACHINE_MEMORY} server-workers=4 ` +
-                'client-coverage-workers=4 playwright-workers=4 parallel-client-coverage-workers=4 parallel-playwright-workers=2',
+                `cpuset-a=${band} cpuset-b=${band} cpuset-b-browser=${band} container-memory=${MACHINE_MEMORY} server-workers=4 ` +
+                'client-coverage-workers=4 parallel-client-coverage-workers=4 playwright-workers=4',
         );
         expect(lines.slice(2).map(line => line.split('\t')[3])).toEqual(Array(8).fill('exit=0'));
     }, 60_000);
 
-    it('runs the chains at once on the given disjoint CPU bands, with the parallel worker caps on the client chain', async () => {
+    it('runs client on the given band at once with chain A, then client-browser on every CPU after both', async () => {
+        const band = cpuBand(machineCpus);
         const bandA = cpuBand(machineCpus.slice(0, 2));
         const bandB = cpuBand(machineCpus.slice(2));
 
@@ -230,9 +241,13 @@ describe('[AR-9.18] release-preflight.sh passes the decided resources to every s
             `setup name=epgs-runner-rehearsal cpuset=${bandA} memory=${MACHINE_MEMORY}`,
             `setup name=epgs-runner-rehearsal-b cpuset=${bandB} memory=${MACHINE_MEMORY}`,
         ]);
-        expect(recorded).toContain('start client-static coverage=2 playwright=2');
-        expect(recorded).toContain('start client-browser coverage=2 playwright=2');
-        expect(recorded.indexOf('start client-static coverage=2 playwright=2')).toBeLessThan(recorded.indexOf('end server-check'));
+        const clientStart = recorded.indexOf('start client-static coverage=2 playwright=4');
+        expect(recorded[clientStart - 1]).toBe(`docker update --cpuset-cpus ${bandB} epgs-runner-rehearsal-b`);
+        expect(clientStart).toBeLessThan(recorded.indexOf('end server-check'));
+        const browserStart = recorded.indexOf('start client-browser coverage=4 playwright=4');
+        expect(recorded[browserStart - 1]).toBe(`docker update --cpuset-cpus ${band} epgs-runner-rehearsal-b`);
+        expect(browserStart).toBeGreaterThan(recorded.indexOf('end serialized'));
+        expect(browserStart).toBeGreaterThan(recorded.indexOf('end client-static'));
         expect(recorded.at(-1)).toBe('node-matrix workers=4');
         expect((await summary())[1]).toContain(' chains=parallel ');
     }, 60_000);
@@ -245,7 +260,9 @@ describe('[AR-9.19] release-preflight.sh starts no step when a CPU band is unusa
         const { code, stderr } = await runPreflight({ EPGS_PREFLIGHT_CPUSET_B: `${outside}` });
 
         expect(code).not.toBe(0);
-        expect(stderr).toContain(`EPGS_PREFLIGHT_CPUSET_B=${outside} に、使える CPU（${cpuBand(machineCpus)}）の外の CPU があります`);
+        expect(stderr).toContain(
+            `EPGS_PREFLIGHT_CPUSET_B=${outside} に、使える CPU（${cpuBand(machineCpus)}）の外の CPU があります`,
+        );
         expect(await callsExist()).toBe(false);
     }, 60_000);
 });

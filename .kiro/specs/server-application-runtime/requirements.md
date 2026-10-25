@@ -251,7 +251,8 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
     の結果の記録に残す
 18. When preflightを開始するとき, the preflight shall 実行する環境で使えるCPUとmemoryの量から、模擬containerのCPU帯とmemoryの上限、
     2系統を同時に流すかどうか、およびtestのworker数を決め、CPU帯を使えるCPUの中に、各containerのmemoryの上限を使えるmemory以下に
-    置き、決めた構成を結果の記録に残す
+    置き、同時に走る2系統には物理coreを共有しないCPU帯を、他のstepと同時に走らないstepには使えるCPUのすべてを渡し、決めた構成を
+    結果の記録に残す
 19. If 使えるCPUが4個未満のとき、使えるmemoryが7 GiB未満のとき、または指定されたCPU帯が使えるCPUに収まらないとき, the preflight
     shall stepを1つも始めずに、理由を示して失敗とする
 20. If 選ばれたstepが使う道具（rootfulのDocker、mise、python3とPyYAML）が無いとき, the preflight shall stepを1つも始めずに、

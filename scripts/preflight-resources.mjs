@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // preflight の構成を、実行する環境の CPU と memory から決める（.kiro/specs/server-application-runtime/design.md §12.3.4）。
 //   node scripts/preflight-resources.mjs --steps <step>[,<step>...]
-// 選んだ step が使う道具を確かめ、使える CPU と memory を求め、模擬 container の CPU 帯と memory の上限、2 系統を
-// 同時に流すかどうか、test の worker 数を決めて、release-preflight.sh が eval する代入の行を stdout へ出す。
+// 選んだ step が使う道具を確かめ、使える CPU とその物理 core と memory を求め、模擬 container の CPU 帯と memory の上限、
+// 2 系統を同時に流すかどうか、test の worker 数を決めて、release-preflight.sh が eval する代入の行を stdout へ出す。
 // 道具が足りない、最低限に届かない、指定が使えないときは、理由を stderr へ出して 1 で終わる。
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -13,10 +13,10 @@ const GIB = 1024 ** 3;
 const MIN_CPUS = 4;
 // 8 GB の機械が報告する量。
 const MIN_MEMORY = 7 * GIB;
-const PARALLEL_MIN_CPUS = 8;
+// container A と物理 core を共有しない CPU がこの数以上あれば、2 系統を同時に流す。
+const PARALLEL_MIN_CPUS = 4;
 const PARALLEL_MIN_DOCKER_MEMORY = 24 * GIB;
 const CONTAINER_A_CPUS = 4;
-const CONTAINER_B_MAX_CPUS = 8;
 const CONTAINER_MEMORY_LIMIT = 16 * GIB;
 // worker 数の memory からの上限は (memory − MEMORY_RESERVE) ÷ 1 worker の量。
 const MEMORY_RESERVE = 1 * GIB;
@@ -26,12 +26,10 @@ const SERVER_WORKER_MEMORY = 0.75 * GIB;
 // Playwright の 6 workers を含む client-browser の job の peak は 6.28 GB だった。
 const CLIENT_COVERAGE_WORKER_MEMORY = 0.75 * GIB;
 const PLAYWRIGHT_WORKER_MEMORY = 1 * GIB;
-// docker-gate-node24 と client の系統を同時に流すときの上限。docker-gate-node24 は image の build で disk I/O と memory 帯域を
-// 使い、その競合は CPU 帯の分離では避けられない。同時に流すと、coverage:gate の既定（8 workers）では
-// upload-submit.spec.test.tsx の重い test が 5000ms の timeout を超え、Playwright の既定（6 workers）では e2e の 2 test が
-// locator と click の timeout で落ちた。この値では落ちない。
+// docker-gate-node24 と client を同時に流すときの coverage:gate の上限。docker-gate-node24 は image の build で disk I/O と
+// memory 帯域を使い、その競合は CPU 帯の分離では避けられない。同時に流すと、coverage:gate の既定（8 workers）では
+// upload-submit.spec.test.tsx の重い test が 5000ms の timeout を超えた。この値では落ちない。
 const PARALLEL_CLIENT_COVERAGE_WORKERS = 4;
-const PARALLEL_PLAYWRIGHT_WORKERS = 2;
 
 const CPU_LIST = /^\d+(-\d+)?(,\d+(-\d+)?)*$/;
 
@@ -79,19 +77,27 @@ const setting = (env, name) => {
 };
 
 /**
- * 構成を決める。machine は { cpus: 使える CPU 番号, hostMemory, dockerMemory }（byte）。
- * 成功なら { ok: true, plan }、失敗なら { ok: false, errors }（理由の文）。
+ * 構成を決める。machine は { cpus: 使える CPU 番号, cores: 物理 core ごとの CPU 番号の組（省略時は CPU ごとに別の core）,
+ * hostMemory, dockerMemory }（byte）。成功なら { ok: true, plan }、失敗なら { ok: false, errors }（理由の文）。
  */
 export const planPreflightResources = (machine, env) => {
     const errors = [];
     const cpus = [...new Set(machine.cpus)].sort((a, b) => a - b);
+    const coreOf = new Map();
+    for (const [index, core] of (machine.cores ?? cpus.map(cpu => [cpu])).entries()) {
+        for (const cpu of core) coreOf.set(cpu, index);
+    }
+    const coreKey = cpu => coreOf.get(cpu) ?? `cpu${cpu}`;
+    const sameCore = (cpu, others) => others.some(other => coreKey(cpu) === coreKey(other));
     let { hostMemory, dockerMemory } = machine;
 
     const memorySetting = setting(env, 'EPGS_PREFLIGHT_MEMORY');
     if (memorySetting !== undefined) {
         const limit = parseMemory(memorySetting);
         if (limit === undefined) {
-            errors.push(`EPGS_PREFLIGHT_MEMORY=${memorySetting} は memory の量（例: 8g、7680m、byte 数）ではありません`);
+            errors.push(
+                `EPGS_PREFLIGHT_MEMORY=${memorySetting} は memory の量（例: 8g、7680m、byte 数）ではありません`,
+            );
         } else {
             hostMemory = Math.min(hostMemory, limit);
             dockerMemory = Math.min(dockerMemory, limit);
@@ -101,7 +107,9 @@ export const planPreflightResources = (machine, env) => {
     if (hostMemory < MIN_MEMORY) errors.push(`host の memory が ${hostMemory} byte です。7 GiB 以上が要ります`);
     if (dockerMemory < MIN_MEMORY) errors.push(`Docker の memory が ${dockerMemory} byte です。7 GiB 以上が要ります`);
 
-    let parallel = cpus.length >= PARALLEL_MIN_CPUS && dockerMemory >= PARALLEL_MIN_DOCKER_MEMORY;
+    const defaultA = cpus.slice(0, CONTAINER_A_CPUS);
+    const separateCpus = cpus.filter(cpu => !sameCore(cpu, defaultA));
+    let parallel = separateCpus.length >= PARALLEL_MIN_CPUS && dockerMemory >= PARALLEL_MIN_DOCKER_MEMORY;
     const parallelSetting = setting(env, 'EPGS_PREFLIGHT_PARALLEL');
     if (parallelSetting !== undefined) {
         if (parallelSetting === '0' || parallelSetting === '1') parallel = parallelSetting === '1';
@@ -122,13 +130,8 @@ export const planPreflightResources = (machine, env) => {
         }
         return parsed;
     };
-    const cpusA = cpuset('EPGS_PREFLIGHT_CPUSET_A', cpus.slice(0, CONTAINER_A_CPUS));
-    const cpusB = cpuset(
-        'EPGS_PREFLIGHT_CPUSET_B',
-        parallel
-            ? cpus.slice(CONTAINER_A_CPUS, CONTAINER_A_CPUS + CONTAINER_B_MAX_CPUS)
-            : cpus.slice(0, CONTAINER_B_MAX_CPUS),
-    );
+    const cpusA = cpuset('EPGS_PREFLIGHT_CPUSET_A', defaultA);
+    const cpusB = cpuset('EPGS_PREFLIGHT_CPUSET_B', parallel ? separateCpus : cpus);
     if (parallel && cpusA !== undefined && cpusB !== undefined && cpusA.some(cpu => cpusB.includes(cpu))) {
         errors.push(
             `2 系統を同時に流すのに、container A（${formatCpuList(cpusA)}）と B（${formatCpuList(cpusB)}）の CPU 帯が重なっています`,
@@ -144,20 +147,22 @@ export const planPreflightResources = (machine, env) => {
         }
         return Number(given);
     };
-    const parallelCoverageCap = workerSetting('EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS', PARALLEL_CLIENT_COVERAGE_WORKERS);
-    const parallelPlaywrightCap = workerSetting('EPGS_PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS', PARALLEL_PLAYWRIGHT_WORKERS);
+    const parallelCoverageCap = workerSetting(
+        'EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS',
+        PARALLEL_CLIENT_COVERAGE_WORKERS,
+    );
 
     if (errors.length > 0) return { ok: false, errors };
 
     const containerMemory = Math.min(CONTAINER_MEMORY_LIMIT, dockerMemory);
-    const clientCoverageWorkers = Math.min(
-        cpusB.length,
-        8,
-        workersByMemory(containerMemory, CLIENT_COVERAGE_WORKER_MEMORY),
+    const coverageByMemory = workersByMemory(containerMemory, CLIENT_COVERAGE_WORKER_MEMORY);
+    const clientCoverageWorkers = Math.min(cpus.length, 8, coverageByMemory);
+    const playwrightWorkers = Math.min(
+        // 物理 core の数。8 core・16 thread の機械で、8 workers の e2e は 10.6 分で通り、12 workers は 9.8 分で click の
+        // timeout により 1 test が落ちた。
+        new Set(cpus.map(coreKey)).size,
+        workersByMemory(containerMemory, PLAYWRIGHT_WORKER_MEMORY),
     );
-    // client/playwright.config.ts が CI で CPU 数から選ぶ数（CPU 数 − 2 を 4〜6 に収めた数）。
-    const playwrightByCpu = Math.min(6, Math.max(4, cpusB.length - 2));
-    const playwrightWorkers = Math.min(playwrightByCpu, workersByMemory(containerMemory, PLAYWRIGHT_WORKER_MEMORY));
     return {
         ok: true,
         plan: {
@@ -167,12 +172,12 @@ export const planPreflightResources = (machine, env) => {
             parallel,
             cpusetA: formatCpuList(cpusA),
             cpusetB: formatCpuList(cpusB),
+            cpusetBrowser: formatCpuList(cpus),
             containerMemory,
             serverWorkers: Math.min(cpus.length, workersByMemory(hostMemory, SERVER_WORKER_MEMORY)),
             clientCoverageWorkers,
+            parallelClientCoverageWorkers: Math.min(parallelCoverageCap, cpusB.length, 8, coverageByMemory),
             playwrightWorkers,
-            parallelClientCoverageWorkers: Math.min(parallelCoverageCap, clientCoverageWorkers),
-            parallelPlaywrightWorkers: Math.min(parallelPlaywrightCap, playwrightWorkers),
         },
     };
 };
@@ -187,12 +192,12 @@ export const planRecord = plan =>
         `chains=${plan.parallel ? 'parallel' : 'serial'}`,
         `cpuset-a=${plan.cpusetA}`,
         `cpuset-b=${plan.cpusetB}`,
+        `cpuset-b-browser=${plan.cpusetBrowser}`,
         `container-memory=${plan.containerMemory}`,
         `server-workers=${plan.serverWorkers}`,
         `client-coverage-workers=${plan.clientCoverageWorkers}`,
-        `playwright-workers=${plan.playwrightWorkers}`,
         `parallel-client-coverage-workers=${plan.parallelClientCoverageWorkers}`,
-        `parallel-playwright-workers=${plan.parallelPlaywrightWorkers}`,
+        `playwright-workers=${plan.playwrightWorkers}`,
     ].join(' ');
 
 /** release-preflight.sh が eval する代入の行。値は数字・CPU 帯・記録の文だけで、shell の特殊文字を含まない。 */
@@ -201,12 +206,12 @@ export const planShellAssignments = plan =>
         `PREFLIGHT_PARALLEL=${plan.parallel ? 1 : 0}`,
         `PREFLIGHT_CPUSET_A=${plan.cpusetA}`,
         `PREFLIGHT_CPUSET_B=${plan.cpusetB}`,
+        `PREFLIGHT_CPUSET_BROWSER=${plan.cpusetBrowser}`,
         `PREFLIGHT_CONTAINER_MEMORY=${plan.containerMemory}`,
         `PREFLIGHT_SERVER_WORKERS=${plan.serverWorkers}`,
         `PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS=${plan.clientCoverageWorkers}`,
-        `PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS=${plan.playwrightWorkers}`,
         `PREFLIGHT_PARALLEL_CLIENT_COVERAGE_GATE_MAX_WORKERS=${plan.parallelClientCoverageWorkers}`,
-        `PREFLIGHT_PARALLEL_CLIENT_PLAYWRIGHT_WORKERS=${plan.parallelPlaywrightWorkers}`,
+        `PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS=${plan.playwrightWorkers}`,
         `PREFLIGHT_RESOURCES_RECORD='${planRecord(plan)}'`,
     ].join('\n');
 
@@ -272,7 +277,22 @@ const cgroupMemoryLimit = readText => {
 };
 
 /**
- * 使える CPU と memory を求める。readText は file の中身（無ければ undefined）、dockerMemory は Docker の MemTotal を返す。
+ * 使える CPU を物理 core ごとの組にする。thread_siblings_list が同じ CPU を同じ core とし、読めない CPU は 1 つで 1 core とする。
+ * 組は最初の CPU の番号の順に並べる。
+ */
+const physicalCores = (cpus, readText) => {
+    const cores = new Map();
+    for (const cpu of cpus) {
+        const siblings = readText(`/sys/devices/system/cpu/cpu${cpu}/topology/thread_siblings_list`)?.trim();
+        const key = siblings === undefined || parseCpuList(siblings) === undefined ? `cpu${cpu}` : siblings;
+        cores.set(key, [...(cores.get(key) ?? []), cpu]);
+    }
+    return [...cores.values()];
+};
+
+/**
+ * 使える CPU とその物理 core と memory を求める。readText は file の中身（無ければ undefined）、dockerMemory は Docker の
+ * MemTotal を返す。
  */
 export const detectResources = ({ readText, dockerMemory }) => {
     const status = readText('/proc/self/status') ?? '';
@@ -283,6 +303,7 @@ export const detectResources = ({ readText, dockerMemory }) => {
     const limit = cgroupMemoryLimit(readText);
     return {
         cpus,
+        cores: physicalCores(cpus, readText),
         hostMemory: limit === undefined ? total : Math.min(total, limit),
         dockerMemory: dockerMemory(),
     };

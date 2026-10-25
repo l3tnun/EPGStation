@@ -171,33 +171,39 @@ hosted CI が実行しない検査を含め、公開してよい状態かを手�
 step を始める前に、`scripts/preflight-resources.mjs` が選んだ step の道具（rootful の Docker、`rehearsal-setup` なら `python3` と PyYAML、`node-matrix` なら mise）を確かめ、使える CPU（`taskset` などで絞った実行ではその範囲）と memory（host は `MemTotal` と cgroup の `memory.max` の最小、Docker は `docker info` の `MemTotal`）から構成を決める。道具が足りないとき、CPU が 4 個未満・memory が 7 GiB 未満のとき、指定が使えないときは、理由を出して step を 1 つも始めずに終わる。
 
 1. 1〜3（`stale-containers`・`rehearsal-setup`・`deps-prepare`）を順に単独で実行する。
-2. container A の系統（`server-check` → `docker-gate-node24`）と container B の系統（`client` → `client-browser`）を流す。CPU が 8 個以上かつ Docker の memory が 24 GiB 以上なら 2 系統を同時に、それ以外は A の系統の後に B の系統を流す。
-3. 2 系統がすべて終わってから `node-matrix` を単独で実行する。
+2. container A の系統（`server-check` → `docker-gate-node24`）と container B の `client` を流す。container A と物理 core を共有しない CPU が 4 個以上あり、Docker の memory が 24 GiB 以上なら同時に、それ以外は A の系統の後に `client` を流す。
+3. 両方が終わってから、`client-browser` を使える CPU のすべてで単独に実行する。
+4. 最後に `node-matrix` を単独で実行する。
 
-| 項目 | 2 系統を同時に流すとき | 順に流すとき |
-| --- | --- | --- |
-| container A の CPU 帯 | 使える CPU の先頭 4 個 | 使える CPU の先頭 4 個 |
-| container B の CPU 帯 | A の次から最大 8 個 | 使える CPU の先頭から最大 8 個 |
-| 各 container の memory の上限 | 16 GiB と Docker の memory の小さい方 | 同じ |
+物理 core は、各 CPU の `/sys/devices/system/cpu/cpu<N>/topology/thread_siblings_list` で決まる。SMT の機械では番号の離れた CPU が同じ core を共有する（例: 8 core・16 thread で CPU i と i+8）。
+
+| 項目 | 値 |
+| --- | --- |
+| container A の CPU 帯 | 使える CPU の先頭 4 個 |
+| container B の `client` の CPU 帯 | 同時に流すときは、container A と物理 core を共有しない CPU のすべて。順に流すときは使える CPU のすべて |
+| container B の `client-browser` の CPU 帯 | 使える CPU のすべて |
+| 各 container の memory の上限 | 16 GiB と Docker の memory の小さい方 |
+
+container B の CPU 帯は、`client` と `client-browser` の各 step の初めに `docker update --cpuset-cpus` で合わせる。
 
 worker 数は、CPU の数と、memory から求めた上限（(memory − 1 GiB) ÷ 1 worker の量。1 未満にはしない）の小さい方になる。
 
-| 対象 | CPU からの上限 | 1 worker の量 | 同時に流すときの上限 |
-| --- | --- | --- | --- |
-| `node-matrix` の server test（`EPGSTATION_TEST_MAX_WORKERS`） | 使える CPU の数 | host の memory から 0.75 GiB | 同じ |
-| `client` の `coverage:gate`（`EPGSTATION_COVERAGE_GATE_MAX_WORKERS`） | container B の CPU 数と 8 の小さい方 | container B の上限から 0.75 GiB | 4 |
-| `client-browser` の Playwright（`PLAYWRIGHT_WORKERS`） | container B の CPU 数 − 2 を 4〜6 に収めた数 | container B の上限から 1 GiB | 2 |
+| 対象 | CPU からの上限 | 1 worker の量 |
+| --- | --- | --- |
+| `node-matrix` の server test（`EPGSTATION_TEST_MAX_WORKERS`） | 使える CPU の数 | host の memory から 0.75 GiB |
+| `client` の `coverage:gate`（`EPGSTATION_COVERAGE_GATE_MAX_WORKERS`） | `client` の CPU 帯の CPU 数と 8 の小さい方。同時に流すときは 4 以下 | container B の上限から 0.75 GiB |
+| `client-browser` の Playwright（`PLAYWRIGHT_WORKERS`） | 使える CPU の物理 core の数 | container B の上限から 1 GiB |
 
-同時に流すときの上限は、`docker-gate-node24`（CPU の pinning では隔離できない I/O・メモリ帯域の重い job）と client の系統が同時に走るときに timeout しない値である。`--only` で選んだ step は 1 つずつ流し、この上限を掛けない。
+同時に流すときの `coverage:gate` の上限 4 は、`docker-gate-node24`（CPU の pinning では隔離できない I/O・メモリ帯域の重い job）と同時に走るときに timeout しない値である。`--only` で選んだ step は 1 つずつ流し、`client` にも使える CPU のすべてを渡す。
 
 決めた構成は開始時に表示し、`summary.tsv` の 2 行目（`# resources`）に記録する。次の環境変数で決め打ちできる。
 
 | 変数 | 内容 |
 | --- | --- |
-| `EPGS_PREFLIGHT_CPUSET_A` / `EPGS_PREFLIGHT_CPUSET_B` | container A / B の CPU 帯（例: `0-3`、`4-7,12`）。使える CPU の外を含むとき、同時に流すのに A と B が重なるときは失敗する |
-| `EPGS_PREFLIGHT_PARALLEL` | `1` で 2 系統を同時に、`0` で順に流す |
+| `EPGS_PREFLIGHT_CPUSET_A` / `EPGS_PREFLIGHT_CPUSET_B` | container A の CPU 帯 / 同時に流すときの container B の `client` の CPU 帯（例: `0-3`、`4-7,12`）。使える CPU の外を含むとき、同時に流すのに A と B が重なるときは失敗する |
+| `EPGS_PREFLIGHT_PARALLEL` | `1` で同時に、`0` で順に流す |
 | `EPGS_PREFLIGHT_MEMORY` | host と Docker の memory をこの値以下として扱う（例: `8g`、`7680m`） |
-| `EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS` / `EPGS_PREFLIGHT_CLIENT_PLAYWRIGHT_WORKERS` | 同時に流すときの上限 |
+| `EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS` | 同時に流すときの `coverage:gate` の上限 |
 
 各 step の失敗は並列に流れていてもその場で stderr と `summary.tsv` に記録され、ほかの系統と後続の step は打ち切らずに走り切る。最後に失敗した step がまとめて報告される。`deps-prepare` が失敗したときだけは、test の step を始めない。
 
