@@ -56,7 +56,7 @@
         "aribts": "2.1.12",
         "axios": "1.20.0",
         "better-sqlite3": "12.11.1",
-        "body-parser": "2.3.0",
+        "body-parser": "2.4.0",
         "cors": "2.8.6",
         "diskusage-ng": "1.0.4",
         "eventsource": "5.1.3",
