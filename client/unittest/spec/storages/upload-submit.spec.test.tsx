@@ -332,21 +332,21 @@ describe('Recorded upload route and form state', () => {
     await screen.findByTestId('recorded-upload-page')
     await fillMetadataFields(recordedRepository, 'full')
 
-    fireEvent.click(uploadPage().getByRole('button', { name: 'アップロード' }))
-
-    await waitFor(() => {
-      expect(recordedRepository.uploadVideoFile).toHaveBeenCalledTimes(1)
-    })
+    // Fake timers start before the submit, so the uploading dialog's remount-delay timer that the
+    // upload run schedules when it finishes is always a fake timer this test can advance.
     vi.useFakeTimers()
+    fireEvent.click(uploadPage().getByRole('button', { name: 'アップロード' }))
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0)
     })
+    expect(recordedRepository.uploadVideoFile).toHaveBeenCalledTimes(1)
     expect(screen.getByText('アップロード完了')).toBeVisible()
-    // Flush the uploading dialog's remount-delay timer while still under fake timers, so
-    // switching back to real timers below does not drop it and hang the waitFor.
+    // useRecordedUploadRun unmounts the closed uploading dialog after UPLOAD_DIALOG_REMOUNT_DELAY_MS
+    // (100 ms). Until then the open modal hides the page from role queries.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(150)
+      await vi.advanceTimersByTimeAsync(100)
     })
+    expect(screen.queryByRole('dialog', { name: 'アップロード中' })).not.toBeInTheDocument()
     vi.useRealTimers()
 
     expectHashRoute('#/recorded/upload')
@@ -363,9 +363,6 @@ describe('Recorded upload route and form state', () => {
     expect(uploadVideoBlock(0).getByLabelText('name')).toHaveValue('Main upload')
     expect(uploadVideoBlock(0).getByLabelText('sub directory')).toHaveValue('season-one')
     expectMuiSelectText(/file type/, 'ts', uploadVideoBlock(0))
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: 'アップロード中' })).not.toBeInTheDocument()
-    })
   })
 
   it('[AC 3.5] reports metadata failure without rollback and closes the uploading dialog', async () => {

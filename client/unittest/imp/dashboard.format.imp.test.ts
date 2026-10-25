@@ -7,10 +7,8 @@ import {
   itemLabel,
   preventIOSScrollChainAtBounds,
   recordedMetadataLines,
-  recordedSecondaryText,
   reserveChannelLine,
 } from '@/features/dashboard/lib/dashboardFormat'
-import { DefaultSettingsFactory } from '@/shared/settings/defaultSettings'
 
 function touchMove(element: HTMLElement, clientY: number, cancelable = true) {
   const event = new Event('touchmove', { cancelable, bubbles: true })
@@ -95,23 +93,6 @@ describe('Dashboard formatting helpers', () => {
     )
     expect(formatDashboardReserveTimeRange({ id: 1, startAt })).toBeUndefined()
     expect(formatDashboardReserveTimeRange({ id: 1, endAt })).toBeUndefined()
-  })
-
-  it('shows drop counts with the total size instead of the description when configured', () => {
-    const settings = new DefaultSettingsFactory().create()
-    const dropInfo = { ...settings, isShowDropInfoInsteadOfDescription: true }
-    const dropLogFile = { dropCnt: 1, errorCnt: 2, scramblingCnt: 3 }
-    expect(
-      recordedSecondaryText(
-        { dropLogFile, videoFiles: [{ size: 10 }, { size: 5 }, {}], description: 'd' },
-        dropInfo,
-      ),
-    ).toBe('1/2/3 15 bytes')
-    expect(recordedSecondaryText({ dropLogFile, videoFiles: [{}] }, dropInfo)).toBe('1/2/3')
-    expect(recordedSecondaryText({ dropLogFile }, dropInfo)).toBe('1/2/3')
-    expect(recordedSecondaryText({ description: 'd', extended: 'e' }, dropInfo)).toBe('d')
-    expect(recordedSecondaryText({ dropLogFile, extended: 'e' }, settings)).toBe('e')
-    expect(recordedSecondaryText({}, settings)).toBe('')
   })
 
   it('lists channel and time metadata that exist', () => {

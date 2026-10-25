@@ -115,7 +115,7 @@ export async function verifyPrepared({ root, run, flavor }) {
 }
 
 /**
- * 製品の Dockerfile の各 builder stage の依存の部分（`FROM` から最初の `COPY . ` の直前まで）を
+ * 製品の Dockerfile の各 builder stage の依存の部分（`FROM` から最初の `npm ci` の行と、`\` で続く行まで）を
  * `FROM <npm の層の tag> AS <stage>` の 1 行に置き換えた Dockerfile の文字列を返す。それ以外の行
  * は製品のまま。
  */
@@ -124,7 +124,7 @@ export function deriveImageDockerfile({ root, flavor, plan = planDependencyImage
     const lines = readFileSync(join(root, `Dockerfile.${flavor}`), 'utf8').split(/\r?\n/u);
     const stages = plan.stages.filter(stage => stage.flavor === flavor).sort((a, b) => b.from - a.from);
     for (const stage of stages) {
-        lines.splice(stage.from, stage.copy - stage.from, `FROM ${stage.npmTag} AS ${stage.stage}`);
+        lines.splice(stage.from, stage.rest - stage.from, `FROM ${stage.npmTag} AS ${stage.stage}`);
     }
     return lines.join('\n');
 }

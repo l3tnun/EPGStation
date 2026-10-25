@@ -2,6 +2,10 @@ node_modules/
 # client/node_modules のような、root 以外の深さにある node_modules も除外する。
 # 素の "node_modules/" は build context の root にしか掛からない。
 **/node_modules/
+# client の bundle の成果物（client/dist）は client-builder が作り、最終 stage が build context の
+# コピーの上に重ねる。手元の client/dist が build context に入ると、bundle に無い古い file が image に
+# 残るので除く。
+client/dist/
 Dockerfile*
 .devcontainer
 # git の管理情報と GitHub の設定は、image に要らない。

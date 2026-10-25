@@ -1,10 +1,15 @@
 import { useState, type RefObject } from 'react'
 import type { ShellSnackbarState } from '@/app/AppShell'
 import { RecordedItemMenu } from '@/features/recorded'
+import {
+  hasRecordedDropError,
+  itemSecondaryText,
+  shouldShowRecordedListDropInfo,
+} from '@/features/recorded/lib/recordedFormat'
 import type { RecordedApiRepository, RecordedListItem } from '@/features/recorded/recordedApi'
 import type { SettingsConsumerValue } from '@/shared/settings'
 import { formatDashboardSectionTitle } from '../dashboardRequests'
-import { itemLabel, recordedMetadataLines, recordedSecondaryText } from '../lib/dashboardFormat'
+import { itemLabel, recordedMetadataLines } from '../lib/dashboardFormat'
 import styles from '../DashboardPage.module.css'
 
 export type RecordsSectionKind = 'recording' | 'recorded'
@@ -95,7 +100,12 @@ export function DashboardRecordsSection({
       >
         {items.map((item, index) => {
           const labelText = itemLabel(item, index)
-          const secondary = recordedSecondaryText(item, settings)
+          const secondary = itemSecondaryText(item, settings)
+          const secondaryClassName = `${styles.itemDescription}${
+            shouldShowRecordedListDropInfo(item, settings) && hasRecordedDropError(item)
+              ? ` ${styles.dropWarning}`
+              : ''
+          }`
           const metadataLines = recordedMetadataLines(item)
           const itemContent = (
             <>
@@ -118,7 +128,7 @@ export function DashboardRecordsSection({
                   </span>
                 ))}
                 {secondary === '' ? undefined : (
-                  <span className={styles.itemDescription}>{secondary}</span>
+                  <span className={secondaryClassName}>{secondary}</span>
                 )}
               </span>
             </>

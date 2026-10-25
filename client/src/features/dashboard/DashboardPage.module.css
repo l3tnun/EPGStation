@@ -469,6 +469,11 @@
   letter-spacing: 0.4px;
 }
 
+.dropWarning {
+  color: red !important;
+  font-weight: 700 !important;
+}
+
 .thumbnail,
 .noImage {
   background-position: center center;

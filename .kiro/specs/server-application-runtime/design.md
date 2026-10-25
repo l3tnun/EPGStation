@@ -1125,7 +1125,7 @@ owner判断を新設するopen decisionはない。Implementation時は承認済
 - §12.2 の共通 test 基盤（`test/server/`、`vitest.server.config.ts`、`run-tests.mjs`、`serialized-real-process-files.mjs`）。
 
 #### Revalidation Triggers
-- Dockerfile の stage 構成の変更（依存の部分を導く規則 17.4 が前提にする行の並び: `COPY . ` の位置、server の最初の `WORKDIR`、`npm ci` の行）。
+- Dockerfile の stage 構成の変更（依存の部分を導く規則 17.4 が前提にする行の並び: builder stage の名前、server の最初の `WORKDIR`、`npm ci` の行）。
 - base image の digest の変更、client・server の `package.json`・`package-lock.json` の変更（npm の層の tag が変わる）。
 - 起動時に server が tuner server へ行う問い合わせの変更（代役の契約 17.4）。
 - `docker.yml` の action の版、platform の一覧、tag の付け方、secret 名の変更。
@@ -1136,7 +1136,7 @@ owner判断を新設するopen decisionはない。Implementation時は承認済
 | --- | --- | --- |
 | 依存の層 | OS の package の層（server のみ）と npm の層を、tag 付き image として準備 step が用意する。tag は base の digest・層の内容・manifest の sha256 の hash。本体は `docker image inspect` だけ | `scripts/server-test/dependency-images.mjs`（`planDependencyImages`、`prepareDependencyImages`） |
 | 準備 step | 取得は 3 回・15 秒間隔・種類ごとの上限時間。exit 0 / 75 / 2 / 1 | `scripts/server-test/prepare-dependency-images.mjs` |
-| 層の Dockerfile | 製品の Dockerfile の依存の部分から導く（手書きの層の Dockerfile と Node の header の取得は持たない）。製品の Dockerfile は header を取らず、base image 同梱の header を `npm_package_config_node_gyp_nodedir` で使う | `scripts/server-test/dependency-images.mjs`（`planDependencyImages`）、`Dockerfile.debian`・`Dockerfile.alpine` の server-builder |
+| 層の Dockerfile | 製品の Dockerfile の依存の部分から導く（手書きの層の Dockerfile と Node の header の取得は持たない）。製品の Dockerfile は header を取らず、base image 同梱の header を `npm_package_config_node_gyp_nodedir` で使う | `scripts/server-test/dependency-images.mjs`（`planDependencyImages`）、`Dockerfile.debian`・`Dockerfile.alpine` の server-deps |
 | preflight | `deps-prepare`（container A と host）→ `docker-gate-node24`（container A）。node-matrix の Node 24 の回も同じ file を host の daemon で実行 | `scripts/release-preflight.sh`、`scripts/ci-rehearsal/job.sh`、`scripts/server-test/run-node-acceptance-matrix.mjs` |
 | 公開用 workflow | `master` への push と全 tag で、distro（debian・alpine）と arch（amd64・arm64）の組を各 arch のネイティブの runner で構築し、digest からまとめた multi-arch の image を Docker Hub へ公開する。action は commit SHA で固定する | `.github/workflows/docker.yml` |
 
@@ -1184,7 +1184,7 @@ flowchart LR
 | 項目 | 契約 |
 | --- | --- |
 | base の一覧 | `Dockerfile.debian`・`Dockerfile.alpine` の `FROM ...@sha256:...` をすべて読む。同じ tag が別の digest なら `DependencyImagePlanError`（exit 2） |
-| 依存の部分の導出 | 各 builder stage（`client-builder`・`server-builder`）で、`FROM` から最初の行頭 `COPY . `（ソース全体の copy）の直前までを依存の部分とする。comment と空行は除く。層の `FROM` は `<tag>@<digest>`（`--platform=…` の指定があれば外す）。導けない形（`npm ci` の行・`COPY . ` が無いなど）は exit 2 |
+| 依存の部分の導出 | 各 builder stage（`client-builder`・`server-deps`）で、`FROM` から最初の `npm ci` の行（`\` で続く行を含む）までを依存の部分とする。comment と空行は除く。層の `FROM` は `<tag>@<digest>`（`--platform=…` の指定があれば外す）。導けない形（`npm ci` の行が無い、server の `WORKDIR` の前に OS の package の行が無いなど）は exit 2 |
 | OS の package の層 | server の依存の部分のうち、最初の `WORKDIR` の直前まで。tag は `epgstation-deps-os-<kind>:<hash12>`（base の digest と層の内容） |
 | npm の層 | OS の層（client は base）の上に、残りの依存の部分と manifest。tag は `epgstation-deps-<kind>:<hash12>`（層の内容と manifest の path・sha256。server は OS の層の tag を含む） |
 | 再利用 | `package.json` または `package-lock.json` が変わると、その側（client または server）の npm の層だけ tag が変わる。OS の層と base は tag が変わらない（10.6・10.7） |
@@ -1197,7 +1197,7 @@ flowchart LR
 
 #### Image Dockerfile Deriver（同 module）
 
-製品の Dockerfile を読み、各 builder stage の依存の部分を `FROM <npm の層の tag> AS <stage>` の 1 行に置き換えた Dockerfile を生成する。それ以外の行（`COPY . .`、`RUN rm -rf client`、`RUN npm run compile && npm prune --omit=dev`、`RUN npm run bundle && rm -rf node_modules`、最終 stage）は製品のまま。出力は `test/server/.artifacts/docker-image-check/<id>/Dockerfile` に置く。
+製品の Dockerfile を読み、各 builder stage の依存の部分を `FROM <npm の層の tag> AS <stage>` の 1 行に置き換えた Dockerfile を生成する。それ以外の行（client の source の copy と `RUN npm run bundle`、最終 stage と同じ base の上で `server-deps` の node_modules を受け取る `server-builder`・`server-prod-deps` の stage、build context の `COPY . /app/` に各 stage の成果物を重ねる最終 stage）は製品のまま。出力は `test/server/.artifacts/docker-image-check/<id>/Dockerfile` に置く。
 
 #### Image Builder
 
@@ -1224,7 +1224,7 @@ server container の中で `docker exec <id> node -e "fetch('http://127.0.0.1:88
 
 #### Image Content Inspector
 
-応答の確認のあと、同じ server container の中で `docker exec <id> node -e ...` を実行して image の中身を調べる（10.13）。`/app/package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules/<名前>` に無いこと、`dependencies` の `express` が在ること、`/app/client/node_modules` が無いこと、`/app/client/dist/index.html` が在ること、`/app/.git` と `/app/.github` が無いことを確かめ、満たさなければ `image-content-invalid`。製品の Dockerfile は、server の build（`npm run compile`）のあとに `npm prune --omit=dev` で開発用の package を除き、client の build（`npm run bundle`）のあとに client の `node_modules` を削除する。どちらも network を使わない（`--network=none` の構築で通る）。git の管理情報（`.git`）と GitHub の設定（`.github`）は、`.dockerignore` で build context から除く（`COPY . ` で image に入れない）。
+応答の確認のあと、同じ server container の中で `docker exec <id> node -e ...` を実行して image の中身を調べる（10.13）。`/app/package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules/<名前>` に無いこと、`dependencies` の `express` が在ること、`/app/client/node_modules` が無いこと、`/app/client/dist/index.html` が在ること、`/app/.git` と `/app/.github` が無いことを確かめ、満たさなければ `image-content-invalid`。製品の Dockerfile は、`server-prod-deps` の stage で `npm prune --omit=dev` を実行して開発用の package を除いた `node_modules` を、最終 stage へ重ねる。client は build（`npm run bundle`）の成果物の `client/dist` だけを最終 stage へ重ね、build context の client の `node_modules` は `.dockerignore`（`**/node_modules/`）で除く。どちらも network を使わない（`--network=none` の構築で通る）。git の管理情報（`.git`）と GitHub の設定（`.github`）は、`.dockerignore` で build context から除く（`COPY . ` で image に入れない）。
 
 #### Resource Cleaner
 
@@ -1489,7 +1489,7 @@ Docker Hub への実際の公開、ARM の runner での構築、artifact での
 | 10.10 | 揃っていなければ取らず「準備されていない」で失敗 | Prepared Verifier | DC-1 |
 | 10.11 | registry へ公開しない | docker 実行 helper の argv ledger | DC-8 |
 | 10.12 | 成功・失敗どちらでも container と構築した image を片付け、依存は残す | Resource Cleaner | DC-9 |
-| 10.13 | image に開発用 package、client の node_modules、`.git`・`.github` を含めない | 製品の Dockerfile（`npm prune --omit=dev`、client の `node_modules` の削除）、`.dockerignore`、Image Content Inspector | DC-10 |
+| 10.13 | image に開発用 package、client の node_modules、`.git`・`.github` を含めない | 製品の Dockerfile（`npm prune --omit=dev`、最終 stage へ重ねる client の成果物は `client/dist` だけ）、`.dockerignore`、Image Content Inspector | DC-10 |
 | 11.1 | master への push・tag で、両 Dockerfile から構築して Docker Hub へ公開 | `docker.yml` | 実装時の確認（構文）、最初の実行 |
 | 11.2 | Debian・Alpine の platform の一覧 | `docker.yml` の `build-arch` job の matrix（distro × arch） | 実装時の確認（手元の registry）、最初の実行 |
 | 11.3 | master の push の tag | `docker.yml` の `Docker tags`（`docker/metadata-action`） | 実装時の確認（tag の計算の 4 通り） |
