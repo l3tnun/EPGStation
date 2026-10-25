@@ -551,8 +551,8 @@ Dockerfileを前提にする。外部からの取得は準備の段階（10.1）
 -   [x] 10.1 依存の層を製品のDockerfileから導く準備の道具に直す
 
     -   `scripts/server-test/dependency-images.mjs`が、`Dockerfile.debian`・`Dockerfile.alpine`の`FROM ...@sha256:...`をすべて読み、
-        同じtagが別のdigestなら終了code 2で失敗する。各builder stage（`client-builder`・`server-builder`）で、`FROM`から最初の行頭
-        `COPY . `の直前までを依存の部分として導き、導けない形も終了code 2で失敗する。
+        同じtagが別のdigestなら終了code 2で失敗する。各builder stage（`client-builder`・`server-deps`）で、`FROM`から最初の
+        `npm ci`の行までを依存の部分として導き、導けない形も終了code 2で失敗する。
     -   serverのOS packageの層（最初の`WORKDIR`の直前まで）とnpmの層を別々のtag付きimageとして用意する。tagは層の内容と
         manifestのsha256から決め、`package.json`または`package-lock.json`が変わると、変わった側のnpmの層だけtagが変わり、OSの層と
         baseのtagは変わらない。Nodeのheaderの取得と、手書きの層のDockerfileを持たない。
