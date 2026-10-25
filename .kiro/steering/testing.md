@@ -112,7 +112,7 @@ fake timers の有効範囲は観測の直前だけに絞り、終わったら `
 
 進めるべき時間は実装から特定して書く。値を当てずっぽうに増やさない。実装側に遅延がある例として、MUI の
 Snackbar / Dialog の exit transition は 195 ミリ秒、`EncodeCancelDialogs` は閉じたあと 100 ミリ秒 mount を保つ、
-`useRecordedUploadRun` は `UPLOAD_DIALOG_REMOUNT_DELAY_MS` で 150 ミリ秒待つ、`RecordedCleanupDialog` は最低
+`useRecordedUploadRun` は `UPLOAD_DIALOG_REMOUNT_DELAY_MS` で 100 ミリ秒待つ、`RecordedCleanupDialog` は最低
 1000 ミリ秒表示する、`HlsLifecycleController` は失敗後 500 ミリ秒で 1 回再試行する。
 
 待ち時間の値を大きくして通す対処は取らない。値を大きくしても遅い環境では同じ場所が落ち、失敗の発見が遅れるだけで
