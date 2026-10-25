@@ -996,9 +996,9 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
     -   _Verification: `npm run preflight -- --all`_
     -   _Depends: 16.2_
 
--   [ ] 17. preflightのCPU帯を物理coreで分け、`client-browser`に使えるCPUのすべてを渡す
+-   [x] 17. preflightのCPU帯を物理coreで分け、`client-browser`に使えるCPUのすべてを渡す
 
--   [ ] 17.1 物理coreでの帯の分け方と、`client-browser`の帯と順のtestを書く
+-   [x] 17.1 物理coreでの帯の分け方と、`client-browser`の帯と順のtestを書く
 
     -   `preflight-resources.spec.test.ts`で、SMTの機械（CPU iとi+8が同じcore）でcontainer Bの`client`の帯がcontainer Aと
         物理coreを共有しないこと、すべてのcoreがAと共有されるときは順に流すこと、`client-browser`の帯が使えるCPUのすべてであること、
@@ -1009,7 +1009,7 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
     -   _Requirements: 9.18_
     -   _Boundary: Preflight Steps_
 
--   [ ] 17.2 構成の道具と`release-preflight.sh`を§12.3.4に合わせる
+-   [x] 17.2 構成の道具と`release-preflight.sh`を§12.3.4に合わせる
 
     -   `scripts/preflight-resources.mjs`に物理coreの読み取りと、独立の帯・`client-browser`の帯・worker数の決め方を置く。
     -   `scripts/release-preflight.sh`は、`client`と`client-browser`の初めにcontainer Bの帯を合わせ、`client-browser`をAの系統と
@@ -1020,7 +1020,7 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
     -   _Boundary: Preflight Steps_
     -   _Depends: 17.1_
 
--   [ ] 17.3 CPUを増やすと`--all`が短くなることを確かめる
+-   [x] 17.3 CPUを増やすと`--all`が短くなることを確かめる
 
     -   4 core（`taskset -c 0-3`、memory 7.5 GiB）、8 core（`taskset -c 0-7`）、8 core・16 thread（絞らない）で`--all`を流し、
         全stepが`exit=0`であること、所要時間が4 core、8 core、8 core・16 threadの順に短くなることを確かめる。
