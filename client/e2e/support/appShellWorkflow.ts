@@ -127,6 +127,7 @@ export const routeScrollRestoreCases: readonly RouteScrollRestoreCase[] = [
     testId: 'reserves-page',
     detourNavigationItemId: 'navigation-item-settings',
     detourTestId: 'settings-screen',
+    renderedLocator: (page) => page.getByTestId('reserves-list-item').first(),
   },
   {
     route: '/reserves/manual',
