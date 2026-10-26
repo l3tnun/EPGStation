@@ -2,6 +2,7 @@ import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
 import { installPagedListApiMocks } from './support/pagedListMocks'
 import {
+  installDeferredManualProgramReservesApiMocks,
   installReservesApiMocks,
   manualProgramDetail,
   reserveDeleteTarget,
@@ -135,24 +136,65 @@ for (const viewport of VIEWPORTS) {
     test('audits the manual reserve form with its description, disabled fields, and option panels', async ({
       page,
     }, testInfo) => {
-      await installReservesApiMocks(page)
+      const reservesMocks = await installDeferredManualProgramReservesApiMocks(page)
       await page.goto(`/#/reserves/manual?programId=${manualProgramDetail.id}`)
       await expect(page.getByTestId('manual-reserve-page')).toHaveAttribute(
         'data-manual-mode',
         'add',
       )
-      await expect(page.getByRole('heading', { name: manualProgramDetail.name })).toBeVisible()
+      const saveButton = page.getByRole('button', { name: '保存' })
+      await expect(saveButton).toBeDisabled()
 
-      const formRows = await collectVisibleUiAuditRows(page, {
+      const loadingRows = await collectVisibleUiAuditRows(page, {
         page: 'reserves manual',
         route: '/reserves/manual',
-        dataState: 'manual reserve form',
+        dataState: 'manual reserve program loading',
+        theme: 'dark',
+        viewportDevice: testInfo.project.name,
+        openedState: 'program loading',
+        component: 'manual reserve form',
+        rootSelector: '[data-testid="manual-reserve-page"]',
+        disabledReasons: { 保存: '番組情報取得中' },
+      })
+      expect(loadingRows).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            element: '保存',
+            disabled: true,
+            disabledReason: '番組情報取得中',
+            status: 'excluded',
+          }),
+        ]),
+      )
+      await attachAudit(testInfo, 'dark-manual-reserve-loading-audit.json', loadingRows)
+
+      reservesMocks.releaseManualProgram()
+      await expect(page.getByRole('heading', { name: manualProgramDetail.name })).toBeVisible()
+      await expect(saveButton).toBeEnabled()
+
+      const settledAuditTarget = {
+        page: 'reserves manual',
+        route: '/reserves/manual',
+        dataState: 'manual reserve settled form',
         theme: 'dark',
         viewportDevice: testInfo.project.name,
         openedState: 'default',
         component: 'manual reserve form',
         rootSelector: '[data-testid="manual-reserve-page"]',
-      })
+      } as const
+      await expect
+        .poll(
+          async () => {
+            const rows = await collectVisibleUiAuditRows(page, settledAuditTarget)
+
+            return rows.find((row) => row.element === '保存' && row.visualProperty === 'color')
+              ?.status
+          },
+          { message: 'enabled save button contrast should settle after its color transition' },
+        )
+        .toBe('pass')
+
+      const formRows = await collectVisibleUiAuditRows(page, settledAuditTarget)
       expect(formRows.length).toBeGreaterThan(0)
       await attachAudit(testInfo, 'dark-manual-reserve-form-audit.json', formRows)
     })

@@ -28,6 +28,10 @@ export interface ReservesMockController {
   calls: ReservesApiCall[]
 }
 
+export interface DeferredManualProgramReservesMockController extends ReservesMockController {
+  releaseManualProgram: () => void
+}
+
 export interface ReservesRealtimeMockController extends ReservesMockController {
   clearReserves: () => void
 }
@@ -83,7 +87,10 @@ function reserveListForType(type: string | null) {
   return reservesMixedList
 }
 
-function createReservesHandlers(calls: ReservesApiCall[]) {
+function createReservesHandlers(
+  calls: ReservesApiCall[],
+  waitForManualProgram: () => Promise<void> = () => Promise.resolve(),
+) {
   return [
     http.get(
       ({ request }) => pathnameOf(request).endsWith('/api/reserves'),
@@ -109,8 +116,9 @@ function createReservesHandlers(calls: ReservesApiCall[]) {
     http.get(
       ({ request }) =>
         pathnameOf(request).endsWith(`/api/schedules/detail/${manualProgramDetail.id}`),
-      ({ request }) => {
+      async ({ request }) => {
         recordCall(calls, request)
+        await waitForManualProgram()
 
         return HttpResponse.json(manualProgramDetail)
       },
@@ -152,9 +160,12 @@ function createReservesHandlers(calls: ReservesApiCall[]) {
   ]
 }
 
-export async function installReservesApiMocks(page: Page): Promise<ReservesMockController> {
+async function installReservesApiMocksWithManualProgramWait(
+  page: Page,
+  waitForManualProgram: () => Promise<void>,
+): Promise<ReservesMockController> {
   const calls: ReservesApiCall[] = []
-  const handlers = createReservesHandlers(calls)
+  const handlers = createReservesHandlers(calls, waitForManualProgram)
 
   await page.route('**/api/**', async (route) => {
     const response = await getResponse(handlers, await createMswRequest(route))
@@ -168,6 +179,28 @@ export async function installReservesApiMocks(page: Page): Promise<ReservesMockC
   })
 
   return { calls }
+}
+
+export async function installReservesApiMocks(page: Page): Promise<ReservesMockController> {
+  return installReservesApiMocksWithManualProgramWait(page, () => Promise.resolve())
+}
+
+export async function installDeferredManualProgramReservesApiMocks(
+  page: Page,
+): Promise<DeferredManualProgramReservesMockController> {
+  let releaseManualProgram: () => void = () => undefined
+  const manualProgramReady = new Promise<void>((resolve) => {
+    releaseManualProgram = resolve
+  })
+  const controller = await installReservesApiMocksWithManualProgramWait(
+    page,
+    () => manualProgramReady,
+  )
+
+  return {
+    ...controller,
+    releaseManualProgram,
+  }
 }
 
 export async function installReservesRealtimeApiMocks(
