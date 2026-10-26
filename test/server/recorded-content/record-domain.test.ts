@@ -23,7 +23,7 @@ afterEach(() => {
 });
 
 const logger = () => {
-    const value = { system: { error: vi.fn(), info: vi.fn() } };
+    const value = { system: { error: vi.fn(), info: vi.fn(), warn: vi.fn() } };
     return { getLogger: () => value };
 };
 
@@ -244,7 +244,7 @@ describe('recorded content implementation characterization', () => {
         const subject: any = Object.create(RecorderModel.prototype);
         const failure = new Error('SYNTHETIC_VIDEO_INSERT_REJECTION');
         const unlink = vi.spyOn(FileUtil, 'unlink').mockResolvedValue(undefined);
-        subject.log = { system: { info: vi.fn(), error: vi.fn() } };
+        subject.log = { system: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } };
         subject.reserve = { id: 91 };
         subject.recordedDB = { insertOnce: vi.fn(async () => 92), deleteOnce: vi.fn(async () => undefined) };
         subject.videoFileDB = {
@@ -278,7 +278,7 @@ describe('recorded content implementation characterization', () => {
             close: vi.fn(async () => undefined),
         };
         const util: any = Object.create(RecordingUtilModel.prototype);
-        util.log = { system: { info: vi.fn(), debug: vi.fn(), error: vi.fn() } };
+        util.log = { system: { info: vi.fn(), debug: vi.fn(), error: vi.fn(), warn: vi.fn() } };
         util.config = { recordedTmp: 'synthetic-incoming' };
         util.videoUtil = { getFullFilePathFromId: vi.fn(async () => 'synthetic-incoming/record.ts') };
         util.getRecPath = vi.fn(async () => ({
@@ -310,7 +310,10 @@ describe('recorded content implementation characterization', () => {
             resolveSize = resolve;
         });
         const subject: any = Object.create(RecorderModel.prototype);
-        subject.log = { system: { info: vi.fn(), error: vi.fn(), fatal: vi.fn() }, stream: { fatal: vi.fn() } };
+        subject.log = {
+            system: { info: vi.fn(), error: vi.fn(), fatal: vi.fn(), warn: vi.fn() },
+            stream: { fatal: vi.fn() },
+        };
         subject.destroyStream = vi.fn();
         subject.scheduleBinding = null;
         subject.retryTimerId = null;

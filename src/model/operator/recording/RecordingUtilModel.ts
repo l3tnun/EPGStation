@@ -18,6 +18,7 @@ import IExecutionManagementModel from '../../IExecutionManagementModel.js';
 import ILogger from '../../ILogger.js';
 import ILoggerModel from '../../ILoggerModel.js';
 import IRecordingUtilModel, { RecFilePathInfo } from './IRecordingUtilModel.js';
+import RecordingStorageSync from './RecordingStorageSync.js';
 
 /**
  * `getRecPath` の排他制御区間が `GET_REC_PATH_OWNER_TIMEOUT` を超過した場合に投げられるエラー。
@@ -356,10 +357,25 @@ class RecordingUtilModel implements IRecordingUtilModel {
                 this.log.system.debug(err);
             }
 
+            // rename した移動先と移動元のディレクトリを記憶装置へ書き出す
+            if (isSuccessRenameFile === true) {
+                await this.syncDirectory(path.dirname(newRecPath.fullPath));
+                await this.syncDirectory(path.dirname(oldVideoFilePath));
+            }
+
             // rename で移動できなかった場合はコピーrecordedTmp から本来の保存先へコピー
             if (isSuccessRenameFile === false) {
                 try {
                     await this.copyFileToReservation(oldVideoFilePath, destinationReservation);
+                    // copy 先を記憶装置へ書き出せなければ、移動の失敗として一時録画先のファイルを残す
+                    const copySync = await RecordingStorageSync.sync(
+                        newRecPath.fullPath,
+                        () => RecordingStorageSync.syncFile(newRecPath.fullPath),
+                        this.log.system,
+                    );
+                    if (copySync !== 'synced' && copySync !== 'unsupported') {
+                        throw new Error(`RecordingFileSync${copySync}`);
+                    }
                 } catch (err: any) {
                     this.log.system.error(`copy file error: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);
                     await closeDestinationReservation().catch(error => {
@@ -373,6 +389,7 @@ class RecordingUtilModel implements IRecordingUtilModel {
 
                     throw err;
                 }
+                await this.syncDirectory(path.dirname(newRecPath.fullPath));
             }
 
             // VideoFile DB 更新
@@ -436,6 +453,18 @@ class RecordingUtilModel implements IRecordingUtilModel {
         }
         if (isMoveCompleted === true && finalCloseError !== undefined) throw finalCloseError;
         return newRecPath.fullPath;
+    }
+
+    /**
+     * ディレクトリを記憶装置へ書き出す。書き出せなかったときは RecordingStorageSync が警告を記録し、移動は続ける
+     * @param directoryPath: 書き出すディレクトリ
+     */
+    private async syncDirectory(directoryPath: string): Promise<void> {
+        await RecordingStorageSync.sync(
+            directoryPath,
+            () => RecordingStorageSync.syncDirectory(directoryPath),
+            this.log.system,
+        );
     }
 
     private async copyFileToReservation(sourcePath: string, destination: fs.promises.FileHandle): Promise<void> {

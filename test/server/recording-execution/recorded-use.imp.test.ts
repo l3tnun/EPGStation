@@ -352,6 +352,11 @@ describe('recording manager recorded-use lifecycle internals', () => {
         const terminal = harness.model.whenNormalRecordingTerminal();
         const finalization = harness.model.recEnd();
         try {
+            // 終了処理は writer の終了を待ってから録画ファイルを書き出し、録画中状態の解除へ進む。
+            await Promise.resolve();
+            expect(provider.tryAcquireDeletion(1916)).toEqual({ status: 'busy' });
+            writer.closed = true;
+            writer.emit('close');
             await finalization;
             await Promise.resolve();
 
@@ -359,8 +364,6 @@ describe('recording manager recorded-use lifecycle internals', () => {
 
             size.resolve();
             stream.emit('close');
-            writer.closed = true;
-            writer.emit('close');
             dropStop.resolve();
             await terminal;
             await Promise.resolve();

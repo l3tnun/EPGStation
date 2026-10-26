@@ -96,7 +96,7 @@ describe('recording execution module boundary', () => {
 
     it('[RE-8.1] recording execution sources import only the common tuner types and no product-specific client', async () => {
         const files = (await readdir(recordingSourceDirectory)).filter(name => name.endsWith('.ts')).sort();
-        expect(files).toHaveLength(13);
+        expect(files).toHaveLength(14);
 
         const specifiers: { file: string; specifier: string }[] = [];
         for (const file of files) {

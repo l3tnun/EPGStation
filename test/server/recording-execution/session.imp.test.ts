@@ -1322,26 +1322,28 @@ describe('recorder phase compatibility', () => {
         harness.model.isRecording = true;
 
         const normalFinalization = harness.model.recEnd();
-        expect(harness.recordedDB.removeRecording).toHaveBeenCalledOnce();
         let deletionSettled = false;
         const deletion = harness.model.cancel(true).then(() => {
             deletionSettled = true;
         });
         for (let turn = 0; turn < 5; turn += 1) await Promise.resolve();
+        // 録画中状態の解除は、writer の終了を待って録画ファイルを書き出した後に始まる。
         expect(deletionSettled).toBe(false);
-        expect(harness.recordedDB.removeRecording).toHaveBeenCalledOnce();
+        expect(harness.recordedDB.removeRecording).not.toHaveBeenCalled();
+
+        writer.closed = true;
+        writer.emit('close');
+        await vi.waitFor(() => expect(harness.recordedDB.removeRecording).toHaveBeenCalledOnce());
+        expect(deletionSettled).toBe(false);
 
         clearRecording.resolve();
-        await Promise.resolve();
-        expect(harness.recordingUtil.movingFromTmp).toHaveBeenCalledOnce();
+        await vi.waitFor(() => expect(harness.recordingUtil.movingFromTmp).toHaveBeenCalledOnce());
         expect(deletionSettled).toBe(false);
 
         move.resolve('/synthetic-root/synthetic.ts');
-        await Promise.resolve();
-        // The size update must not start yet: the writer (recFile) has not closed, so stat()-ing
-        // the file here could still observe an unflushed write.
-        expect(harness.recordingUtil.updateVideoFileSize).not.toHaveBeenCalled();
-        expect(harness.dropChecker.getResult).toHaveBeenCalledOnce();
+        // writer は閉じているので、size の更新は移動の後にすぐ始まる。
+        await vi.waitFor(() => expect(harness.recordingUtil.updateVideoFileSize).toHaveBeenCalledOnce());
+        await vi.waitFor(() => expect(harness.dropChecker.getResult).toHaveBeenCalledOnce());
         expect(deletionSettled).toBe(false);
 
         drop.resolve({});
@@ -1349,13 +1351,6 @@ describe('recorder phase compatibility', () => {
         expect(deletionSettled).toBe(false);
         size.resolve();
         for (let turn = 0; turn < 20; turn += 1) await Promise.resolve();
-        expect(deletionSettled).toBe(false);
-        // updateVideoFileSize is still deferred: only the writer's own 'close' releases it.
-        expect(harness.recordingUtil.updateVideoFileSize).not.toHaveBeenCalled();
-        writer.closed = true;
-        writer.emit('close');
-        await Promise.resolve();
-        expect(harness.recordingUtil.updateVideoFileSize).toHaveBeenCalledOnce();
         expect(deletionSettled).toBe(false);
         dropStop.resolve();
         await deletion;
@@ -2232,7 +2227,9 @@ describe('recorder phase compatibility', () => {
         vi.useFakeTimers();
         const harness = makeRecorder();
         const reserve = makeReserve({ id: 4013, endAt: Date.now() - 1_000 });
-        const checkEventRelaySpy = vi.spyOn(harness.model, 'checkEventRelay').mockImplementation(() => Promise.resolve());
+        const checkEventRelaySpy = vi
+            .spyOn(harness.model, 'checkEventRelay')
+            .mockImplementation(() => Promise.resolve());
         harness.model.setEventRelayTimer(reserve);
         expect(harness.model.eventRelayTimerId).not.toBeNull();
         await vi.advanceTimersByTimeAsync(0);
@@ -2421,7 +2418,9 @@ describe('recorder phase compatibility', () => {
         stream.end();
         await new Promise(resolve => setImmediate(resolve));
         await new Promise(resolve => setImmediate(resolve));
-        expect(logger.system.fatal).toHaveBeenCalledWith(`unexpected recEnd error: reserveId: ${reserve.id} recordedId: null`);
+        expect(logger.system.fatal).toHaveBeenCalledWith(
+            `unexpected recEnd error: reserveId: ${reserve.id} recordedId: null`,
+        );
     });
 
     it('recFailed logs and still notifies recording failure when its own recEnd rejects', async () => {
@@ -3055,7 +3054,10 @@ describe('recorder phase compatibility', () => {
             await waitUntil(() => session.state.phase === 'AwaitingFirstData', 'the first-data gate');
             stream.write('synthetic first packet');
             await waitUntil(() => session.state.phase === 'Registering', 'the registering phase');
-            await waitUntil(() => harness.videoFileDB.insertOnce.mock.calls.length === 1, 'the pending VideoFile insert');
+            await waitUntil(
+                () => harness.videoFileDB.insertOnce.mock.calls.length === 1,
+                'the pending VideoFile insert',
+            );
 
             session.binding.tryTransition('Registering', 'Finishing');
             rejection.reject(new Error('synthetic stale registration rejection (no intent)'));
@@ -3106,7 +3108,10 @@ describe('recorder phase compatibility', () => {
             await waitUntil(() => session.state.phase === 'AwaitingFirstData', 'the first-data gate');
             stream.write('synthetic first packet');
             await waitUntil(() => session.state.phase === 'Registering', 'the registering phase');
-            await waitUntil(() => harness.videoFileDB.insertOnce.mock.calls.length === 1, 'the pending VideoFile insert');
+            await waitUntil(
+                () => harness.videoFileDB.insertOnce.mock.calls.length === 1,
+                'the pending VideoFile insert',
+            );
 
             // A stream failure settles the outcome (outcomeSettled=true) while the registration is
             // still in flight; the still-pending registration's own eventual "stale, no intent"
@@ -3448,7 +3453,10 @@ describe('recorder phase compatibility', () => {
             await pollFakeUntil(() => original.state.phase === 'AwaitingFirstData', 'the first-data gate');
             stream.write('synthetic first packet');
             await pollFakeUntil(() => original.state.phase === 'Registering', 'the registering phase');
-            await pollFakeUntil(() => harness.videoFileDB.insertOnce.mock.calls.length === 1, 'the pending VideoFile insert');
+            await pollFakeUntil(
+                () => harness.videoFileDB.insertOnce.mock.calls.length === 1,
+                'the pending VideoFile insert',
+            );
 
             // Replace the session (same reservation/token, new generation) while the registration is
             // still in flight. This promotes the tracked registrationOwner's intent to 'Replacement'

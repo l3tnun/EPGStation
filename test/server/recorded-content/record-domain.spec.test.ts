@@ -23,7 +23,7 @@ afterEach(() => {
 
 const managementSubject = () => {
     const value: any = Object.create(RecordedManageModel.prototype);
-    value.log = { system: { info: vi.fn(), error: vi.fn() } };
+    value.log = { system: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } };
     value.recordedDB = { insertOnce: vi.fn(async () => 401) };
     value.videoFileDB = { insertOnce: vi.fn(async () => 402) };
     value.recordedEvent = { emitCreateNewRecorded: vi.fn(), emitAddVideoFile: vi.fn() };
@@ -229,7 +229,7 @@ describe('recorded content domain specification', () => {
     it('[RC-1.5] starts one notification after persistence success and none after persistence failure', async () => {
         const ledger: string[] = [];
         const subject: any = Object.create(RecordedManageModel.prototype);
-        subject.log = { system: { info: vi.fn(), error: vi.fn() } };
+        subject.log = { system: { info: vi.fn(), error: vi.fn(), warn: vi.fn() } };
         subject.recordedDB = {
             insertOnce: vi.fn(async () => {
                 ledger.push('persisted');
@@ -327,7 +327,7 @@ describe('recorded content domain specification', () => {
             close: vi.fn(async () => undefined),
         };
         const subject: any = Object.create(RecordingUtilModel.prototype);
-        subject.log = { system: { debug: vi.fn(), error: vi.fn(), info: vi.fn() } };
+        subject.log = { system: { debug: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() } };
         subject.config = { recordedTmp: 'synthetic-incoming' };
         subject.videoUtil = { getFullFilePathFromId: vi.fn(async () => 'synthetic-incoming/record.ts') };
         subject.getRecPath = vi.fn(async () => ({
@@ -354,7 +354,10 @@ describe('recorded content domain specification', () => {
 
     it('[RC-3.5] clears active recording state and requests the final file-size update at recording completion', async () => {
         const subject: any = Object.create(RecorderModel.prototype);
-        subject.log = { system: { error: vi.fn(), fatal: vi.fn(), info: vi.fn() }, stream: { fatal: vi.fn() } };
+        subject.log = {
+            system: { error: vi.fn(), fatal: vi.fn(), info: vi.fn(), warn: vi.fn() },
+            stream: { fatal: vi.fn() },
+        };
         subject.config = {};
         subject.deletionStop = null;
         subject.destroyStream = vi.fn();

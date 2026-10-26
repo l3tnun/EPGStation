@@ -1274,9 +1274,10 @@ listener 分岐を維持し、`RecordingScheduleController` の CAS は時刻指
     はディレクトリを読み取りで開いて`fsync`し、閉じる。Windows（`process.platform === 'win32'`）ではディレクトリを開けな
     いので、`syncDirectory`は何もしない。
 -   `RecordingStorageSync.sync(label, operation, log)`は一回の書き出しを最大60秒（`SYNC_TIMEOUT_MS`）待ち、結果を
-    `'synced'`・`'failed'`・`'timed-out'`・`'unsupported'`のいずれかで返す。例外は投げない。
+    `'synced'`・`'failed'`・`'timed-out'`・`'unsupported'`・`'missing'`のいずれかで返す。例外は投げない。
     -   `EINVAL`・`ENOTSUP`・`EOPNOTSUPP`は、filesystem が書き出しに対応しないものとして`'unsupported'`にし、試み直さな
         い。
+    -   `ENOENT`は、書き出す対象が無いものとして`'missing'`にし、試み直さない。
     -   それ以外の失敗は1秒（`SYNC_RETRY_INTERVAL_MS`）置いて試み直し、合わせて3回（`SYNC_ATTEMPTS`）失敗したら
         `'failed'`にする。
     -   60秒以内に終わらなければ`'timed-out'`にし、試み直さない。元の呼び出しが後から確定しても、その結果は使わない（
@@ -1286,7 +1287,7 @@ listener 分岐を維持し、`RecordingScheduleController` の CAS は時刻指
 -   一時録画先からの移動（`movingFromTmp`。起動時整理も同じ関数を使う）では、録画ファイル行の path を更新する前に書き出
     す。
     -   rename で移したときは、移動先と移動元のディレクトリを書き出す。結果は記録だけで、移動は続ける。
-    -   copy で移したときは、copy 先のファイルを書き出す。`'failed'`・`'timed-out'`なら移動の失敗として copy の
+    -   copy で移したときは、copy 先のファイルを書き出す。`'failed'`・`'timed-out'`・`'missing'`なら移動の失敗として copy の
         rollback（copy 先の削除）へ進み、一時録画先のファイルを残す。`'unsupported'`なら続ける。続けるときは copy 先の
         ディレクトリも書き出し（結果は記録だけ）、その後に path を更新して一時録画先のファイルを削除する。
 -   `recorded-content-deletion`による取消（6.9 の 2）は file を削除するので書き出さない。書き出しの途中で削除が来たとき
@@ -1393,8 +1394,8 @@ Requirements、Design、test、mapping、実装で同時に定める。
 | writer error（最初の data 後）         | 実装の write-error 経路                                | 録画失敗通知                                                                         | 作成済み結果数で判定                                       |
 | stream error                           | 実装の finished 経路                                   | 録画失敗通知                                                                         | 作成済み結果数で判定                                       |
 | 録画終了時の writer 終了待ち 60 秒超過 | `system.warn`へ記録                                    | 書き出さずに録画中解除へ                                                             | なし                                                       |
-| 録画終了時の書き出し                   | 失敗・時間切れ・非対応を`system.warn`へ記録            | 録画中解除へ                                                                         | 失敗だけ1秒間隔で合計3回。時間切れ・非対応は試み直さない   |
-| 一時 file 移動先の書き出し             | copy 先の失敗・時間切れは移動失敗。ほかは記録だけ      | 移動失敗なら copy を削除し一時 file を残してサイズ以降へ                             | 失敗だけ1秒間隔で合計3回。時間切れ・非対応は試み直さない   |
+| 録画終了時の書き出し                   | 失敗・時間切れ・非対応・対象なしを`system.warn`へ記録  | 録画中解除へ                                                                         | 失敗だけ1秒間隔で合計3回。時間切れ・非対応・対象なしは試み直さない |
+| 一時 file 移動先の書き出し             | copy 先の失敗・時間切れ・対象なしは移動失敗。ほかは記録だけ | 移動失敗なら copy を削除し一時 file を残してサイズ以降へ                             | 失敗だけ1秒間隔で合計3回。時間切れ・非対応・対象なしは試み直さない |
 | 録画中解除                             | 例外を伝播                                             | 移動以降を行わない。後片付けは再起動時の起動時整理に任せる                           | なし                                                       |
 | 一時 file 移動                         | エラーを記録                                           | サイズ以降へ                                                                         | なし                                                       |
 | file サイズ反映                        | 非同期エラーを記録                                     | 待たずに後続へ                                                                       | なし                                                       |
@@ -1754,9 +1755,9 @@ component/interfaceへの追跡、`期待`はverification oracle、`失敗`はfa
 | RE-5.8  | RecordedContentPort / final re-read               | `finalization.spec.test.ts#RE-5.8`        | S/I/G | N0,N0,T,T,T,N1,N1,N2,T | F→C/CAN-NA/RE-NA/RST-NA                                                                                                                                 | 順            | DB Promise                                                | query reject                                                   | 終了処理reject、history・finish event各0                                                                                                                                                                                                                                                             | E1   |
 | RE-5.9  | RecordedContentPort / final re-read               | `finalization.spec.test.ts#RE-5.9`        | S/I/G | T,T,T,T,T,N1,T,N2,T    | F→C/CAN-NA/RE-NA/RST-NA                                                                                                                                 | 順            | DB/event                                                  | query成功null                                                  | 正常に終えhistory・finish event各0                                                                                                                                                                                                                                                                   | E1   |
 | RE-5.10 | RecordingStorageSync / 録画終了の書き出し          | `finalization.spec.test.ts#RE-5.10`       | S/I/G | T,T,T,T,T,N1,T,N2,T    | F/CAN-AP/RE-AP/RST-NA | 順 | writer/file/directory/fsync | writer close遅延・fsync reject | 正常終了・取消・失敗終了でwriter終了後にfileとdirectoryを書き出し、その後に録画中解除・移動・通知 | E1   |
-| RE-5.11 | RecordingStorageSync / 試行と非対応               | `finalization.spec.test.ts#RE-5.11`       | S/I   | N0,N0,T,T,T,N1,N1,N2,T | F/CAN-NA/RE-AP/RST-NA | 端/順 | fsync/timer/log | 1・2・3回目の失敗・EINVAL・ENOTSUP・EOPNOTSUPP | 失敗は1秒間隔で合計3回、非対応は1回。`synced`以外はwarn一回で後続へ | E1   |
+| RE-5.11 | RecordingStorageSync / 試行と非対応               | `finalization.spec.test.ts#RE-5.11`       | S/I   | N0,N0,T,T,T,N1,N1,N2,T | F/CAN-NA/RE-AP/RST-NA | 端/順 | fsync/timer/log | 1・2・3回目の失敗・EINVAL・ENOTSUP・EOPNOTSUPP・ENOENT | 失敗は1秒間隔で合計3回、非対応・対象なしは1回。`synced`以外はwarn一回で後続へ | E1   |
 | RE-5.12 | RecordingStorageSync / 時間切れ                   | `finalization.spec.test.ts#RE-5.12`       | S/I   | N0,N0,T,T,T,T,T,N2,T   | F/CAN-NA/RE-NA/RST-NA | 端/衝 | writer/fsync/timer/log | writer close・fsyncの59,999/60,000ms・後着reject | 60秒でwarnして後続へ。writer未終了なら書き出さず、時間切れは試み直さず後着rejectを未処理にしない | E1   |
-| RE-5.13 | RecordingFilePort / `movingFromTmp`の書き出し     | `finalization.spec.test.ts#RE-5.13`       | S/I/G | T,T,T,T,T,N1,T,N2,T    | F/SU/CAN-NA/RE-NA/RST-AP | 順 | file/directory/DB path/fsync | rename後のdirectory失敗・copy先の失敗・時間切れ・非対応 | path更新前に書き出す。copy先の失敗・時間切れは移動失敗で一時fileを残し、非対応とdirectoryは記録して続ける | E1   |
+| RE-5.13 | RecordingFilePort / `movingFromTmp`の書き出し     | `finalization.spec.test.ts#RE-5.13`       | S/I/G | T,T,T,T,T,N1,T,N2,T    | F/SU/CAN-NA/RE-NA/RST-AP | 順 | file/directory/DB path/fsync | rename後のdirectory失敗・copy先の失敗・時間切れ・非対応 | path更新前に書き出す。copy先の失敗・時間切れ・対象なしは移動失敗で一時fileを残し、非対応とdirectoryは記録して続ける | E1   |
 | RE-6.1  | RetryCoordinator / result count query             | `retry.spec.test.ts#RE-6.1`               | S/I/G | T,T,T,T,T,T,T,N2,T     | F/C/CAN-NA/RE-AP/RST-NA                                                                                                                                 | 順/衝         | DB query/registry                                         | count reject・重複failure event                                | 同じ予約IDの作成済み結果数を一回確認                                                                                                                                                                                                                                                                 | E1   |
 | RE-6.2  | RetryCoordinator / `prepare`                      | `retry.spec.test.ts#RE-6.2`               | S/I/G | N0,N0,T,T,T,T,T,N2,T   | C→W→P/CAN-AP/RE-AP/RST-NA                                                                                                                               | 端/衝         | DB count/clock/registry                                   | count 0/1/2・endAt直前/到達                                    | 上限未満かつ終了前だけ最新世代を再準備                                                                                                                                                                                                                                                               | E1   |
 | RE-6.3  | RetryCoordinator / session factory                | `retry.spec.test.ts#RE-6.3`               | S/I   | N0,N0,T,T,T,T,T,N2,T   | C/CAN-NA/RE-AP/RST-NA                                                                                                                                   | 端            | DB count/factory                                          | count 3以上                                                    | 新session・stream request各0                                                                                                                                                                                                                                                                         | E1   |
@@ -1845,9 +1846,9 @@ Test Matrixとは別の追跡表であり、canonical test locatorは重複所�
 | 5.8  | 終了時再取得の照会例外を伝播し履歴・通知を行わない                  | reject と副作用なしテスト                |
 | 5.9  | 終了時再取得成功かつ null なら履歴・通知なしで完了                  | null 結果テスト                          |
 | 5.10 | writer 終了後に file と directory を書き出してから録画中解除・移動・通知 | 終了原因別の呼出順テスト・thread pool を塞いだ統合テスト |
-| 5.11 | 書き出しの失敗は1秒間隔で合計3回、非対応は試み直さず、warn で後続へ | 失敗回数・errno 別テスト                 |
+| 5.11 | 書き出しの失敗は1秒間隔で合計3回、非対応・対象なしは試み直さず、warn で後続へ | 失敗回数・errno 別テスト                 |
 | 5.12 | writer 終了・書き出し一回の60秒超過は warn で後続へ、試み直さない   | fake clock 境界・後着 reject テスト      |
-| 5.13 | 移動では path 更新前に書き出し、copy 先の失敗・時間切れは移動失敗   | rename・copy 別の書き出しテスト          |
+| 5.13 | 移動では path 更新前に書き出し、copy 先の失敗・時間切れ・対象なしは移動失敗 | rename・copy 別の書き出しテスト          |
 | 6.1  | 録画失敗後に予約 ID の作成済み録画結果数を照会                      | count port 呼出テスト                    |
 | 6.2  | 3 件未満かつ終了前なら最新世代を即時準備候補化                      | count 0〜2 と時刻境界テスト              |
 | 6.3  | 3 件以上なら session を新規作成しない                               | factory 未呼出しテスト                   |

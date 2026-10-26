@@ -34,6 +34,7 @@ const mutate = [
     'src/model/operator/recording/RecordingUtilModel.ts',
     'src/model/operator/recording/DropCheckerModel.ts',
     'src/model/operator/recording/RecordingStreamCreator.ts',
+    'src/model/operator/recording/RecordingStorageSync.ts',
     // 設定の解釈
     'src/model/ConfigYaml.ts',
     'src/model/Configuration.ts',

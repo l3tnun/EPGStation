@@ -1,3 +1,4 @@
+import { pbkdf2 } from 'node:crypto';
 import * as fs from 'node:fs';
 import { chmod, mkdir, mkdtemp, open, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -13,6 +14,7 @@ import {
     makeReserve,
     RecordingUtilModel,
 } from './_harness';
+import { CHUNK_SIZE, chunk, createRealTuner, insertReserve, wireRecording, withSqlite } from './_real-tuner-wiring';
 
 const FileUtil = load<{ unlink(filePath: string): Promise<void> }>('util', 'FileUtil.js');
 
@@ -1332,8 +1334,7 @@ describe('recording filesystem boundary', () => {
             const recording = harness.model.doRecord();
             await new Promise(resolve => setImmediate(resolve));
             const dataListener = once.mock.calls.find(([event]) => event === 'data')?.[1] as
-                | (() => Promise<void>)
-                | undefined;
+                (() => Promise<void>) | undefined;
             expect(dataListener).toBeTypeOf('function');
             await expect(dataListener!()).resolves.toBeUndefined();
             await expect(recording).rejects.toThrow('AddRecordedDBError');
@@ -1410,5 +1411,47 @@ describe('recording filesystem boundary', () => {
             await rm(root, { recursive: true, force: true });
         }
     });
-});
 
+    it('[RE-5.10][Task 6.4] has every received byte in the recording file when it publishes the finish while the thread pool is busy', async () => {
+        await withSqlite(async (source, root) => {
+            const tuner = await createRealTuner();
+            const wired = wireRecording(source, root, tuner, { config: { recordedFormat: '%ID%' } });
+            // 完了通知を出した時点で、録画 file に何 byte 書かれているかを記録する。
+            const sizesAtFinish: number[] = [];
+            const publishFinish = Object.getPrototypeOf(wired.event).emitFinishRecording;
+            wired.finished.mockImplementation(function (reserve: { id: number }, ...rest: unknown[]) {
+                sizesAtFinish.push(fs.statSync(join(root, `${reserve.id}.ts`)).size);
+                return publishFinish.call(wired.event, reserve, ...rest);
+            });
+            const stall: Array<Promise<unknown>> = [];
+            try {
+                const reserve = await insertReserve(source, { id: 8_801, programId: 8_811 });
+                const recorder = (await wired.startAll([reserve.id])).get(reserve.id);
+                const preparation = recorder.startPreparation();
+                const sender = await tuner.sender(reserve.programId);
+                await sender.write(chunk(0));
+                await preparation;
+                await vi.waitFor(() => expect(wired.started).toHaveBeenCalledOnce());
+                for (let index = 1; index < 26; index++) await sender.write(chunk(index));
+                // libuv の thread pool をすべて CPU の仕事で塞ぎ、録画 file への書き込み（fs.write）を thread pool が空く
+                // まで待たせる。この間に放送 stream の最後の data と終わりが届く。
+                const poolSize = Number(process.env.UV_THREADPOOL_SIZE ?? 4);
+                for (let job = 0; job < poolSize * 2; job++) {
+                    stall.push(
+                        new Promise(resolve => pbkdf2('synthetic', 'synthetic', 600_000, 64, 'sha512', resolve)),
+                    );
+                }
+                for (let index = 26; index < 31; index++) await sender.write(chunk(index));
+                sender.end();
+                await vi.waitFor(() => expect(wired.finished).toHaveBeenCalledOnce(), { timeout: 30_000 });
+
+                expect(sizesAtFinish).toEqual([31 * CHUNK_SIZE]);
+                expect(wired.failed).not.toHaveBeenCalled();
+            } finally {
+                await Promise.all(stall);
+                wired.stop();
+                await tuner.close();
+            }
+        });
+    }, 120_000);
+});

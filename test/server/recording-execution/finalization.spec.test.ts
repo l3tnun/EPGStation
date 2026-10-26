@@ -1,14 +1,17 @@
 import { once } from 'node:events';
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { promises as fsPromises, statSync } from 'node:fs';
+import { mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { get as httpGet, IncomingMessage } from 'node:http';
 import { AddressInfo, createServer, Socket } from 'node:net';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { PassThrough } from 'node:stream';
 import { describe, expect, it, vi } from 'vitest';
 import {
     deferred,
     flushImmediate,
+    load,
+    logger,
     makeRecorder,
     makeRecorded,
     makeRecordingSessionBinding,
@@ -16,7 +19,19 @@ import {
     ProgramDB,
     Recorded,
     RecorderModel,
+    RecordingUtilModel,
 } from './_harness';
+
+type StorageSyncResult = 'synced' | 'failed' | 'timed-out' | 'unsupported' | 'missing';
+const RecordingStorageSync = load<{
+    syncFile(filePath: string): Promise<void>;
+    syncDirectory(directoryPath: string): Promise<void>;
+    sync(
+        target: string,
+        operation: () => Promise<void>,
+        log: { warn(...args: unknown[]): void },
+    ): Promise<StorageSyncResult>;
+}>('model', 'operator', 'recording', 'RecordingStorageSync.js');
 
 // Stores a program through ProgramDB with a fake database runner and returns the row it persisted.
 const storeProgram = async (name: string, needToReplaceEnclosingCharacters: boolean) => {
@@ -247,12 +262,11 @@ describe('recording finalization', () => {
         size.resolve();
     });
 
-    it('[INT-CASES-RE-9.4 regression] waits for the recFile writer to close before starting the size update', async () => {
+    it('[RE-5.10][Task 6.4] waits for the recFile writer to close before clearing the recording flag and starting the size update', async () => {
         const ledger: string[] = [];
         const recorded = makeRecorded();
         let closeListener: (() => void) | undefined;
-        // A fake WriteStream whose 'close' only fires when this test calls `closeListener`
-        // directly, so the write completion can never race a real timer/IO delay.
+        // 'close' は test が `closeListener` を呼んだときだけ届く。書き込みの終わりが timer や I/O の遅れと競合しない。
         const writer = {
             closed: false,
             end: vi.fn(),
@@ -279,23 +293,32 @@ describe('recording finalization', () => {
         harness.model.videoFileFulPath = '/synthetic-root/synthetic.ts';
         harness.model.recFile = writer;
         harness.model.updateDropFileLog = vi.fn(async () => ledger.push('drop'));
+        const syncFile = vi.spyOn(RecordingStorageSync, 'syncFile').mockImplementation(async () => {
+            ledger.push('sync-file');
+        });
+        const syncDirectory = vi.spyOn(RecordingStorageSync, 'syncDirectory').mockImplementation(async () => {
+            ledger.push('sync-directory');
+        });
+        try {
+            const finalization = harness.model.recEnd();
+            await vi.waitFor(() => expect(closeListener).toBeTypeOf('function'));
+            await flushImmediate();
+            expect(ledger).toEqual([]);
+            expect(harness.recordingEvent.emitFinishRecording).not.toHaveBeenCalled();
 
-        await harness.model.recEnd();
-        // finalizeRecording completes (drop/requery/finish) without waiting for the writer to
-        // close (unchanged behavior: it must not block on the size update). But the size
-        // update itself must not have started yet, since stat()-ing the file before the
-        // writer's 'close' could observe a write that is still unflushed.
-        expect(closeListener).toBeTypeOf('function');
-        expect(ledger).toEqual(['clear', 'drop', 'query']);
-        expect(harness.recordingUtil.updateVideoFileSize).not.toHaveBeenCalled();
-        expect(harness.recordingEvent.emitFinishRecording).toHaveBeenCalledOnce();
+            closeListener!();
+            await finalization;
+            await flushImmediate();
 
-        closeListener!();
-        await flushImmediate();
-        await flushImmediate();
-
-        expect(ledger).toEqual(['clear', 'drop', 'query', 'size-start']);
-        expect(harness.recordingUtil.updateVideoFileSize).toHaveBeenCalledWith(31);
+            // size の更新は待たずに始まるので、drop・再取得との前後は決めない。
+            expect(ledger.slice(0, 3)).toEqual(['sync-file', 'sync-directory', 'clear']);
+            expect([...ledger.slice(3)].sort()).toEqual(['drop', 'query', 'size-start']);
+            expect(harness.recordingUtil.updateVideoFileSize).toHaveBeenCalledWith(31);
+            expect(harness.recordingEvent.emitFinishRecording).toHaveBeenCalledOnce();
+        } finally {
+            syncFile.mockRestore();
+            syncDirectory.mockRestore();
+        }
     });
 
     it('[Task 6.1] stops planned-delete after stream/writer/drop shutdown and skips result finalizers', async () => {
@@ -775,5 +798,386 @@ describe('recording finalization', () => {
                 });
             },
         );
+    });
+});
+
+describe('recording file storage sync', () => {
+    const errorWithCode = (code: string): Error => Object.assign(new Error(`synthetic-${code}`), { code });
+
+    it.each(['end', 'cancel', 'failure'] as const)(
+        '[RE-5.10][Task 6.4] writes the recording file and its directory out before clearing the recording flag and publishing the finish (%s)',
+        async trigger => {
+            const recording = await startRecordingOverReceiver({});
+            const { fullPath, harness, head, receiver, send } = recording;
+            const tail = makeTsPackets(300, 0x33);
+            const ledger: string[] = [];
+            // 書き出しを呼んだ時点で、録画 file に何 byte 書かれているかを記録する。
+            const syncFile = vi.spyOn(RecordingStorageSync, 'syncFile').mockImplementation(async (filePath: string) => {
+                ledger.push(`file:${filePath}:${statSync(filePath).size}`);
+            });
+            const syncDirectory = vi
+                .spyOn(RecordingStorageSync, 'syncDirectory')
+                .mockImplementation(async (directoryPath: string) => {
+                    ledger.push(`directory:${directoryPath}`);
+                });
+            harness.recordedDB.removeRecording.mockImplementation(async () => {
+                ledger.push('clear');
+            });
+            harness.recordingEvent.emitFinishRecording.mockImplementation(() => {
+                ledger.push('finish');
+            });
+            try {
+                await send(tail);
+                if (trigger === 'end') {
+                    receiver.sender.end();
+                } else if (trigger === 'cancel') {
+                    await harness.model.cancel(false);
+                } else {
+                    await vi.waitFor(async () => expect((await stat(fullPath)).size).toBe(head.length + tail.length));
+                    receiver.stream.destroy(new Error('synthetic stream failure'));
+                }
+                await vi.waitFor(() => expect(ledger).toContain('finish'));
+
+                expect(ledger).toEqual([
+                    `file:${fullPath}:${head.length + tail.length}`,
+                    `directory:${dirname(fullPath)}`,
+                    'clear',
+                    'finish',
+                ]);
+            } finally {
+                syncFile.mockRestore();
+                syncDirectory.mockRestore();
+                await recording.cleanup();
+            }
+        },
+    );
+
+    it('[RE-5.10][Task 6.4] does not write out a recording that is stopped for its deletion', async () => {
+        const syncFile = vi.spyOn(RecordingStorageSync, 'syncFile');
+        const syncDirectory = vi.spyOn(RecordingStorageSync, 'syncDirectory');
+        try {
+            const harness = makeRecorder();
+            harness.model.reserve = makeReserve();
+            harness.model.isPlanToDelete = true;
+            harness.model.recordedId = 21;
+            harness.model.videoFileId = 31;
+            harness.model.videoFileFulPath = '/synthetic-root/synthetic.ts';
+            await harness.model.recEnd();
+
+            expect(syncFile).not.toHaveBeenCalled();
+            expect(syncDirectory).not.toHaveBeenCalled();
+        } finally {
+            syncFile.mockRestore();
+            syncDirectory.mockRestore();
+        }
+    });
+
+    it('[RE-5.10][Task 6.4] writes a real recording file out to storage through the file and directory handles', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'epgstation-recording-storage-sync-'));
+        const filePath = join(root, 'synthetic.ts');
+        try {
+            await writeFile(filePath, 'synthetic-payload');
+            await expect(RecordingStorageSync.syncFile(filePath)).resolves.toBeUndefined();
+            await expect(RecordingStorageSync.syncDirectory(root)).resolves.toBeUndefined();
+            expect(await readFile(filePath, 'utf8')).toBe('synthetic-payload');
+            await expect(RecordingStorageSync.syncFile(join(root, 'missing.ts'))).rejects.toMatchObject({
+                code: 'ENOENT',
+            });
+            await expect(RecordingStorageSync.syncDirectory(join(root, 'missing'))).rejects.toMatchObject({
+                code: 'ENOENT',
+            });
+        } finally {
+            await rm(root, { recursive: true, force: true });
+        }
+    });
+
+    it('[RE-5.10][Task 6.4] does not open a directory to write it out on Windows', async () => {
+        const platform = Object.getOwnPropertyDescriptor(process, 'platform')!;
+        Object.defineProperty(process, 'platform', { ...platform, value: 'win32' });
+        try {
+            await expect(
+                RecordingStorageSync.syncDirectory(join(tmpdir(), 'synthetic-missing-directory')),
+            ).resolves.toBeUndefined();
+        } finally {
+            Object.defineProperty(process, 'platform', platform);
+        }
+    });
+
+    it('[RE-5.11][Task 6.4] retries a failed write-out a second apart up to three attempts and warns once', async () => {
+        vi.useFakeTimers();
+        const log = { warn: vi.fn() };
+        const operation = vi.fn(async () => Promise.reject(errorWithCode('EIO')));
+        try {
+            const result = RecordingStorageSync.sync('synthetic-target', operation, log);
+            await vi.advanceTimersByTimeAsync(0);
+            expect(operation).toHaveBeenCalledTimes(1);
+            await vi.advanceTimersByTimeAsync(999);
+            expect(operation).toHaveBeenCalledTimes(1);
+            await vi.advanceTimersByTimeAsync(1);
+            expect(operation).toHaveBeenCalledTimes(2);
+            await vi.advanceTimersByTimeAsync(1_000);
+            expect(operation).toHaveBeenCalledTimes(3);
+            await expect(result).resolves.toBe('failed');
+            await vi.advanceTimersByTimeAsync(10_000);
+            expect(operation).toHaveBeenCalledTimes(3);
+            expect(log.warn).toHaveBeenCalledOnce();
+            expect(log.warn.mock.calls[0].join(' ')).toContain('synthetic-target');
+            expect(log.warn.mock.calls[0].join(' ')).toContain('synthetic-EIO');
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it.each([1, 2, 3])(
+        '[RE-5.11][Task 6.4] reports a write-out that succeeds on attempt %i as synced without a warning',
+        async succeedingAttempt => {
+            vi.useFakeTimers();
+            const log = { warn: vi.fn() };
+            let attempts = 0;
+            const operation = vi.fn(async () => {
+                attempts += 1;
+                if (attempts < succeedingAttempt) throw errorWithCode('EIO');
+            });
+            try {
+                const result = RecordingStorageSync.sync('synthetic-target', operation, log);
+                await vi.advanceTimersByTimeAsync(2_000);
+                await expect(result).resolves.toBe('synced');
+                expect(operation).toHaveBeenCalledTimes(succeedingAttempt);
+                expect(log.warn).not.toHaveBeenCalled();
+            } finally {
+                vi.useRealTimers();
+            }
+        },
+    );
+
+    it.each([
+        ['EINVAL', 'unsupported'],
+        ['ENOTSUP', 'unsupported'],
+        ['EOPNOTSUPP', 'unsupported'],
+        ['ENOENT', 'missing'],
+    ] as const)(
+        '[RE-5.11][Task 6.4] does not retry a write-out that fails with %s and reports it as %s',
+        async (code, expected) => {
+            vi.useFakeTimers();
+            const log = { warn: vi.fn() };
+            const operation = vi.fn(async () => Promise.reject(errorWithCode(code)));
+            try {
+                const result = RecordingStorageSync.sync('synthetic-target', operation, log);
+                await vi.advanceTimersByTimeAsync(10_000);
+                await expect(result).resolves.toBe(expected);
+                expect(operation).toHaveBeenCalledOnce();
+                expect(log.warn).toHaveBeenCalledOnce();
+                expect(log.warn.mock.calls[0].join(' ')).toContain('synthetic-target');
+            } finally {
+                vi.useRealTimers();
+            }
+        },
+    );
+
+    it('[RE-5.12][Task 6.4] gives up a write-out that has not finished in 60 seconds without retrying it', async () => {
+        vi.useFakeTimers();
+        const log = { warn: vi.fn() };
+        const pending = deferred<void>();
+        const operation = vi.fn(() => pending.promise);
+        try {
+            let settled: StorageSyncResult | undefined;
+            void RecordingStorageSync.sync('synthetic-target', operation, log).then(result => {
+                settled = result;
+            });
+            await vi.advanceTimersByTimeAsync(59_999);
+            expect(settled).toBeUndefined();
+            expect(log.warn).not.toHaveBeenCalled();
+            await vi.advanceTimersByTimeAsync(1);
+            expect(settled).toBe('timed-out');
+            expect(log.warn).toHaveBeenCalledOnce();
+            expect(log.warn.mock.calls[0].join(' ')).toContain('synthetic-target');
+
+            // 時間切れの後に元の書き出しが失敗しても、試み直さず、未処理の reject も残さない。
+            pending.reject(errorWithCode('EIO'));
+            await vi.advanceTimersByTimeAsync(10_000);
+            expect(operation).toHaveBeenCalledOnce();
+            expect(log.warn).toHaveBeenCalledOnce();
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('[RE-5.12][Task 6.4] warns and goes on without writing out when the recording file writer does not close in 60 seconds', async () => {
+        vi.useFakeTimers();
+        const writer = { closed: false, end: vi.fn(), removeAllListeners: vi.fn(), once: vi.fn() };
+        const harness = makeRecorder();
+        harness.model.reserve = makeReserve();
+        harness.model.recordedId = 21;
+        harness.model.videoFileId = 31;
+        harness.model.videoFileFulPath = '/synthetic-root/synthetic.ts';
+        harness.model.recFile = writer;
+        harness.model.updateDropFileLog = vi.fn(async () => undefined);
+        const syncFile = vi.spyOn(RecordingStorageSync, 'syncFile');
+        const syncDirectory = vi.spyOn(RecordingStorageSync, 'syncDirectory');
+        logger.system.warn.mockClear();
+        try {
+            const finalization = harness.model.recEnd();
+            await vi.advanceTimersByTimeAsync(59_999);
+            expect(harness.recordedDB.removeRecording).not.toHaveBeenCalled();
+            expect(logger.system.warn).not.toHaveBeenCalled();
+            await vi.advanceTimersByTimeAsync(1);
+            await finalization;
+
+            expect(logger.system.warn).toHaveBeenCalledOnce();
+            expect(logger.system.warn.mock.calls[0].join(' ')).toContain('/synthetic-root/synthetic.ts');
+            expect(syncFile).not.toHaveBeenCalled();
+            expect(syncDirectory).not.toHaveBeenCalled();
+            expect(harness.recordedDB.removeRecording).toHaveBeenCalledWith(21);
+            expect(harness.recordingEvent.emitFinishRecording).toHaveBeenCalledOnce();
+        } finally {
+            syncFile.mockRestore();
+            syncDirectory.mockRestore();
+            vi.useRealTimers();
+        }
+    });
+
+    // 録画の保存先、一時録画先、移す前の録画 file。case ごとに `buildMove` が作り直す。
+    let recordedRoot: string;
+    let temporaryRoot: string;
+    let oldPath: string;
+    let mover: { movingFromTmp(reserve: unknown, videoFileId: number): Promise<string> };
+    const destination = (): string => join(recordedRoot, 'synthetic.ts');
+    const buildMove = async () => {
+        recordedRoot = await mkdtemp(join(tmpdir(), 'epgstation-recording-move-recorded-'));
+        temporaryRoot = await mkdtemp(join(tmpdir(), 'epgstation-recording-move-tmp-'));
+        oldPath = join(temporaryRoot, '1.ts');
+        const ledger: string[] = [];
+        const pathUpdate = vi.fn(async () => {
+            ledger.push('path');
+        });
+        mover = new RecordingUtilModel(
+            { getLogger: () => logger },
+            {
+                getConfig: () => ({
+                    recorded: [{ name: 'synthetic-root', path: recordedRoot }],
+                    recordedFileExtension: '.ts',
+                    recordedFormat: 'synthetic',
+                    recordedTmp: temporaryRoot,
+                }),
+            },
+            { getExecution: vi.fn(async () => 5), unLockExecution: vi.fn() },
+            { findId: vi.fn(async () => null) },
+            { findChannelIdAndTime: vi.fn(async () => null) },
+            { updateFilePath: pathUpdate },
+            { getFullFilePathFromId: vi.fn(async () => oldPath) },
+        );
+        await writeFile(oldPath, 'synthetic-payload');
+        const cleanup = async (): Promise<void> => {
+            await rm(recordedRoot, { recursive: true, force: true });
+            await rm(temporaryRoot, { recursive: true, force: true });
+        };
+        return { cleanup, ledger, pathUpdate };
+    };
+
+    it('[RE-5.13][Task 6.4] writes out the destination and source directories of a renamed recording before recording its new path', async () => {
+        const move = await buildMove();
+        const sync = vi.spyOn(RecordingStorageSync, 'sync');
+        const syncDirectory = vi
+            .spyOn(RecordingStorageSync, 'syncDirectory')
+            .mockImplementation(async (directoryPath: string) => {
+                move.ledger.push(`directory:${directoryPath}`);
+            });
+        const syncFile = vi.spyOn(RecordingStorageSync, 'syncFile');
+        try {
+            await expect(mover.movingFromTmp(makeReserve({ id: 1 }), 71)).resolves.toBe(destination());
+
+            expect(move.ledger).toEqual([`directory:${recordedRoot}`, `directory:${temporaryRoot}`, 'path']);
+            expect(syncFile).not.toHaveBeenCalled();
+            expect(sync.mock.calls.map(call => call[0])).toEqual([recordedRoot, temporaryRoot]);
+        } finally {
+            sync.mockRestore();
+            syncDirectory.mockRestore();
+            syncFile.mockRestore();
+            await move.cleanup();
+        }
+    });
+
+    it('[RE-5.13][Task 6.4] writes out a copied recording and its directory before recording its new path and removing the temporary file', async () => {
+        const move = await buildMove();
+        const rename = vi.spyOn(fsPromises, 'rename').mockRejectedValueOnce(errorWithCode('EXDEV'));
+        const syncFile = vi.spyOn(RecordingStorageSync, 'syncFile').mockImplementation(async (filePath: string) => {
+            move.ledger.push(`file:${filePath}:${statSync(filePath).size}:${statSync(oldPath).size}`);
+        });
+        const syncDirectory = vi
+            .spyOn(RecordingStorageSync, 'syncDirectory')
+            .mockImplementation(async (directoryPath: string) => {
+                move.ledger.push(`directory:${directoryPath}`);
+            });
+        try {
+            await expect(mover.movingFromTmp(makeReserve({ id: 1 }), 71)).resolves.toBe(destination());
+
+            const size = 'synthetic-payload'.length;
+            expect(move.ledger).toEqual([`file:${destination()}:${size}:${size}`, `directory:${recordedRoot}`, 'path']);
+            await expect(stat(oldPath)).rejects.toMatchObject({ code: 'ENOENT' });
+        } finally {
+            rename.mockRestore();
+            syncFile.mockRestore();
+            syncDirectory.mockRestore();
+            await move.cleanup();
+        }
+    });
+
+    it.each(['failed', 'timed-out', 'missing'] as const)(
+        '[RE-5.13][Task 6.4] keeps the temporary recording and removes the copy when the copy is %s to write out',
+        async result => {
+            const move = await buildMove();
+            const rename = vi.spyOn(fsPromises, 'rename').mockRejectedValueOnce(errorWithCode('EXDEV'));
+            const sync = vi
+                .spyOn(RecordingStorageSync, 'sync')
+                .mockImplementation(async (target: string) => (target === destination() ? result : 'synced'));
+            try {
+                await expect(mover.movingFromTmp(makeReserve({ id: 1 }), 71)).rejects.toThrow();
+
+                expect(move.pathUpdate).not.toHaveBeenCalled();
+                expect(await readFile(oldPath, 'utf8')).toBe('synthetic-payload');
+                await expect(stat(destination())).rejects.toMatchObject({ code: 'ENOENT' });
+            } finally {
+                rename.mockRestore();
+                sync.mockRestore();
+                await move.cleanup();
+            }
+        },
+    );
+
+    it.each(['unsupported', 'synced'] as const)(
+        '[RE-5.13][Task 6.4] completes a copy move whose copy is %s to write out',
+        async result => {
+            const move = await buildMove();
+            const rename = vi.spyOn(fsPromises, 'rename').mockRejectedValueOnce(errorWithCode('EXDEV'));
+            const sync = vi
+                .spyOn(RecordingStorageSync, 'sync')
+                .mockImplementation(async (target: string) => (target === destination() ? result : 'failed'));
+            try {
+                await expect(mover.movingFromTmp(makeReserve({ id: 1 }), 71)).resolves.toBe(destination());
+
+                expect(move.pathUpdate).toHaveBeenCalledOnce();
+                expect(await readFile(destination(), 'utf8')).toBe('synthetic-payload');
+                await expect(stat(oldPath)).rejects.toMatchObject({ code: 'ENOENT' });
+                expect(sync.mock.calls.map(call => call[0])).toEqual([destination(), recordedRoot]);
+            } finally {
+                rename.mockRestore();
+                sync.mockRestore();
+                await move.cleanup();
+            }
+        },
+    );
+
+    it('[RE-5.13][Task 6.4] completes a rename move even when its directories cannot be written out', async () => {
+        const move = await buildMove();
+        const sync = vi.spyOn(RecordingStorageSync, 'sync').mockImplementation(async () => 'failed');
+        try {
+            await expect(mover.movingFromTmp(makeReserve({ id: 1 }), 71)).resolves.toBe(destination());
+
+            expect(move.pathUpdate).toHaveBeenCalledOnce();
+            expect(await readFile(destination(), 'utf8')).toBe('synthetic-payload');
+        } finally {
+            sync.mockRestore();
+            await move.cleanup();
+        }
     });
 });

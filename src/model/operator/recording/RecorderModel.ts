@@ -30,6 +30,7 @@ import IRecorderModel, { RecordingScheduleSessionBinding } from './IRecorderMode
 import IRecordingStreamCreator from './IRecordingStreamCreator.js';
 import IRecordingUtilModel, { RecFilePathInfo } from './IRecordingUtilModel.js';
 import RecordingRecordedUseProvider, { RecordingSessionRecordedUse } from './RecordingRecordedUseProvider.js';
+import RecordingStorageSync from './RecordingStorageSync.js';
 import { isPathSelectionOverdueError, PathSelectionOverdueError } from './RecordingUtilModel.js';
 
 /** `stopForDeletion`が発行する後始末待ち（`DeletionTerminalLatch.terminal`）に許容する
@@ -1710,6 +1711,9 @@ class RecorderModel implements IRecorderModel {
         }
 
         if (this.recordedId !== null) {
+            // 録画ファイルを記憶装置へ書き出してから、録画中状態の解除・移動・完了通知へ進む
+            if (this.videoFileFulPath !== null) await this.syncRecordingFile(this.videoFileFulPath);
+
             // remove recording flag
             this.log.system.info(`remove recording flag: ${this.recordedId}`);
             await this.recordedDB.removeRecording(this.recordedId);
@@ -1797,6 +1801,37 @@ class RecorderModel implements IRecorderModel {
             `recording finish reserveId: ${this.reserve.id}, recordedId: ${this.recordedId}, videoFileFulPath: ${this.videoFileFulPath}`,
         );
         this.transitionSchedulePhase(this.currentScheduleBinding(expectedSessionToken), ['Finishing'], 'Completed');
+    }
+
+    /**
+     * 録画ファイルの writer の終了（'close'）を待ち、録画ファイルとそれを置いたディレクトリを記憶装置へ書き出す。
+     * writer が WRITER_CLOSE_TIMEOUT_MS 以内に終わらなければ警告を記録し、書き出さずに戻る。書き出しの結果にかかわらず戻る
+     * @param filePath: 録画ファイル
+     */
+    private async syncRecordingFile(filePath: string): Promise<void> {
+        const closeWait = this.recFileCloseTerminal;
+        if (closeWait !== null) {
+            let timer: NodeJS.Timeout | undefined;
+            const isClosed = await Promise.race([
+                closeWait.then(() => true),
+                new Promise<boolean>(resolve => {
+                    timer = setTimeout(() => resolve(false), RecordingStorageSync.WRITER_CLOSE_TIMEOUT_MS);
+                }),
+            ]);
+            clearTimeout(timer);
+            if (isClosed === false) {
+                this.log.system.warn(`recording file writer did not close: ${filePath}`);
+                return;
+            }
+        }
+
+        await RecordingStorageSync.sync(filePath, () => RecordingStorageSync.syncFile(filePath), this.log.system);
+        const directoryPath = path.dirname(filePath);
+        await RecordingStorageSync.sync(
+            directoryPath,
+            () => RecordingStorageSync.syncDirectory(directoryPath),
+            this.log.system,
+        );
     }
 
     private trackFinalizationContinuation(operation: Promise<unknown>): void {
