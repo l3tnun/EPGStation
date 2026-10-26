@@ -112,6 +112,8 @@ export const recordingDomainSuiteMatrix = [
             test('create-recorded-program-map.imp.test.ts', 'imp'),
             test('drop-checker.imp.test.ts', 'imp', ['fake-timer', 'stream', 'filesystem']),
             test('drop-checker-attach-order.imp.test.ts', 'imp', ['stream', 'filesystem']),
+            test('drop-checker-log-batching.imp.test.ts', 'imp', ['fake-timer', 'stream']),
+            test('drop-checker-log-batching.integration.test.ts', 'integration', ['stream', 'filesystem']),
             test('drop-checker-real-ts.integration.test.ts', 'integration', ['stream', 'filesystem']),
             test('dropchecker-finished-error.imp.test.ts', 'imp', ['stream', 'filesystem']),
             test('stop-finish-catch.imp.test.ts', 'imp', ['stream']),

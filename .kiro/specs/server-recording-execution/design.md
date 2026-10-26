@@ -878,6 +878,17 @@ sequenceDiagram
 立に、ドロップログ側だけで`<録画file名>(<n>).log`（`n`は1から昇順）の空き名を再帰的に探して確定する。ログ保存先
 directoryが存在しなければ作成する。確定した空fileを`prepare()`の中で即座に生成し、以降はそのpathへ追記する。
 
+drop/error明細はUTF-8の文字列bufferへ発生順に追加する。64 KiB以上、または最初の未出力明細から100 msの先に成立した
+条件でbatchを切り出し、単一Promise tailへ接続して一度に一つだけappendする。100 msはflushの予定時間であり、I/O完了
+期限ではない。明細がない間はtimerを作らない。scramblingは個別明細を出さず、aribtsのPID別集計件数を保持する。
+
+自然finishとstopは同じfinish Promiseを共有する。getResultは解析結果の確定を通知し、ログI/Oの完了を待たない。stopは
+先行batchと残量のflush、その後の空行・全PID集計の追記のsettlementを待ち、flush timerを回収する。finish開始後の明細追加は
+受け付けない。結果待ちの10秒timeoutは維持し、結果確定時には待機timerとlistenerを回収する。
+append失敗は出力先と例外をsystem logへ記録し、再送せず後続batchと集計の出力を試みる。settlementはログ保存成功の保証ではない。
+64 KiBはbatch切出しの閾値であり、I/O待機中の全batch量の上限ではない。
+
+
 パス候補選択の5秒は優先度付き実行権の取得待ち期限である。期限切れ時はentryをqueueから除外または無効化してからcallerへ
 errorを返し、録画先選択を開始しない。期限切れentryへ後から実行権を渡さず、次の有効なpath選択要求を進める。
 
@@ -1640,7 +1651,9 @@ tuner server は実 HTTP で応答する loopback の server で、受け取っ�
 
 `drop-checker-real-ts.integration.test.ts`は、本物の`DropCheckerModel`に本物の ffmpeg が作った TS を、188 byte の倍数でない大きさの
 chunk で、また packet の途中から始まる形で流し、drop・error・scrambling を数えないことを確かめる。
-集計結果の取得とログ追記の完了は別の境界であり、比較testは既存の書込みtrackerで追記完了を待ってからログを検証・回収する。
+集計結果の取得とログ追記の完了は別の境界であり、比較testはstopまたは既存の書込みtrackerで追記完了を待ってからログを検証・回収する。
+`drop-checker-log-batching.imp.test.ts`は64 KiB/100 msの境界、直列append、自然finishと重複stop、失敗後の継続、timer回収を確認する。
+`drop-checker-log-batching.integration.test.ts`は合成TSを本物の解析器へ渡し、一時fileにscrambling最終集計と順序どおりの明細が残ることを確認する。
 
 ## 12. 正式トレーサビリティ
 
