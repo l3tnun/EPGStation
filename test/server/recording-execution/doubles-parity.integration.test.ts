@@ -294,6 +294,9 @@ describe('microtask DB doubles against the synchronous better-sqlite3 when recor
                     sender.end();
                 }
                 await vi.waitFor(() => expect(wired.finished).toHaveBeenCalledTimes(4), { timeout: 30_000 });
+                // 録画完了通知は writer close より先に届き得る。全 session の物理的な終端を待ってから
+                // file を読み、同一 turn に届いた最後の data まで保存されたことを検証する。
+                await Promise.all([...recorders.values()].map(recorder => recorder.whenNormalRecordingTerminal()));
 
                 const recordeds = (
                     await Promise.all(reservations.map(reserve => wired.recordedDB.findReserveId(reserve.id)))
