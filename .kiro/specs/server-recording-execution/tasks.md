@@ -380,7 +380,7 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 5.3_
 
--   [x] 6. 録画終了、部分失敗、および録画失敗後の有限再試行を固定する
+-   [ ] 6. 録画終了、部分失敗、および録画失敗後の有限再試行を固定する
 -   [x] 6.1 stream・writer終端からsize・drop反映までをcharacterizationする
 
     -   予約終了、取消、上流終端、stream error、writer errorから、stream・writer・drop停止、時刻指定milestone・relay
@@ -432,6 +432,25 @@ event payload、および失敗伝播を維持する。番組リレー確認の2
     -   _Boundary: Recording failure retry coordinator・RecordingCandidateRegistry integration_
     -   _Verification: unittest/spec, unittest/imp, integration_
     -   _Depends: 1.7, 6.2_
+
+-   [ ] 6.4 録画ファイルを記憶装置へ書き出してから録画の完了を記録・通知する
+
+    -   正常終了、取消、録画開始後の失敗による終了で、writer の終了を待ってから録画ファイルとディレクトリを書き出し、その
+        後に録画中解除、一時file移動、完了通知へ進むことを`unittest/spec`で固定する。削除の取消では書き出さない。
+    -   書き出しの失敗は1秒間隔で合計3回試み、`EINVAL`・`ENOTSUP`・`EOPNOTSUPP`は試み直さないこと、writer の終了と書き出
+        し一回の60秒境界、時間切れの後に試み直さず後着のrejectを未処理にしないこと、`synced`以外でwarnを一回記録して後続
+        へ進むことをfake clockで確かめる。
+    -   一時file移動では、rename後に移動先と移動元のディレクトリを、copy後にcopy先のファイルとディレクトリを、録画ファイ
+        ル行のpath更新の前に書き出す。copy先の失敗・時間切れでは移動失敗としてcopyを消し一時fileを残し、非対応では移動を
+        続けることを確かめる。
+    -   実filesystemでlibuvのthread poolを塞いで書き込みを遅らせても、完了通知の時点で録画ファイルの大きさが受け取った放送
+        データと一致することを統合testで確かめる。
+    -   完了時には、書き出しの順序、試行回数、時間切れ、非対応、移動の各結果が`RecordingStorageSync`と終了処理・
+        `movingFromTmp`で再現される。
+    -   _Requirements: 5.2, 5.10, 5.11, 5.12, 5.13_
+    -   _Boundary: RecordingSession finalization・RecordingStorageSync・RecordingFilePort_
+    -   _Verification: unittest/spec, unittest/imp, integration_
+    -   _Depends: 6.1, 6.2_
 
 -   [x] 7. 起動時の中断録画整理と候補再構築を段階化する
 -   [x] 7.1 中断録画の項目単位整理をcharacterizationする

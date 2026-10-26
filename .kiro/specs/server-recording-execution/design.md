@@ -53,10 +53,19 @@ contractへ従う。仕様contractと異なるsource特性は隔離したcharact
 | 時刻指定予約の終了時刻更新時に開始を待つ上限 |    15,000 ms | 録画準備中の予約の終了時刻を更新するとき、録画開始を待つ上限 |
 | 使用済みチューナー追跡情報を整理する周期     | 1,800,000 ms | 使用済みチューナー追跡情報を整理する独立周期             |
 | `DELETION_STOP_TIMEOUT_MS`                   |    60,000 ms | 削除前に録画資源の終端を確認する最大待ち                 |
+| `WRITER_CLOSE_TIMEOUT_MS`                    |    60,000 ms | 録画終了時に録画ファイルの writer の終了（'close'）を待つ上限 |
+| `SYNC_TIMEOUT_MS`                            |    60,000 ms | 記憶装置への書き出し（fsync）一回を待つ上限              |
+| `SYNC_ATTEMPTS`・`SYNC_RETRY_INTERVAL_MS`    | 3 回・1,000 ms | 書き出しが失敗したときに試みる合計回数と、その間隔     |
 
 `SCAN_INTERVAL_MS` と `PREPARATION_LEAD_MS` は本番では固定し、テストでは時計とスケジューラーを差し替えて境界を決定論的に
 検証する。15 秒は準備開始時点の計算値であり、short timer の判定幅ではない。チューナー接続確立期限はチューナーサーバー連
 携側の契約であり、本機能の予約タイマーではない。
+
+録画終了時に書き出すのは、まだ記憶装置へ書かれていない録画ファイルの最後の部分で、Linux の既定ではおおむね最後の 30 秒分
+（BS の録画で 1 本約 100 MB）である。同時に終わる 8 本を 30 MB/s の記憶装置へ書き出しても 30 秒ほどで終わるので、書き出
+し一回の上限を 60 秒とする。writer の終了は Node の buffer に残った最大 1 MB ほどを OS へ渡すだけなので、60 秒は
+filesystem が止まったときの上限である。fsync は途中で止められず、時間切れの呼び出しは libuv の thread を握ったまま残るの
+で、時間切れの後は試み直さない。
 
 ## 2. 依存関係と境界
 
@@ -129,7 +138,7 @@ start state と一つの `startPromise` を所有する。最初の呼出しだ�
 | `RecordingCandidateRegistry`   | 予約 ID ごとの最新候補、世代、現在 phase                                   | 永続化、タイマーハンドル         |
 | `RecordingSession`             | 1 予約の準備、録画、変更、取消、終了                                       | 将来予約全体の走査               |
 | `StreamAllocator`              | 論理チューナー割当、同一チャンネル共有、途中終了判定                       | 製品固有接続                     |
-| `RecordingFileWriter`          | パス決定、書込み、初回データ待ち、移動、サイズ取得                         | 録画結果の永続化方針             |
+| `RecordingFileWriter`          | パス決定、書込み、初回データ待ち、記憶装置への書き出し、移動、サイズ取得   | 録画結果の永続化方針             |
 | `DropCounter`                  | ドロップ、エラー、スクランブル集計                                         | 終了判断                         |
 | `StartupRecordingReconciler`   | 録画中フラグ解除、残存ファイル移動・サイズ更新                             | 受信プロセス復元                 |
 | `RecordingLifecyclePublisher`  | 準備、開始、失敗、再試行終了、完了、リレー候補の公開                       | イベント配送先の実装             |
@@ -611,7 +620,7 @@ listener を用いる。これらを越える新しい終了重複排除契約�
 て録画履歴の追加と予約削除要否`true`の完了通知を行う（Requirements 5.5）。データベース処理が event loop を塞ぐかどうか
 （driver が同期か非同期か）で、この結果を変えない。session は、録画中の`reservation-no-longer-recordable`の取消を受けた
 時点で予約終了時刻（`endAt`）を過ぎていれば（`endAt <= 現在時刻`）、自動予約ルールの予約（番組リレーを除く）に限り予約
-削除要否を`true`のまま残す（6.9 の 10）。consumer はこの完了通知で`updateRule(ruleId)`を再度要求し、追加された録画履歴で
+削除要否を`true`のまま残す（6.9 の 11）。consumer はこの完了通知で`updateRule(ruleId)`を再度要求し、追加された録画履歴で
 重複状態を再計算する。手動予約と番組リレー予約では、取消の時点で予約はすでに削除されている。予約削除要否を`true`にする
 と consumer が存在しない予約の取消を要求して失敗を記録するだけなので、`false`のまま通知する。
 
@@ -1198,6 +1207,7 @@ sequenceDiagram
     Session->>Session: enter existing finish path
     Session->>Tuner: try close
     Session->>File: try close
+    Session->>File: await close (≤60s), sync file and directory
     Session->>Recorded: clearRecordingFlag
     alt 解除成功
         Session->>Util: try move temporary file
@@ -1234,22 +1244,53 @@ listener 分岐を維持し、`RecordingScheduleController` の CAS は時刻指
 2. `recorded-content-deletion`による取消では、ドロップ確認停止後に終了し、録画中解除、移動、サイズ、履歴、完了通知を行わ
    ない。
 3. 録画済み番組 ID がなければ、録画結果反映をせず終了する。
-4. 録画中状態を解除する。この要求が失敗した場合は例外を伝播し、それ以後を行わない。録画中状態の解除、一時録画先からの
+4. 録画ファイル（`videoFileFulPath`）があれば、writer の終了（'close'）を最大60秒（`WRITER_CLOSE_TIMEOUT_MS`）待ち、録画
+   ファイルと、それを置いたディレクトリを記憶装置へ書き出す（6.9.1）。writer の終了を60秒で確かめられないときは
+   `system.warn`へ記録し、書き出さずに次へ進む。書き出しの結果にかかわらず次へ進む。正常終了、取消、および 6.10 の録画
+   開始後の失敗による終了のいずれもこの手順を通る。
+5. 録画中状態を解除する。この要求が失敗した場合は例外を伝播し、それ以後を行わない。録画中状態の解除、一時録画先からの
    移動、録画完了の処理は、サーバー再起動時の起動時整理（6.1）が済ませる。
-5. 一時録画先を使った場合は通常先への移動を試みる。失敗は記録して続行する。
-6. writer の終了（'close'）を待ってからファイルサイズ更新を開始する（未flushの書込みを読まないため）。writerの終了待ち
+6. 一時録画先を使った場合は通常先への移動を試みる（移動先の書き出しは 6.9.1）。失敗は記録して続行する。
+7. writer の終了（'close'）を待ってからファイルサイズ更新を開始する（未flushの書込みを読まないため）。writerの終了待ち
    自体はこの終了処理を止めない。開始後はその完了を待たず、失敗は非同期に記録する。
-7. ドロップ情報を取得・集計・更新する。失敗は記録して続行する。
-8. 録画済み番組を再取得する。照会例外は伝播し、履歴追加と完了通知を行わない。
-9. 照会成功で結果なしなら、履歴追加と完了通知を行わず終了する。
-10. 番組指定の自動予約で、番組リレーではなく、正常終了して予約削除が必要な場合だけ録画履歴追加を試みる。予約終了時刻
+8. ドロップ情報を取得・集計・更新する。失敗は記録して続行する。
+9. 録画済み番組を再取得する。照会例外は伝播し、履歴追加と完了通知を行わない。
+10. 照会成功で結果なしなら、履歴追加と完了通知を行わず終了する。
+11. 番組指定の自動予約で、番組リレーではなく、正常終了して予約削除が必要な場合だけ録画履歴追加を試みる。予約終了時刻
     を過ぎてから`reservation-no-longer-recordable`の取消で止めた自動予約ルールの予約は、正常終了に含める（5.3）。履歴の名前は録画済み番組の半角名から番組の短縮名と同じ規則（`server-program-guide` 3.6）で作る。失敗は記録して続
     行する。
-11. 録画結果と予約削除要否を完了通知する。
+12. 録画結果と予約削除要否を完了通知する。
 
 一時ファイル移動は同一ファイルシステムの rename を先に試し、失敗時は copy を試す。録画ファイル行のパス更新に失敗した場
 合、rename なら元へ rename、copy なら新しい copy の削除を試みる。copy 成功後の旧ファイル削除失敗を含む部分 rollback の失
 敗は記録して呼出元へ伝えるが、終了処理側は移動失敗として後続へ進む。
+
+### 6.9.1 記憶装置への書き出し
+
+録画ファイルの内容は、OS の page cache へ渡っただけでは電源断や OS の停止で失われ得る。録画を完了として記録・通知する前
+と、一時録画先のファイルを消す前に、内容を記憶装置へ書き出す。
+
+-   手段は`RecordingStorageSync`に置く。`syncFile(path)`はファイルを`r+`で開いて`fsync`し、閉じる。`syncDirectory(path)`
+    はディレクトリを読み取りで開いて`fsync`し、閉じる。Windows（`process.platform === 'win32'`）ではディレクトリを開けな
+    いので、`syncDirectory`は何もしない。
+-   `RecordingStorageSync.sync(label, operation, log)`は一回の書き出しを最大60秒（`SYNC_TIMEOUT_MS`）待ち、結果を
+    `'synced'`・`'failed'`・`'timed-out'`・`'unsupported'`のいずれかで返す。例外は投げない。
+    -   `EINVAL`・`ENOTSUP`・`EOPNOTSUPP`は、filesystem が書き出しに対応しないものとして`'unsupported'`にし、試み直さな
+        い。
+    -   それ以外の失敗は1秒（`SYNC_RETRY_INTERVAL_MS`）置いて試み直し、合わせて3回（`SYNC_ATTEMPTS`）失敗したら
+        `'failed'`にする。
+    -   60秒以内に終わらなければ`'timed-out'`にし、試み直さない。元の呼び出しが後から確定しても、その結果は使わない（
+        reject は未処理にせず捨てる）。
+    -   `'synced'`以外では、対象の path と結果を`system.warn`へ一回記録する。
+-   録画終了（6.9 の 4）では、録画ファイルとディレクトリを順に書き出し、どちらの結果でも次へ進む。
+-   一時録画先からの移動（`movingFromTmp`。起動時整理も同じ関数を使う）では、録画ファイル行の path を更新する前に書き出
+    す。
+    -   rename で移したときは、移動先と移動元のディレクトリを書き出す。結果は記録だけで、移動は続ける。
+    -   copy で移したときは、copy 先のファイルを書き出す。`'failed'`・`'timed-out'`なら移動の失敗として copy の
+        rollback（copy 先の削除）へ進み、一時録画先のファイルを残す。`'unsupported'`なら続ける。続けるときは copy 先の
+        ディレクトリも書き出し（結果は記録だけ）、その後に path を更新して一時録画先のファイルを削除する。
+-   `recorded-content-deletion`による取消（6.9 の 2）は file を削除するので書き出さない。書き出しの途中で削除が来たとき
+    は、削除側は既存のとおり`DELETION_STOP_TIMEOUT_MS`を上限に終了処理の終わりを待つ。
 
 ### 6.10 録画開始後失敗の再試行
 
@@ -1351,6 +1392,9 @@ Requirements、Design、test、mapping、実装で同時に定める。
 | writer error（最初の data 待機中）     | gateを一回failureでsettle                              | 二重録画失敗通知や後発timeoutを作用させない                                          | 通常の準備attempt規則                                      |
 | writer error（最初の data 後）         | 実装の write-error 経路                                | 録画失敗通知                                                                         | 作成済み結果数で判定                                       |
 | stream error                           | 実装の finished 経路                                   | 録画失敗通知                                                                         | 作成済み結果数で判定                                       |
+| 録画終了時の writer 終了待ち 60 秒超過 | `system.warn`へ記録                                    | 書き出さずに録画中解除へ                                                             | なし                                                       |
+| 録画終了時の書き出し                   | 失敗・時間切れ・非対応を`system.warn`へ記録            | 録画中解除へ                                                                         | 失敗だけ1秒間隔で合計3回。時間切れ・非対応は試み直さない   |
+| 一時 file 移動先の書き出し             | copy 先の失敗・時間切れは移動失敗。ほかは記録だけ      | 移動失敗なら copy を削除し一時 file を残してサイズ以降へ                             | 失敗だけ1秒間隔で合計3回。時間切れ・非対応は試み直さない   |
 | 録画中解除                             | 例外を伝播                                             | 移動以降を行わない。後片付けは再起動時の起動時整理に任せる                           | なし                                                       |
 | 一時 file 移動                         | エラーを記録                                           | サイズ以降へ                                                                         | なし                                                       |
 | file サイズ反映                        | 非同期エラーを記録                                     | 待たずに後続へ                                                                       | なし                                                       |
@@ -1535,6 +1579,8 @@ fake wall clock、fake scheduler、spy port を使い、実時間待機を行わ
     始末が一回であることを確認する。
 -   時刻指定終了更新後、旧時刻では終了せず新時刻で 1 回終了することを確認する。
 -   録画中番組の終了時刻更新後、旧リレー milestone が作用せず新 milestone で 1 回確認する。
+-   実 filesystem で libuv の thread pool を塞いで録画ファイルへの書き込みを遅らせても、完了通知の時点で録画ファイルの大
+    きさが受け取った放送データと一致することを確認する。
 -   プロセス中断を模擬して録画中行と一時ファイルを残し、次回起動時整理が `needsReservationRemoval = true` の録画完了を発
     行して既存 consumer 分岐を起動することを確認する。
 
@@ -1595,9 +1641,9 @@ Requirement 9はtest suiteや品質判定を自己検証しない。次の5層�
 
 | 証跡key               | evidence layer                | 成立条件                                                                                                                                                                 |
 | --------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `SPEC-CASES-RE-9.1`   | spec case                     | 12.1のRE-1.1〜RE-8.2と一意な`*.spec.test.ts#RE-N.M`が72件、欠落・重複0件で全件成功                                                                                       |
+| `SPEC-CASES-RE-9.1`   | spec case                     | 12.1のRE-1.1〜RE-8.2と一意な`*.spec.test.ts#RE-N.M`が76件、欠落・重複0件で全件成功                                                                                       |
 | `IMP-CHAR-RE-9.2`     | implementation-characteristic | scheduler、session、path、finalization、startup、characterizationの具体caseが値域・分岐・race・資源解放を検証し、仕様contractとsource特性を混在させず全件成功            |
-| `MATRIX-RE-9.3`       | matrix                        | 12.1が77行、全必須列を持ち、ID、主case、状態、failure、資源、N0/N1/N2理由の欠落・重複・余剰が各0                                                                         |
+| `MATRIX-RE-9.3`       | matrix                        | 12.1が81行、全必須列を持ち、ID、主case、状態、failure、資源、N0/N1/N2理由の欠落・重複・余剰が各0                                                                         |
 | `INT-CASES-RE-9.4`    | integration                   | DB、filesystem、既存IPC/event、共通tuner streamを接続したcaseが全件成功。HTTP carrierはservice-interface、child process監督はmedia-process/runtime ownerのため非適用 |
 | `RUNTIME-R9-RE-9.5`   | 品質判定                      | `server-application-runtime`所有の固定commandで実行される機能test全件と、同Requirement 9 Acceptance Criterion 9のserver全体のC0/C1が成立 |
 
@@ -1707,6 +1753,10 @@ component/interfaceへの追跡、`期待`はverification oracle、`失敗`はfa
 | RE-5.7  | Finalization / local failure continuation         | `finalization.spec.test.ts#RE-5.7`        | S/I/G | N0,N0,T,T,T,N1,N1,N2,T | F/CAN-NA/RE-NA/RST-NA                                                                                                                                   | 順            | file/DB/drop/log/event                                    | move/size/drop/history各reject                                 | 各失敗を記録し定義済み次段階へ進む                                                                                                                                                                                                                                                                   | E1   |
 | RE-5.8  | RecordedContentPort / final re-read               | `finalization.spec.test.ts#RE-5.8`        | S/I/G | N0,N0,T,T,T,N1,N1,N2,T | F→C/CAN-NA/RE-NA/RST-NA                                                                                                                                 | 順            | DB Promise                                                | query reject                                                   | 終了処理reject、history・finish event各0                                                                                                                                                                                                                                                             | E1   |
 | RE-5.9  | RecordedContentPort / final re-read               | `finalization.spec.test.ts#RE-5.9`        | S/I/G | T,T,T,T,T,N1,T,N2,T    | F→C/CAN-NA/RE-NA/RST-NA                                                                                                                                 | 順            | DB/event                                                  | query成功null                                                  | 正常に終えhistory・finish event各0                                                                                                                                                                                                                                                                   | E1   |
+| RE-5.10 | RecordingStorageSync / 録画終了の書き出し          | `finalization.spec.test.ts#RE-5.10`       | S/I/G | T,T,T,T,T,N1,T,N2,T    | F/CAN-AP/RE-AP/RST-NA | 順 | writer/file/directory/fsync | writer close遅延・fsync reject | 正常終了・取消・失敗終了でwriter終了後にfileとdirectoryを書き出し、その後に録画中解除・移動・通知 | E1   |
+| RE-5.11 | RecordingStorageSync / 試行と非対応               | `finalization.spec.test.ts#RE-5.11`       | S/I   | N0,N0,T,T,T,N1,N1,N2,T | F/CAN-NA/RE-AP/RST-NA | 端/順 | fsync/timer/log | 1・2・3回目の失敗・EINVAL・ENOTSUP・EOPNOTSUPP | 失敗は1秒間隔で合計3回、非対応は1回。`synced`以外はwarn一回で後続へ | E1   |
+| RE-5.12 | RecordingStorageSync / 時間切れ                   | `finalization.spec.test.ts#RE-5.12`       | S/I   | N0,N0,T,T,T,T,T,N2,T   | F/CAN-NA/RE-NA/RST-NA | 端/衝 | writer/fsync/timer/log | writer close・fsyncの59,999/60,000ms・後着reject | 60秒でwarnして後続へ。writer未終了なら書き出さず、時間切れは試み直さず後着rejectを未処理にしない | E1   |
+| RE-5.13 | RecordingFilePort / `movingFromTmp`の書き出し     | `finalization.spec.test.ts#RE-5.13`       | S/I/G | T,T,T,T,T,N1,T,N2,T    | F/SU/CAN-NA/RE-NA/RST-AP | 順 | file/directory/DB path/fsync | rename後のdirectory失敗・copy先の失敗・時間切れ・非対応 | path更新前に書き出す。copy先の失敗・時間切れは移動失敗で一時fileを残し、非対応とdirectoryは記録して続ける | E1   |
 | RE-6.1  | RetryCoordinator / result count query             | `retry.spec.test.ts#RE-6.1`               | S/I/G | T,T,T,T,T,T,T,N2,T     | F/C/CAN-NA/RE-AP/RST-NA                                                                                                                                 | 順/衝         | DB query/registry                                         | count reject・重複failure event                                | 同じ予約IDの作成済み結果数を一回確認                                                                                                                                                                                                                                                                 | E1   |
 | RE-6.2  | RetryCoordinator / `prepare`                      | `retry.spec.test.ts#RE-6.2`               | S/I/G | N0,N0,T,T,T,T,T,N2,T   | C→W→P/CAN-AP/RE-AP/RST-NA                                                                                                                               | 端/衝         | DB count/clock/registry                                   | count 0/1/2・endAt直前/到達                                    | 上限未満かつ終了前だけ最新世代を再準備                                                                                                                                                                                                                                                               | E1   |
 | RE-6.3  | RetryCoordinator / session factory                | `retry.spec.test.ts#RE-6.3`               | S/I   | N0,N0,T,T,T,T,T,N2,T   | C/CAN-NA/RE-AP/RST-NA                                                                                                                                   | 端            | DB count/factory                                          | count 3以上                                                    | 新session・stream request各0                                                                                                                                                                                                                                                                         | E1   |
@@ -1794,6 +1844,10 @@ Test Matrixとは別の追跡表であり、canonical test locatorは重複所�
 | 5.7  | 移動、サイズ、drop、履歴失敗を記録して定義済み後続へ進む            | 各 fault injection テスト                |
 | 5.8  | 終了時再取得の照会例外を伝播し履歴・通知を行わない                  | reject と副作用なしテスト                |
 | 5.9  | 終了時再取得成功かつ null なら履歴・通知なしで完了                  | null 結果テスト                          |
+| 5.10 | writer 終了後に file と directory を書き出してから録画中解除・移動・通知 | 終了原因別の呼出順テスト・thread pool を塞いだ統合テスト |
+| 5.11 | 書き出しの失敗は1秒間隔で合計3回、非対応は試み直さず、warn で後続へ | 失敗回数・errno 別テスト                 |
+| 5.12 | writer 終了・書き出し一回の60秒超過は warn で後続へ、試み直さない   | fake clock 境界・後着 reject テスト      |
+| 5.13 | 移動では path 更新前に書き出し、copy 先の失敗・時間切れは移動失敗   | rename・copy 別の書き出しテスト          |
 | 6.1  | 録画失敗後に予約 ID の作成済み録画結果数を照会                      | count port 呼出テスト                    |
 | 6.2  | 3 件未満かつ終了前なら最新世代を即時準備候補化                      | count 0〜2 と時刻境界テスト              |
 | 6.3  | 3 件以上なら session を新規作成しない                               | factory 未呼出しテスト                   |
@@ -1858,6 +1912,7 @@ Test Matrixとは別の追跡表であり、canonical test locatorは重複所�
 | `src/model/operator/recording/RecorderModel.ts`                                   | stream後の早期Recording化、初回data、DB listener、変更・取消・終了 | first-data/登録settlement、generation/phase fence、削除terminal barrier      |
 | `src/model/operator/recording/RecordingStreamCreator.ts`                          | 論理tuner、同一channel共有、再割当、時刻指定timer、追跡情報整理    | 共通tuner port、中央の時刻指定終了milestone、古い終了処理の無効化            |
 | `src/model/operator/recording/RecordingUtilModel.ts`                              | path候補lock、存在確認によるsuffix選択、一時file移動、size更新     | 実行権内のno-clobber作成、確保済みhandle引渡し、exact owner cleanup          |
+| `src/model/operator/recording/RecordingStorageSync.ts`                            | ファイル・ディレクトリの書き出し、試行回数・時間切れ・非対応の判定 | 録画終了と一時file移動の書き出し（6.9.1）                                    |
 | `src/model/ExecutionManagementModel.ts`、`src/model/IExecutionManagementModel.ts` | priority queue、取得待ちtimeout、実行ID、release                   | priority 1・5秒待機、期限切れentry除外、600秒overdue、exact release          |
 | `src/model/ModelContainerSetter.ts`                                               | execution coordinatorのDI binding                                  | 録画path選択専用process内queueの一意なbinding                                |
 | `src/model/operator/recording/DropCheckerModel.ts`                                | stream分岐（`prepare`・`attach`）、drop・error・scrambling集計、結果待ち | session終端と削除terminal barrierからの停止・listener回収                    |
