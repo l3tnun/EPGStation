@@ -143,6 +143,10 @@ for (const viewport of VIEWPORTS) {
       )
       await expect(page.getByRole('heading', { name: manualProgramDetail.name })).toBeVisible()
 
+      // The heading can render while the program load is completing. Audit the settled form rather
+      // than the transient disabled save button, whose MUI disabled color is below this audit's gate.
+      await expect(page.getByRole('button', { name: '保存' })).toBeEnabled()
+
       const formRows = await collectVisibleUiAuditRows(page, {
         page: 'reserves manual',
         route: '/reserves/manual',
