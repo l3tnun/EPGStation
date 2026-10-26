@@ -11,11 +11,8 @@ test.beforeEach(async ({ page }) => {
   await installAppShellApiMocks(page, { enableBroadcastWaveNavigation: true })
 })
 
-test('keeps Search period dialogs, submit scroll, result-link scroll, and geometry parity', async ({
-  page,
-}) => {
-  const requestLog = createSearchRuleRequestLog()
-  await installSearchRuleWorkflowApiMocks(page, { requestLog })
+test('keeps the Search duration fields and action row geometry', async ({ page }) => {
+  await installSearchRuleWorkflowApiMocks(page)
   await page.setViewportSize({ width: 390, height: 600 })
 
   await page.goto('/#/search')
@@ -57,6 +54,17 @@ test('keeps Search period dialogs, submit scroll, result-link scroll, and geomet
       'Search action row does not add the divider below the buttons',
     )
     .resolves.toBe('0px')
+})
+
+test('sends the Search period chosen in its dialogs and scrolls to the result section', async ({
+  page,
+}) => {
+  const requestLog = createSearchRuleRequestLog()
+  await installSearchRuleWorkflowApiMocks(page, { requestLog })
+  await page.setViewportSize({ width: 390, height: 600 })
+
+  await page.goto('/#/search')
+  await expect(page.getByRole('heading', { name: '検索' })).toBeVisible()
 
   await page.getByRole('textbox', { name: '開始', exact: true }).click()
   const startDialog = page.getByRole('dialog', { name: '期間 開始' })
@@ -103,6 +111,17 @@ test('keeps Search period dialogs, submit scroll, result-link scroll, and geomet
       ],
     },
   })
+})
+
+test('scrolls from the SearchResult header link to the Rule option card', async ({ page }) => {
+  await installSearchRuleWorkflowApiMocks(page)
+  await page.setViewportSize({ width: 390, height: 600 })
+
+  await page.goto('/#/search')
+  await expect(page.getByRole('heading', { name: '検索' })).toBeVisible()
+
+  await page.getByTestId('search-rule-page').getByRole('button', { name: '検索' }).click()
+  await expect(page.getByRole('region', { name: '検索結果' })).toBeVisible()
 
   await page.getByRole('button', { name: '録画設定へ移動' }).click()
   const ruleOptionAnchor = page.getByTestId('search-rule-option-anchor')
