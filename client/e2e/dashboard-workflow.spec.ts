@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { createServer } from 'node:http'
 import { Server as SocketIOServer } from 'socket.io'
 import { installAppShellApiMocks } from './support/appShellMocks'
@@ -6,6 +6,7 @@ import { replaceApiMocks } from './support/apiMockReplacement'
 import {
   createDashboardRequestLog,
   dashboardFixtureSecrecyText,
+  type DashboardRequestLog,
   installDashboardRealtimeApiMocks,
   installDashboardWorkflowApiMocks,
 } from './support/dashboardMocks'
@@ -29,11 +30,16 @@ test('uses only synthetic Dashboard fixture values', () => {
   }
 })
 
-test('drives Dashboard loading, summary actions, and delegated entrypoints', async ({ page }) => {
+async function openSlowDashboard(page: Page): Promise<DashboardRequestLog> {
   const requestLog = createDashboardRequestLog()
   await installDashboardWorkflowApiMocks(page, { mode: 'slow', requestLog })
-
   await page.goto('/')
+  return requestLog
+}
+
+test('shows Dashboard summaries after loading', async ({ page }) => {
+  const requestLog = await openSlowDashboard(page)
+
   await expect(page.getByTestId('dashboard-page')).toHaveCount(0)
   await expect(page.getByTestId('dashboard-page')).toBeVisible()
   await expect(page.getByRole('heading', { name: '録画中 1/3' })).toBeVisible()
@@ -62,26 +68,41 @@ test('drives Dashboard loading, summary actions, and delegated entrypoints', asy
   expect(requestLog.apiPaths).toContain(
     '/api/reserves?type=normal&isHalfWidth=true&offset=0&limit=24',
   )
-
   await expect(page.getByRole('button', { name: 'MORE' })).toHaveCount(3)
+})
+
+test('opens the next Recorded page from the Recorded MORE button', async ({ page }) => {
+  await openSlowDashboard(page)
+
   await page
     .getByTestId('dashboard-section-recorded-list')
     .getByRole('button', { name: 'MORE' })
     .click()
   await expect(page).toHaveURL(/#\/recorded\?page=2&timestamp=\d+$/)
+})
 
-  await page.goto('/')
+test('opens the conflicting Reserves from the conflict button', async ({ page }) => {
+  await openSlowDashboard(page)
+
   await page.getByRole('button', { name: '競合 2 件' }).click()
   await expect(page).toHaveURL(/#\/reserves\?type=conflict&timestamp=\d+$/)
+})
 
-  await page.goto('/')
+test('opens Recorded detail from a Recorded summary item', async ({ page }) => {
+  await openSlowDashboard(page)
+
   await page
     .getByTestId('dashboard-section-recorded-list')
     .getByRole('button', { name: 'Synthetic Dashboard Recorded Alpha', exact: true })
     .click()
   await expect(page).toHaveURL(/#\/recorded\/detail\/7201\?timestamp=\d+$/)
+})
 
-  await page.goto('/')
+test('opens the Reserve dialog from a Reserve summary item and moves to its Guide time', async ({
+  page,
+}) => {
+  await openSlowDashboard(page)
+
   await page
     .getByTestId('dashboard-section-reserves-list')
     .getByRole('button', { name: 'Synthetic Dashboard Reserve Alpha', exact: true })
@@ -107,15 +128,21 @@ test('drives Dashboard loading, summary actions, and delegated entrypoints', asy
   ).toBeVisible()
   await dialog.getByRole('button', { name: /05\/05\(火\) 10:15/ }).click()
   await expect(page).toHaveURL(/#\/guide\?time=26050510&type=GR&timestamp=\d+$/)
+})
 
-  await page.goto('/')
+test('searches Recorded by rule from the Recorded item menu', async ({ page }) => {
+  await openSlowDashboard(page)
+
   await page
     .getByRole('button', { name: '録画メニュー: Synthetic Dashboard Recorded Alpha' })
     .click()
   await page.getByRole('menuitem', { name: 'search' }).click()
   await expect(page).toHaveURL(/#\/recorded\?ruleId=8201&timestamp=\d+$/)
+})
 
-  await page.goto('/')
+test('searches Recorded by title from the Recorded item menu', async ({ page }) => {
+  await openSlowDashboard(page)
+
   await page
     .getByRole('button', { name: '録画メニュー: Synthetic Dashboard Recorded Title Search' })
     .click()
@@ -123,14 +150,23 @@ test('drives Dashboard loading, summary actions, and delegated entrypoints', asy
   await expect(page).toHaveURL(
     /#\/recorded\?keyword=Synthetic\+Dashboard\+Recorded\+Title\+Search&timestamp=\d+$/,
   )
+})
 
-  await page.goto('/')
+test('protects a Recorded item from the Recorded item menu', async ({ page }) => {
+  const requestLog = await openSlowDashboard(page)
+
   await page
     .getByRole('button', { name: '録画メニュー: Synthetic Dashboard Recorded Alpha' })
     .click()
   await page.getByRole('menuitem', { name: 'protect' }).click()
   await expect.poll(() => requestLog.methods).toContain('PUT /api/recorded/7201/protect')
   await expectAnnounced(page, '保護に成功')
+})
+
+test('deletes a Reserve from the Reserve item menu and refreshes the Reserve summary', async ({
+  page,
+}) => {
+  const requestLog = await openSlowDashboard(page)
 
   await clickWithoutPointerStabilityWait(
     page.getByRole('button', { name: '予約メニュー: Synthetic Dashboard Reserve Delete' }),
