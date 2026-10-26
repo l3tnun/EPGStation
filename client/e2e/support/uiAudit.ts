@@ -56,6 +56,21 @@ export async function collectVisibleUiAuditRows(
   page: Page,
   target: UiAuditTarget,
 ): Promise<UiAuditRow[]> {
+  // MUI の control は、無効から有効への切り替えなどで色を CSS transition で変える。変わる途中の
+  // 色を測らないよう、root の中で動いている CSS transition が無くなるまで待つ。
+  await expect
+    .poll(() =>
+      page.evaluate((rootSelector) => {
+        const root = document.querySelector(rootSelector)
+        if (root === null) return 0
+
+        return root
+          .getAnimations({ subtree: true })
+          .filter((animation) => 'transitionProperty' in animation).length
+      }, target.rootSelector),
+    )
+    .toBe(0)
+
   const rawRows = await page.evaluate(({ rootSelector }) => {
     const root = document.querySelector(rootSelector)
     if (root === null) return []

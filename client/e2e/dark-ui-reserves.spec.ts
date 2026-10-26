@@ -142,6 +142,8 @@ for (const viewport of VIEWPORTS) {
         'add',
       )
       await expect(page.getByRole('heading', { name: manualProgramDetail.name })).toBeVisible()
+      // 保存 は form の読み込みが終わってから有効になる。読み込みの途中の色を測らない。
+      await expect(page.getByRole('button', { name: '保存' })).toBeEnabled()
 
       const formRows = await collectVisibleUiAuditRows(page, {
         page: 'reserves manual',
