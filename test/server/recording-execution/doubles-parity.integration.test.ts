@@ -161,6 +161,12 @@ describe('reservation instance double against the frozen copy the recording path
                     await vi.waitFor(() => expect(wired.started).toHaveBeenCalledOnce());
                     sender.end();
                     await vi.waitFor(() => expect(wired.finished).toHaveBeenCalledOnce());
+                    // 完了通知は録画 file の writer の終了（'close'）を待たずに届く。DB に終端のサイズが反映され、
+                    // file への書き込みが終わった状態を待ってから file を読む。
+                    await vi.waitFor(async () => {
+                        const [row] = await wired.videoFileDB.findAll();
+                        expect(row.size).toBe(CHUNK_SIZE);
+                    });
                     const [videoFile] = await wired.videoFileDB.findAll();
                     expect(videoFile.filePath).toBe(fromCopy.fileName);
                     await expect(readFile(join(root, videoFile.filePath))).resolves.toEqual(chunk(0));
@@ -294,6 +300,15 @@ describe('microtask DB doubles against the synchronous better-sqlite3 when recor
                     sender.end();
                 }
                 await vi.waitFor(() => expect(wired.finished).toHaveBeenCalledTimes(4), { timeout: 30_000 });
+                // 完了通知は録画 file の writer の終了（'close'）を待たずに届き、file size の更新は writer の終了の後に
+                // 始まる。DB に終端のサイズが反映され、file への書き込みが終わった状態を待ってから file を読む。
+                await vi.waitFor(
+                    async () =>
+                        expect((await wired.videoFileDB.findAll()).map((row: { size: number }) => row.size)).toEqual(
+                            Array.from({ length: 4 }, () => 31 * CHUNK_SIZE),
+                        ),
+                    { timeout: 30_000 },
+                );
 
                 const recordeds = (
                     await Promise.all(reservations.map(reserve => wired.recordedDB.findReserveId(reserve.id)))

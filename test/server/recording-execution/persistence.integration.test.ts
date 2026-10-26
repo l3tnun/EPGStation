@@ -350,6 +350,9 @@ describe('recording persistence sequence', () => {
 
                     stream.end();
                     await vi.waitFor(() => expect(finished).toHaveBeenCalledOnce());
+                    // 完了通知は録画 file の writer の終了（'close'）を待たずに届く。file size の更新は writer の終了の
+                    // 後に始まるので、その呼び出しを待ってから file を読む。
+                    await vi.waitFor(() => expect(updateVideoFileSize).toHaveBeenCalledOnce());
                     const recordeds = await recordedDB.findReserveId(reserve.id);
                     const videoFiles = await videoFileDB.findAll();
 
@@ -361,7 +364,6 @@ describe('recording persistence sequence', () => {
                         'synthetic-first-data',
                     );
                     await expect(readFile(sentinel, 'utf8')).resolves.toBe('synthetic-existing-file');
-                    await vi.waitFor(() => expect(updateVideoFileSize).toHaveBeenCalledOnce());
                     expect(close).toHaveBeenCalledOnce();
                 } finally {
                     (manager as any).scheduleController.stop();
