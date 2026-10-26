@@ -15,9 +15,10 @@ export interface UiAuditTarget {
   openedState: string
   component: string
   rootSelector: string
+  disabledReasons?: Readonly<Record<string, string>>
 }
 
-export interface UiAuditRow extends Omit<UiAuditTarget, 'rootSelector'> {
+export interface UiAuditRow extends Omit<UiAuditTarget, 'rootSelector' | 'disabledReasons'> {
   element: string
   role: string
   visualProperty: string
@@ -25,6 +26,8 @@ export interface UiAuditRow extends Omit<UiAuditTarget, 'rootSelector'> {
   actual: string
   evidence: string
   status: AuditStatus
+  disabled: boolean
+  disabledReason?: string
 }
 
 const CONTRAST_THRESHOLD_TEXT = 4.5
@@ -32,13 +35,18 @@ const CONTRAST_THRESHOLD_NON_TEXT = 3
 
 function finalizeRow(row: UiAuditRow, foreground: string, background: string): UiAuditRow {
   const ratio = contrastRatio(foreground, background)
+  const blackOnDark = isBlackOnDark(foreground, background)
   const threshold = row.role === 'text' ? CONTRAST_THRESHOLD_TEXT : CONTRAST_THRESHOLD_NON_TEXT
   const actual =
     ratio === undefined
       ? `${foreground} on ${background}; contrast=unverified`
       : `${foreground} on ${background}; contrast=${ratio.toFixed(2)}`
-  const status =
-    ratio === undefined || row.theme === 'dark'
+  const recordsDisabledContrast = row.disabled && row.disabledReason !== undefined
+  const status: AuditStatus = recordsDisabledContrast
+    ? ratio === undefined || blackOnDark
+      ? 'fail'
+      : 'excluded'
+    : ratio === undefined || row.theme === 'dark'
       ? ratio === undefined || ratio < threshold || isBlackOnDark(foreground, background)
         ? 'fail'
         : 'pass'
@@ -46,7 +54,9 @@ function finalizeRow(row: UiAuditRow, foreground: string, background: string): U
 
   return {
     ...row,
-    expected: `contrast >= ${threshold}`,
+    expected: recordsDisabledContrast
+      ? 'disabled contrast recorded with reason'
+      : `contrast >= ${threshold}`,
     actual,
     status,
   }
@@ -208,6 +218,8 @@ export async function collectVisibleUiAuditRows(
       const background = findBackground(element)
       const label = labelFor(element)
       const role = roleFor(element)
+      const disabled =
+        element.matches(':disabled') || element.getAttribute('aria-disabled') === 'true'
       const rows = [
         {
           element: label,
@@ -215,6 +227,7 @@ export async function collectVisibleUiAuditRows(
           visualProperty: 'color',
           foreground: style.color,
           background,
+          disabled,
         },
       ]
 
@@ -228,6 +241,7 @@ export async function collectVisibleUiAuditRows(
             visualProperty: `${pseudo}.color`,
             foreground: pseudoStyle.color,
             background,
+            disabled,
           })
         }
       }
@@ -253,6 +267,10 @@ export async function collectVisibleUiAuditRows(
         actual: '',
         evidence: target.rootSelector,
         status: 'unverified',
+        disabled: row.disabled,
+        ...(row.disabled && target.disabledReasons?.[row.element] !== undefined
+          ? { disabledReason: target.disabledReasons[row.element] }
+          : {}),
       },
       row.foreground,
       row.background,
