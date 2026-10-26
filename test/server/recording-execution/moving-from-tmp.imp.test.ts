@@ -3,12 +3,19 @@ import { createRequire } from 'node:module';
 import { mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { logger, makeRecorded, makeReserve, RecordingUtilModel } from './_harness';
 
 const require = createRequire(join(process.cwd(), 'package.json'));
 const snapshot = process.env.EPGSTATION_SERVER_COMPILED_SNAPSHOT as string;
 const FileUtil = require(join(snapshot, 'util', 'FileUtil.js')).default;
+const storageSyncPath = join(snapshot, 'model', 'operator', 'recording', 'RecordingStorageSync.js');
+const RecordingStorageSync = require(storageSyncPath).default;
+let freshImportCount = 0;
+// module の先頭の定数表から作り直した RecordingStorageSync を読む。
+const importFreshStorageSync = async (): Promise<any> =>
+    (await import(`${pathToFileURL(storageSyncPath).href}?fresh-storage-sync=${++freshImportCount}`)).default;
 
 let root: string;
 let tmp: string;
@@ -452,7 +459,9 @@ describe('[RE-9.2] recording path selection details', () => {
     it('uses NULL for the channel type and channel of a recorded program whose channel is unknown', async () => {
         const model = buildModel({ recorded: [{ name: 'synthetic-root', path: root }] });
 
-        await expect(model.formatFilePathString('%TYPE%/%CH%', makeRecorded({ channelId: 10 }))).resolves.toBe('NULL/NULL');
+        await expect(model.formatFilePathString('%TYPE%/%CH%', makeRecorded({ channelId: 10 }))).resolves.toBe(
+            'NULL/NULL',
+        );
     });
 
     it('keeps the reservation channel type and channel when the channel lookup finds nothing', async () => {
@@ -461,5 +470,80 @@ describe('[RE-9.2] recording path selection details', () => {
         await expect(model.formatFilePathString('%TYPE%/%CH%', makeReserve({ id: 1 }))).resolves.toBe(
             'GR/synthetic-channel',
         );
+    });
+});
+
+describe('[RE-9.2] RecordingStorageSync write-out details', () => {
+    const errorWithCode = (code: string): Error => Object.assign(new Error(`synthetic-${code}`), { code });
+    const fakeHandle = (sync: () => Promise<void>) => ({ close: vi.fn(async () => undefined), sync: vi.fn(sync) });
+
+    it.each([
+        ['syncFile', 'r+'],
+        ['syncDirectory', 'r'],
+    ] as const)('%s opens the target with %s, syncs it once, and closes it', async (name, flags) => {
+        const handle = fakeHandle(async () => undefined);
+        const open = vi.spyOn(fs.promises, 'open').mockResolvedValue(handle as unknown as fs.promises.FileHandle);
+
+        await expect(RecordingStorageSync[name]('/synthetic-root/synthetic.ts')).resolves.toBeUndefined();
+
+        expect(open).toHaveBeenCalledWith('/synthetic-root/synthetic.ts', flags);
+        expect(handle.sync).toHaveBeenCalledOnce();
+        expect(handle.close).toHaveBeenCalledOnce();
+    });
+
+    it.each(['syncFile', 'syncDirectory'] as const)('%s still closes the target when the sync rejects', async name => {
+        const failure = errorWithCode('EIO');
+        const handle = fakeHandle(async () => Promise.reject(failure));
+        vi.spyOn(fs.promises, 'open').mockResolvedValue(handle as unknown as fs.promises.FileHandle);
+
+        await expect(RecordingStorageSync[name]('/synthetic-root/synthetic.ts')).rejects.toBe(failure);
+
+        expect(handle.close).toHaveBeenCalledOnce();
+    });
+
+    it.each([
+        ['succeeds', async () => undefined, 'synced'],
+        ['is not supported', async () => Promise.reject(errorWithCode('EINVAL')), 'unsupported'],
+    ] as const)('leaves no timeout timer behind when the write-out %s', async (_label, operation, expected) => {
+        vi.useFakeTimers();
+        try {
+            await expect(RecordingStorageSync.sync('synthetic-target', operation, { warn: vi.fn() })).resolves.toBe(
+                expected,
+            );
+            expect(vi.getTimerCount()).toBe(0);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('treats a write-out rejected without an error object as a failure and retries it', async () => {
+        vi.useFakeTimers();
+        const operation = vi.fn(async () => Promise.reject(undefined));
+        try {
+            const result = RecordingStorageSync.sync('synthetic-target', operation, { warn: vi.fn() });
+            await vi.advanceTimersByTimeAsync(2_000);
+            await expect(result).resolves.toBe('failed');
+            expect(operation).toHaveBeenCalledTimes(3);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('builds the unsupported error codes from its own module evaluation', async () => {
+        const fresh = await importFreshStorageSync();
+        const log = { warn: vi.fn() };
+        for (const code of ['EINVAL', 'ENOTSUP', 'EOPNOTSUPP']) {
+            await expect(
+                fresh.sync('synthetic-target', async () => Promise.reject(errorWithCode(code)), log),
+            ).resolves.toBe('unsupported');
+        }
+        vi.useFakeTimers();
+        try {
+            const result = fresh.sync('synthetic-target', async () => Promise.reject(errorWithCode('')), log);
+            await vi.advanceTimersByTimeAsync(2_000);
+            await expect(result).resolves.toBe('failed');
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });

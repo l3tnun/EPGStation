@@ -374,7 +374,7 @@ class RecordingUtilModel implements IRecordingUtilModel {
                         this.log.system,
                     );
                     if (copySync !== 'synced' && copySync !== 'unsupported') {
-                        throw new Error(`RecordingFileSync${copySync}`);
+                        throw new Error(`RecordingFileSync: ${copySync}`);
                     }
                 } catch (err: any) {
                     this.log.system.error(`copy file error: ${oldVideoFilePath} -> ${newRecPath.fullPath}`);

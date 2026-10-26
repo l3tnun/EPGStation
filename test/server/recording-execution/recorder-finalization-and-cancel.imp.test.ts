@@ -1,16 +1,23 @@
 import 'reflect-metadata';
 
+import { EventEmitter } from 'node:events';
 import { PassThrough } from 'node:stream';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
     deferred,
     flushImmediate,
+    load,
     makeRecorder,
     makeRecordingSessionBinding,
     makeReserve,
     RecorderModel,
 } from './_harness';
+
+const RecordingStorageSync = load<{
+    syncFile(filePath: string): Promise<void>;
+    syncDirectory(directoryPath: string): Promise<void>;
+}>('model', 'operator', 'recording', 'RecordingStorageSync.js');
 
 afterEach(() => {
     vi.useRealTimers();
@@ -421,7 +428,17 @@ describe('RecorderModel.readArrivedStreamData (unittest/imp)', () => {
                 return 1;
             },
         };
-        return { reads, stream: { destroyed: false, readableEnded: false, readableLength: 0, isPaused: () => false, socket, ...overrides } };
+        return {
+            reads,
+            stream: {
+                destroyed: false,
+                readableEnded: false,
+                readableLength: 0,
+                isPaused: () => false,
+                socket,
+                ...overrides,
+            },
+        };
     };
 
     it('[R2-RECORDER-DRAIN] watches the received byte count for one more turn before it decides nothing arrives', async () => {
@@ -440,40 +457,55 @@ describe('RecorderModel.readArrivedStreamData (unittest/imp)', () => {
         ['paused stream', 'paused', true],
         ['writer waiting for drain', 'writableNeedDrain', true],
         ['writer with pending data', 'writableLength', 1],
-    ] as const)('[R2-RECORDER-DRAIN] keeps reading while the %s is the only pending condition', async (_label, condition, value) => {
-        // 時間切れではなく、個々の待機条件が解消したことで戻ることを確かめる。
-        vi.useFakeTimers({ toFake: ['Date'] });
-        const harness = makeRecorder();
-        const state = { readableLength: 0, paused: false, writableLength: 0, writableNeedDrain: false, [condition]: value };
-        const { stream } = makeDrainStream({ isPaused: () => state.paused });
-        Object.defineProperty(stream, 'readableLength', { get: () => state.readableLength });
-        harness.model.recFile = {
-            get writableLength() { return state.writableLength; },
-            get writableNeedDrain() { return state.writableNeedDrain; },
-        };
-        let completed = false;
-        const pending = harness.model.readArrivedStreamData(stream).then(() => { completed = true; });
+    ] as const)(
+        '[R2-RECORDER-DRAIN] keeps reading while the %s is the only pending condition',
+        async (_label, condition, value) => {
+            // 時間切れではなく、個々の待機条件が解消したことで戻ることを確かめる。
+            vi.useFakeTimers({ toFake: ['Date'] });
+            const harness = makeRecorder();
+            const state = {
+                readableLength: 0,
+                paused: false,
+                writableLength: 0,
+                writableNeedDrain: false,
+                [condition]: value,
+            };
+            const { stream } = makeDrainStream({ isPaused: () => state.paused });
+            Object.defineProperty(stream, 'readableLength', { get: () => state.readableLength });
+            harness.model.recFile = {
+                get writableLength() {
+                    return state.writableLength;
+                },
+                get writableNeedDrain() {
+                    return state.writableNeedDrain;
+                },
+            };
+            let completed = false;
+            const pending = harness.model.readArrivedStreamData(stream).then(() => {
+                completed = true;
+            });
 
-        try {
-            await flushImmediate();
-            await flushImmediate();
-            await flushImmediate();
-            expect(completed).toBe(false);
+            try {
+                await flushImmediate();
+                await flushImmediate();
+                await flushImmediate();
+                expect(completed).toBe(false);
 
-            state.readableLength = 0;
-            state.paused = false;
-            state.writableLength = 0;
-            state.writableNeedDrain = false;
-            await pending;
-            expect(completed).toBe(true);
-        } finally {
-            state.readableLength = 0;
-            state.paused = false;
-            state.writableLength = 0;
-            state.writableNeedDrain = false;
-            await pending;
-        }
-    });
+                state.readableLength = 0;
+                state.paused = false;
+                state.writableLength = 0;
+                state.writableNeedDrain = false;
+                await pending;
+                expect(completed).toBe(true);
+            } finally {
+                state.readableLength = 0;
+                state.paused = false;
+                state.writableLength = 0;
+                state.writableNeedDrain = false;
+                await pending;
+            }
+        },
+    );
 
     it('[R2-RECORDER-DRAIN] returns immediately without scheduling a turn when the writer is absent', async () => {
         const harness = makeRecorder();
@@ -595,5 +627,31 @@ describe('RecorderModel.update dispatch (unittest/imp)', () => {
         await harness.model.update(changed, true);
 
         expect(harness.model.setTimer).toHaveBeenCalledWith(changed, true);
+    });
+});
+
+describe('RecorderModel recording file write-out (unittest/imp)', () => {
+    it('[RE-5.12] leaves no writer-close timer behind once the writer has closed', async () => {
+        vi.useFakeTimers();
+        const writer = Object.assign(new EventEmitter(), { closed: false, end: vi.fn() });
+        const harness = makeRecorder();
+        harness.model.reserve = makeReserve();
+        harness.model.recordedId = 21;
+        harness.model.videoFileId = 31;
+        harness.model.videoFileFulPath = '/synthetic-root/synthetic.ts';
+        harness.model.recFile = writer;
+        harness.model.updateDropFileLog = vi.fn(async () => undefined);
+        const syncFile = vi.spyOn(RecordingStorageSync, 'syncFile').mockResolvedValue(undefined);
+        vi.spyOn(RecordingStorageSync, 'syncDirectory').mockResolvedValue(undefined);
+
+        const finalization = harness.model.recEnd();
+        await vi.advanceTimersByTimeAsync(0);
+        expect(syncFile).not.toHaveBeenCalled();
+        writer.closed = true;
+        writer.emit('close');
+        await finalization;
+
+        expect(syncFile).toHaveBeenCalledWith('/synthetic-root/synthetic.ts');
+        expect(vi.getTimerCount()).toBe(0);
     });
 });

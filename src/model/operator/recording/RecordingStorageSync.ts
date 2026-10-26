@@ -26,7 +26,7 @@ namespace RecordingStorageSync {
     export type Result = 'synced' | 'failed' | 'timed-out' | 'unsupported' | 'missing';
 
     /** filesystem が書き出しに対応しないことを表す error code */
-    const UNSUPPORTED_CODES: ReadonlySet<string> = new Set(['EINVAL', 'ENOTSUP', 'EOPNOTSUPP']);
+    const UNSUPPORTED_CODES: ReadonlySet<string | undefined> = new Set(['EINVAL', 'ENOTSUP', 'EOPNOTSUPP']);
 
     /**
      * ファイルを開いて書き出し、閉じる
@@ -100,7 +100,7 @@ namespace RecordingStorageSync {
                 log.warn(`storage sync target is missing: ${target}`);
                 return 'missing';
             }
-            if (code !== undefined && UNSUPPORTED_CODES.has(code)) {
+            if (UNSUPPORTED_CODES.has(code)) {
                 log.warn(`storage sync is not supported: ${target} (${code})`);
                 return 'unsupported';
             }

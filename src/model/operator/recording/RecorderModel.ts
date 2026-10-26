@@ -1819,7 +1819,7 @@ class RecorderModel implements IRecorderModel {
                 }),
             ]);
             clearTimeout(timer);
-            if (isClosed === false) {
+            if (!isClosed) {
                 this.log.system.warn(`recording file writer did not close: ${filePath}`);
                 return;
             }

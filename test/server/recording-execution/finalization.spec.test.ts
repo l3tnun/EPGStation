@@ -1131,7 +1131,9 @@ describe('recording file storage sync', () => {
                 .spyOn(RecordingStorageSync, 'sync')
                 .mockImplementation(async (target: string) => (target === destination() ? result : 'synced'));
             try {
-                await expect(mover.movingFromTmp(makeReserve({ id: 1 }), 71)).rejects.toThrow();
+                await expect(mover.movingFromTmp(makeReserve({ id: 1 }), 71)).rejects.toThrow(
+                    `RecordingFileSync: ${result}`,
+                );
 
                 expect(move.pathUpdate).not.toHaveBeenCalled();
                 expect(await readFile(oldPath, 'utf8')).toBe('synthetic-payload');
