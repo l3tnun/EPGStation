@@ -1,10 +1,10 @@
 /**
  * 公開用 Docker image の手元の確認の、準備済みの確認と image の構築。
  *
- * 外部へは取りに行かない。必要な base image と npm の層は `prepare-dependency-images.mjs` が
+ * 外部へは取りに行かない。必要な base image と npm のレイヤは `prepare-dependency-images.mjs` が
  * 先に手元へ揃えておく。ここは `docker image inspect` で在ることを確かめ（無ければ
- * `not-prepared`）、製品の Dockerfile の依存の部分だけを準備済みの npm の層に置き換えた
- * Dockerfile を導いて、`--network=none --pull=false` で構築する。
+ * `not-prepared`）、製品の Dockerfile の依存の部分だけを準備済みの npm のレイヤに置き換えた
+ * Dockerfile を導いて、bake の定義の target の引数を渡し、`--network=none --pull=false` で構築する。
  *
  * `run(argv, { timeoutMs })` は `{ code, stdout, stderr }` を返す（時間切れは `code: null`）。
  * `createDockerLedger(run)` が包んだ `run` は、呼んだ docker の argv を順に記録する。
@@ -13,7 +13,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { FETCH_TIMEOUT_MS, planDependencyImages } from './dependency-images.mjs';
+import { FETCH_TIMEOUT_MS, planDependencyImages, targetArgs } from './dependency-images.mjs';
 
 /** 準備の step の command。`not-prepared` の message に示す。 */
 export const PREPARE_COMMAND = 'node scripts/server-test/prepare-dependency-images.mjs';
@@ -87,15 +87,15 @@ async function isPresent(run, ref) {
 }
 
 /**
- * base（Dockerfile の digest で固定した ref）と、`flavor` の npm の層（現在の tag）が手元に
- * あることを `docker image inspect` だけで確かめる。無ければ `not-prepared` で失敗し、取得は
- * しない。成功したら、`flavor` の npm の層の tag を `{ client, server }` で返す。
+ * base（bake の定義の digest で固定した ref）と、`flavor` の各 builder stage の npm のレイヤ（現在の tag）が
+ * 手元にあることを `docker image inspect` だけで確かめる。無ければ `not-prepared` で失敗し、取得は
+ * しない。成功したら、builder stage の名前から npm のレイヤの tag への対応を返す。
  */
-export async function verifyPrepared({ root, run, flavor }) {
+export async function verifyPrepared({ root, run, flavor, plan = planDependencyImages(root) }) {
     assertFlavor(flavor);
-    const plan = planDependencyImages(root);
-    const npmLayers = plan.images.filter(image => image.layer === 'npm' && image.kind.startsWith(`${flavor}-`));
-    const required = [...plan.bases.map(base => base.ref), ...npmLayers.map(image => image.tag)];
+    targetArgs(plan, flavor);
+    const stages = plan.stages.filter(stage => stage.flavor === flavor);
+    const required = [...plan.bases.map(base => base.ref), ...stages.map(stage => stage.npmTag)];
     const missing = [];
     for (const ref of required) {
         if (!(await isPresent(run, ref))) {
@@ -108,20 +108,17 @@ export async function verifyPrepared({ root, run, flavor }) {
             `${missing.join(', ')} not in the local image store; run \`${PREPARE_COMMAND}\` first`,
         );
     }
-    return {
-        client: npmLayers.find(image => image.kind === `${flavor}-client`).tag,
-        server: npmLayers.find(image => image.kind === `${flavor}-server`).tag,
-    };
+    return Object.fromEntries(stages.map(stage => [stage.stage, stage.npmTag]));
 }
 
 /**
- * 製品の Dockerfile の各 builder stage の依存の部分（`FROM` から最初の `npm ci` の行と、`\` で続く行まで）を
- * `FROM <npm の層の tag> AS <stage>` の 1 行に置き換えた Dockerfile の文字列を返す。それ以外の行
- * は製品のまま。
+ * 製品の Dockerfile の、`flavor` の各 builder stage の依存の部分（`FROM` から最初の `npm ci` の行と、
+ * `\` で続く行まで）を `FROM <npm のレイヤの tag> AS <stage>` の 1 行に置き換えた Dockerfile の文字列を
+ * 返す。それ以外の行は製品のまま。
  */
 export function deriveImageDockerfile({ root, flavor, plan = planDependencyImages(root) }) {
     assertFlavor(flavor);
-    const lines = readFileSync(join(root, `Dockerfile.${flavor}`), 'utf8').split(/\r?\n/u);
+    const lines = readFileSync(join(root, 'Dockerfile'), 'utf8').split(/\r?\n/u);
     const stages = plan.stages.filter(stage => stage.flavor === flavor).sort((a, b) => b.from - a.from);
     for (const stage of stages) {
         lines.splice(stage.from, stage.rest - stage.from, `FROM ${stage.npmTag} AS ${stage.stage}`);
@@ -147,11 +144,11 @@ export function checkImageName(flavor, id) {
 }
 
 /**
- * 導いた Dockerfile で image を構築し、`Os=linux`・`Architecture=amd64` を確かめる。context は
- * repository root（`.dockerignore` が効く）。構築の失敗・platform の不一致は `build-failed`。
- * 構築した image の名前を返す。
+ * 導いた Dockerfile で image を構築し、`Os=linux`・`Architecture=amd64` を確かめる。`buildArgs`
+ * （bake の定義の target の引数）は `--build-arg` で渡す。context は repository root（`.dockerignore` が
+ * 効く）。構築の失敗・platform の不一致は `build-failed`。構築した image の名前を返す。
  */
-export async function buildCheckImage({ root, run, flavor, id, dockerfilePath }) {
+export async function buildCheckImage({ root, run, flavor, id, dockerfilePath, buildArgs = {} }) {
     const image = checkImageName(flavor, id);
     const built = await run(
         [
@@ -162,6 +159,7 @@ export async function buildCheckImage({ root, run, flavor, id, dockerfilePath })
             '--network=none',
             '--pull=false',
             '--no-cache',
+            ...Object.entries(buildArgs).flatMap(([name, value]) => ['--build-arg', `${name}=${value}`]),
             '-f',
             dockerfilePath,
             '-t',
@@ -597,9 +595,10 @@ export async function runImageCheck({ root, run, flavor, id, probeDeadlineMs, sl
     let primary;
     let facts;
     try {
-        await verifyPrepared({ root, run, flavor });
-        const dockerfilePath = writeImageDockerfile({ root, flavor, id });
-        await buildCheckImage({ root, run, flavor, id, dockerfilePath });
+        const plan = planDependencyImages(root);
+        await verifyPrepared({ root, run, flavor, plan });
+        const dockerfilePath = writeImageDockerfile({ root, flavor, id, plan });
+        await buildCheckImage({ root, run, flavor, id, dockerfilePath, buildArgs: targetArgs(plan, flavor) });
         const { names, mirakurunPath } = await startServer({ root, run, flavor, id });
         const expectedVersion = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
         const elapsedMs = await probeHttp({ run, names, expectedVersion, deadlineMs: probeDeadlineMs, sleep, now });

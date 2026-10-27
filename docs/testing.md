@@ -159,7 +159,7 @@ hosted CI が実行しない検査を含め、公開してよい状態かを手�
 | --- | --- | --- |
 | 1 | `stale-containers` | 強制終了された run が残した `epgs-docker-check-*`・`ar-9-17-*`・`epgstation-persistence-*` の container、`epgs-docker-check-*` の network、`epgstation-docker-check-*` の image を削除する。長命の container A・B と `epgstation-deps-*` の依存 image は残す |
 | 2 | `rehearsal-setup` | hosted runner を模擬する container を 2 つ作る（ubuntu 24.04 / Docker 28.0.4〈overlay2〉/ 新規 user / `TZ=UTC`）。container A（`epgs-runner-rehearsal`）は `server-check` と `docker-gate-node24` 用、container B（`epgs-runner-rehearsal-b`）は `client` と `client-browser` 用。CPU 帯と memory の上限は「実行の構成」で決まる |
-| 3 | `deps-prepare` | Docker image の確認に使う依存 image（base image の pull、OS package の層、npm の依存関係の層）を container A の nested daemon と host の daemon に揃える。外部へ取りに行くのはこの step だけ。揃っていれば `docker image inspect` だけで終わる。取得に失敗したら exit 75 で止まり、test は 1 つも始めない |
+| 3 | `deps-prepare` | Docker image の確認に使う依存 image（base image の pull、OS package のレイヤ、npm の依存関係のレイヤ）を container A の nested daemon と host の daemon に揃える。外部へ取りに行くのはこの step だけ。揃っていれば `docker image inspect` だけで終わる。取得に失敗したら exit 75 で止まり、test は 1 つも始めない |
 | 4 | `server-check` | root の lint・typecheck・format check（PR の server `check` job と同じ検査）を container A で実行する |
 | 5 | `docker-gate-node24` | Docker image の確認（§5）を container A で単独に実行する。Node 24 |
 | 6 | `client` | client の lint・typecheck・format:check・unit test・coverage 100%（`coverage:gate`）・dev server の確認（`npm run test:dev-server`）を container B で実行する |

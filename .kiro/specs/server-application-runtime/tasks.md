@@ -548,18 +548,20 @@ gitignored `test/server/.artifacts/`だけを生成する。Requirement 9 Accept
 Major 10はDesign §17の手元の確認（Requirement 10）を持つ。製品のDockerfileは変更せず、base image同梱のNode headerを使う形の
 Dockerfileを前提にする。外部からの取得は準備の段階（10.1）だけで行い、本体の確認（10.2〜10.3）は取得しない。
 
--   [x] 10.1 依存の層を製品のDockerfileから導く準備の道具に直す
+-   [x] 10.1 依存のレイヤを製品のDockerfileから導く準備の道具に直す
 
-    -   `scripts/server-test/dependency-images.mjs`が、`Dockerfile.debian`・`Dockerfile.alpine`の`FROM ...@sha256:...`をすべて読み、
-        同じtagが別のdigestなら終了code 2で失敗する。各builder stage（`client-builder`・`server-deps`）で、`FROM`から最初の
-        `npm ci`の行までを依存の部分として導き、導けない形も終了code 2で失敗する。
-    -   serverのOS packageの層（最初の`WORKDIR`の直前まで）とnpmの層を別々のtag付きimageとして用意する。tagは層の内容と
-        manifestのsha256から決め、`package.json`または`package-lock.json`が変わると、変わった側のnpmの層だけtagが変わり、OSの層と
-        baseのtagは変わらない。Nodeのheaderの取得と、手書きの層のDockerfileを持たない。
+    -   `scripts/server-test/dependency-images.mjs`が、`docker-bake.json`のtarget（`debian`・`alpine`）ごとに、`Dockerfile`の`FROM`を
+        targetの引数で解決した参照をすべて読み、`<tag>@sha256:...`でない参照、同じtagが別のdigestのときは終了code 2で失敗する。各builder stage
+        （`client-builder`・`server-builder`・`server-prod-deps`）で、`FROM`から最初の`npm ci`の行までを依存の部分として導き、`ARG`には
+        targetの引数の値を埋める。導けない形も終了code 2で失敗する。
+    -   `server-prod-deps`のOS packageのレイヤ（最初の`WORKDIR`の直前まで）とnpmのレイヤを別々のtag付きimageとして用意する。tagはレイヤの内容と
+        manifestのsha256から決め、targetの間で内容が同じレイヤ（`client-builder`・`server-builder`）は1つのtagにする。`package.json`または
+        `package-lock.json`が変わると、変わった側のnpmのレイヤだけtagが変わり、OSのレイヤとbaseのtagは変わらない。Nodeのheaderの取得と、
+        手書きのレイヤのDockerfileを持たない。
     -   `scripts/server-test/prepare-dependency-images.mjs`の取得対象をbase image、OS package、npmの依存関係だけにし、揃っていれば
         外へ取りに行かず、取得失敗は終了code 75、入力の誤りは2、想定外は1で終える。`scripts/ci-rehearsal/deps-image-tags.mjs`は同じ
-        moduleから層のtagを得る形を保つ。
-    -   `test/server/application-runtime/docker-dependency-images.spec.test.ts`を新規に作り、層の導出、導けない形、lock変更時のnpmの層だけの作り直し、揃っている場合に取得しないこと、取得失敗の終了codeを
+        moduleからレイヤのtagを得る形を保つ。
+    -   `test/server/application-runtime/docker-dependency-images.spec.test.ts`を新規に作り、レイヤの導出、導けない形、lock変更時のnpmのレイヤだけの作り直し、揃っている場合に取得しないこと、取得失敗の終了codeを
         fakeの`run`で確かめる。
     -   完了時には、spec testが全件成功し、準備の取得がpull・buildだけであり、揃っている場合のdocker呼び出しが`inspect`だけである。
     -   _Requirements: 10.2, 10.5, 10.6, 10.7, 10.8, 10.9_
@@ -568,15 +570,15 @@ Dockerfileを前提にする。外部からの取得は準備の段階（10.1）
 
 -   [x] 10.2 準備済みの確認と、製品のDockerfileから導いたDockerfileの構築を実装する
 
-    -   新規`scripts/server-test/docker-image-check.mjs`に、`docker image inspect`だけでbase（Dockerfileのdigestと一致）とnpmの層が手元に
+    -   `scripts/server-test/docker-image-check.mjs`に、`docker image inspect`だけでbase（bakeの定義のdigestと一致）とnpmのレイヤが手元に
         あることを確かめるPrepared Verifierを置く。無ければ、理由`not-prepared`と準備のcommandを示して失敗し、外部へ取りに行かない。
-    -   同moduleのImage Dockerfile Deriverは、各builder stageの依存の部分を`FROM <npmの層のtag> AS <stage>`の1行に置き換えた
+    -   同moduleのImage Dockerfile Deriverは、各builder stageの依存の部分を`FROM <npmのレイヤのtag> AS <stage>`の1行に置き換えた
         Dockerfileを`test/server/.artifacts/docker-image-check/<id>/Dockerfile`に生成し、それ以外の行は製品のDockerfileのままとする。
-    -   Image Builderは、`docker build --platform linux/amd64 --network=none --pull=false --no-cache`で構築し、構築後に`Os=linux`・
+    -   Image Builderは、`docker build --platform linux/amd64 --network=none --pull=false --no-cache`にtargetの引数を`--build-arg`で渡して構築し、構築後に`Os=linux`・
         `Architecture=amd64`を確かめる。呼んだdockerのargvをledgerに残す。
-    -   導いたDockerfileの`FROM`が準備済みのnpmの層のtagであり、それ以外の行が製品のDockerfileと一致すること、準備されていない場合に取得のargvが0件であることを
+    -   導いたDockerfileの`FROM`が準備済みのnpmのレイヤのtagであり、それ以外の行が製品のDockerfileと一致すること、準備されていない場合に取得のargvが0件であることを
         `docker-dependency-images.spec.test.ts`で確かめる。
-    -   完了時には、Debian版・Alpine版のDockerfileから導いたDockerfileがspec testで検証され、準備されていない状態が`not-prepared`として区別できる。
+    -   完了時には、Debian版・Alpine版のtargetについて導いたDockerfileがspec testで検証され、準備されていない状態が`not-prepared`として区別できる。
     -   _Requirements: 10.1, 10.2, 10.10_
     -   _Boundary: Prepared Verifier・Image Dockerfile Deriver・Image Builder_
     -   _Verification: unittest/spec_
@@ -648,9 +650,9 @@ Dockerfileを前提にする。外部からの取得は準備の段階（10.1）
 -   [x] 11.1 `.github/workflows/docker.yml`をDesign §17.8の形で書く
 
     -   triggerを`master`へのpushと全tag、`pull_request`と`workflow_dispatch`なし、top-level `permissions: {}`、jobに`contents: read`とする。
-        `build-arch` job（distro × archのmatrix、archごとのネイティブのrunner、Buildx・Docker Hubのlogin・digestでのbuild-push・digestのartifactの各step）と、
+        `build-arch` job（archのmatrix、archごとのネイティブのrunner、Buildx・Docker Hubのlogin・1回のbakeでのdigestでのpush・digestのartifactの各step）と、
         `build` job（`Docker tags`のstep〈`docker/metadata-action`〉、digestのartifactの取得、Docker Hubのlogin、multi-arch manifestのまとめの各step）で構成する。
-        actionはcommit SHAで固定し、`type=gha`のcacheをdistroとarchの組ごとのscopeで持ち、`provenance: false`とする。
+        actionはcommit SHAで固定し、`type=gha`のcacheをtargetとarchの組ごとのscopeで持ち、`provenance: false`とする。
     -   Docker Hubの認証情報は`secrets`の参照で渡し、`DOCKERHUB_IMAGE`・digest・tagの一覧は`env`でshellへ渡す。
     -   完了時には、workflowがDesign §17.8の「workflowの設計判断と理由」の表と一致し、`pull_request`を含まない。
     -   _Requirements: 11.1, 11.2, 11.5, 11.6_
@@ -664,7 +666,7 @@ Dockerfileを前提にする。外部からの取得は準備の段階（10.1）
         `refs/tags/v2.10.0`、distroを`debian`と`alpine`の4通りで実行し、Requirement 11 Acceptance Criterion 3・4のtag列と一致することを確かめる。`images`はdummyを使う。
     -   `actionlint`が使えれば構文を検査する。
     -   実行した4通りの入力と出力、`actionlint`の結果を、実装の記録（変更の本文）に残す。恒久のtestは置かない。
-    -   Docker Hubへの公開、ARMのrunnerでの構築、artifactでのdigestの受け渡し、gha cacheの保存・復元は、offlineでは確かめられないため、最初の公開の実行で確かめる。
+    -   Docker Hubへの公開、ARMのrunnerでの構築、artifactでのdigestの受け渡し、gha cacheの保存・復元は、offlineでは確かめられないため、workflowの実行で確かめる。
     -   完了時には、4通りのtag列が期待と一致した記録が残る。
     -   _Requirements: 11.3, 11.4_
     -   _Depends: 11.1_
@@ -684,7 +686,7 @@ Dockerfileを前提にする。外部からの取得は準備の段階（10.1）
 -   [x] 11.4 arm64をネイティブのrunnerで構築し、archごとのimageをdigestでまとめる
 
     -   `docker.yml`を、archごとにjobを分けてamd64は`ubuntu-latest`、arm64は`ubuntu-24.04-arm`で構築する形にする（Design §17.8）。archごとのimageはtagを付けずに
-        digestでpushし、digestをartifactで`build` jobへ渡して`docker buildx imagetools create`でまとめ、Requirement 11 Acceptance Criterion 3・4のtagだけを付ける。
+        digestでpushし、digestをarchごとに1つのartifactで`build` jobへ渡して`docker buildx imagetools create`でまとめ、Requirement 11 Acceptance Criterion 3・4のtagだけを付ける。
         まとめる前にdigestが2つあることを確かめる。triggerは`master`へのpushと全tagだけにする。
     -   `docker/metadata-action`、`actions/upload-artifact`、`actions/download-artifact`はNode 24の版をcommit SHAで固定する。
     -   手元のregistryで、digestでのpushとまとめを実行し、registryのtagがまとめた分だけであることと、まとめたimageがamd64・arm64を持つことを確かめる。
@@ -706,6 +708,21 @@ Dockerfileを前提にする。外部からの取得は準備の段階（10.1）
     -   _Requirements: 10.13_
     -   _Boundary: Image Content Inspector_
     -   _Verification: `docker-image.integration.test.ts`、`docker-dependency-images.spec.test.ts`_
+
+-   [ ] 11.6 1つの`Dockerfile`と`docker-bake.json`で、archごとに1回の構築からDebian版・Alpine版を作る
+
+    -   Debian版とAlpine版は1つの`Dockerfile`から作り、base imageは`docker-bake.json`のtarget（`debian`・`alpine`）の引数（`DISTRO`・`BUILDER_IMAGE`・
+        `NODE_IMAGE`）で渡す。`client-builder`・`server-builder`は両targetで同じ`BUILDER_IMAGE`の上に置き、`server-prod-deps`は`npm ci --omit=dev`で
+        実行時の依存だけを作る。npmのcache mountは`sharing=locked`で使う（Design §17.8「Dockerfileとbakeの定義」）。
+    -   `docker.yml`の`build-arch` jobはarchごとに`docker/bake-action`の1回のbakeで両targetを構築し、targetごとのdigestをarchごとに1つのartifactで渡す。
+    -   手元の確認（10.1・10.2）は`Dockerfile`と`docker-bake.json`からレイヤを導き、`docker-dependency-images.spec.test.ts`で確かめる。
+    -   手元の`docker buildx bake --progress=plain`で`npm run bundle`と`npm run compile`がそれぞれ1回だけ実行されることと、workflowの実行で
+        両targetのimageがamd64・arm64でDocker Hubへ公開されることを確かめ、結果を実装の記録に残す。
+    -   完了時には、`docker-dependency-images.spec.test.ts`と`docker-image.integration.test.ts`が成功し、workflowがDesign §17.8と一致する。
+    -   _Requirements: 10.1, 10.2, 10.13, 11.1, 11.2, 11.7_
+    -   _Boundary: Dependency Plan・Image Dockerfile Deriver・Image Builder・Docker Publish Workflow_
+    -   _Verification: `docker-dependency-images.spec.test.ts`、`docker-image.integration.test.ts`、手元のbakeのlog、workflowの実行_
+    -   _Depends: 11.4, 11.5_
 
 -   [x] 12. serverの`src/**`のC0・C1を単体testだけで100%にする
 
@@ -1056,7 +1073,7 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
 | 1.2  | `package.json`<br>`package-lock.json`<br>`vitest.server.config.ts`<br>`scripts/server-test/build.mjs`<br>`scripts/server-test/compiled-snapshot.mjs`<br>`scripts/server-test/process.mjs`<br>`scripts/server-test/run-tests.mjs`<br>`scripts/server-test/test-selection.mjs`<br>`test/server/.gitignore` | `command contract test, fail-closed coverage smoke（全domain suite収束までthreshold未達exit 1）` | `1.1`                        | `npm run test:server:coverage` |
 | 1.3  | `test/server/harness/async.ts` | `unittest/imp`（後続domain testが使う） | `1.1`                        | `npm run test:server:imp` |
 | 1.4  | `test/server/harness/child-process.ts`<br>`test/server/harness/fixtures/child-scenarios.ts` | `integration`（後続domain testが使う） | `1.1`                        | `npm run test:server:integration -- test/server/application-runtime/integration/runtime-boundaries.integration.test.ts` |
-| 1.5  | `.devcontainer/epgstation/Dockerfile`<br>`Dockerfile.alpine`<br>`Dockerfile.debian`<br>`README.md`<br>`mise.toml`<br>`package.json`<br>`package-lock.json`<br>`scripts/server-test/compiled-snapshot.mjs`<br>`scripts/server-test/run-tests.mjs`<br>`src/model/service/api/streams/live/{channelId}/m2ts.ts`<br>`src/model/service/api/streams/live/{channelId}/m2tsll.ts`<br>`src/model/service/api/streams/live/{channelId}/mp4.ts`<br>`src/model/service/api/streams/live/{channelId}/webm.ts`<br>`src/model/service/api/streams/recorded/{videoFileId}/mp4.ts`<br>`src/model/service/api/streams/recorded/{videoFileId}/webm.ts`<br>`src/model/service/encode/EncodeProcessManageModel.ts`<br>`src/model/service/encode/EncoderModel.ts`<br>`test/server/harness/child-process.ts`<br>`test/server/harness/startup-retry.ts`<br>`test/server/integration/application-runtime/startup-smoke.integration.test.ts` | `Node.js 24 mandatory foundation cell（coverageの判定は9.9がDesign §12.4の形で扱う）` | `1.2, 1.3, 1.4`              | `mise exec node@24 -- npm ci`<br>`mise exec node@24 -- npm run build-server`<br>`mise exec node@24 -- npm run test:server`<br>`mise exec node@24 -- npm run test:server:integration -- test/server/integration/application-runtime/startup-smoke.integration.test.ts` |
+| 1.5  | `.devcontainer/epgstation/Dockerfile`<br>`Dockerfile`<br>`docker-bake.json`<br>`README.md`<br>`mise.toml`<br>`package.json`<br>`package-lock.json`<br>`scripts/server-test/compiled-snapshot.mjs`<br>`scripts/server-test/run-tests.mjs`<br>`src/model/service/api/streams/live/{channelId}/m2ts.ts`<br>`src/model/service/api/streams/live/{channelId}/m2tsll.ts`<br>`src/model/service/api/streams/live/{channelId}/mp4.ts`<br>`src/model/service/api/streams/live/{channelId}/webm.ts`<br>`src/model/service/api/streams/recorded/{videoFileId}/mp4.ts`<br>`src/model/service/api/streams/recorded/{videoFileId}/webm.ts`<br>`src/model/service/encode/EncodeProcessManageModel.ts`<br>`src/model/service/encode/EncoderModel.ts`<br>`test/server/harness/child-process.ts`<br>`test/server/harness/startup-retry.ts`<br>`test/server/integration/application-runtime/startup-smoke.integration.test.ts` | `Node.js 24 mandatory foundation cell（coverageの判定は9.9がDesign §12.4の形で扱う）` | `1.2, 1.3, 1.4`              | `mise exec node@24 -- npm ci`<br>`mise exec node@24 -- npm run build-server`<br>`mise exec node@24 -- npm run test:server`<br>`mise exec node@24 -- npm run test:server:integration -- test/server/integration/application-runtime/startup-smoke.integration.test.ts` |
 | 1.6  | `mise.toml`<br>`test/server/integration/application-runtime/startup-smoke.integration.test.ts` | `Node.js 26 additional foundation cell` | `1.5`                        | `mise exec node@26 -- npm ci`<br>`mise exec node@26 -- npm run build-server`<br>`mise exec node@26 -- npm run test:server`<br>`mise exec node@26 -- npm run test:server:integration -- test/server/integration/application-runtime/startup-smoke.integration.test.ts` |
 | 2.1  | `test/server/application-runtime/startup-preparation.spec.test.ts`<br>`test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | `unittest/spec, unittest/imp, isolated entrypoint characterization`                                                            | `1.6`                        | `npm run test:server:spec -- test/server/application-runtime/startup-preparation.spec.test.ts`<br>`npm run test:server:imp -- test/server/application-runtime/imp/runtime-characteristics.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 2.2  | `test/server/application-runtime/startup-preparation.spec.test.ts`<br>`test/server/application-runtime/integration/runtime-boundaries.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | `unittest/spec, isolated child-process fault matrix`                                                                           | `2.1`                        | `npm run test:server:spec -- test/server/application-runtime/startup-preparation.spec.test.ts`<br>`npm run test:server:integration -- test/server/application-runtime/integration/runtime-boundaries.integration.test.ts`                                                                                                                                                                                                                                                                                                                                                                                    |
@@ -1090,6 +1107,7 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
 | 11.1 | `.github/workflows/docker.yml` | レビュー | `11.3` | `actionlint .github/workflows/docker.yml`（使える場合） |
 | 11.2 | `.github/workflows/docker.yml` | 実装時の確認 | `11.1` | `Docker tags`のstepの`run`を4通りの`GITHUB_REF`・`DISTRO`で実行 |
 | 11.3 | `tools/check-tracked-secrets.py` | 実装時の確認 | なし | `python3 tools/check-tracked-secrets.py`（stageした例で） |
+| 11.6 | `Dockerfile`<br>`docker-bake.json`<br>`.dockerignore`<br>`.github/workflows/docker.yml`<br>`scripts/server-test/dependency-images.mjs`<br>`scripts/server-test/docker-image-check.mjs`<br>`test/server/application-runtime/docker-dependency-images.spec.test.ts` | `unittest/spec`<br>`integration`<br>実装時の確認 | `11.4, 11.5` | `npm run test:server:spec -- test/server/application-runtime/docker-dependency-images.spec.test.ts`<br>`scripts/ci-rehearsal/job.sh local 24 serialized integration/application-runtime/docker-image.integration.test.ts`<br>`docker buildx bake --progress=plain` |
 | 12.1 | `src/model/db/`の未到達のfileに対応する単体test | `unittest/spec`<br>`unittest/imp` | `9.9, 12.2` | `npm run test:server:coverage` |
 | 12.2 | `src/db/migrations/**`に対応する単体test | `unittest/imp` | `9.9` | `npm run test:server:coverage` |
 | 12.3 | `src/model/operator/`の未到達のfileに対応する単体test | `unittest/spec`<br>`unittest/imp` | `9.9, 12.2` | `npm run test:server:coverage` |
