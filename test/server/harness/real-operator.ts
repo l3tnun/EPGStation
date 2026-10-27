@@ -120,18 +120,56 @@ export const startTunerStub = async (handler: TunerStubHandler): Promise<TunerSt
     };
 };
 
-export const reserveUnusedPort = async (): Promise<number> => {
-    const probe = createServer();
-    await new Promise<void>((resolve, reject) => {
-        probe.once('error', reject);
-        probe.listen(0, loopbackHost, () => resolve());
-    });
-    const address = probe.address();
-    if (address === null || typeof address === 'string') {
-        throw new Error('Port probe did not expose a TCP port');
+/**
+ * Ports for a real process that listens on them later come from below the kernel's ephemeral range
+ * (`ip_local_port_range`). `listen(0)` never hands out such a port, so a stub or a server that another test
+ * opens with `listen(0)` cannot take it between this reservation and the real process's listen. Each Vitest
+ * worker (`VITEST_POOL_ID`, unique among the workers running at once) draws from its own slice, so concurrent
+ * workers never reserve the same port. A port something already listens on is skipped.
+ */
+const reservedPortFloor = 20_000;
+const reservedPortSlices = 32;
+let reservedPortCursor = 0;
+
+const ephemeralPortFloor = async (): Promise<number | undefined> => {
+    try {
+        const [low] = (await readFile('/proc/sys/net/ipv4/ip_local_port_range', 'utf8')).trim().split(/\s+/u).map(Number);
+        return Number.isInteger(low) && low - reservedPortFloor >= reservedPortSlices ? low : undefined;
+    } catch {
+        return undefined;
     }
+};
+
+/** Listens on `port` (all addresses when `host` is omitted, as the Service does) and closes again. */
+const probeListen = async (port: number, host?: string): Promise<number | undefined> => {
+    const probe = createServer();
+    const listening = await new Promise<boolean>(resolve => {
+        probe.once('error', () => resolve(false));
+        probe.listen(port, host, () => resolve(true));
+    });
+    if (!listening) return undefined;
+    const address = probe.address();
     await new Promise<void>(resolve => probe.close(() => resolve()));
-    return address.port;
+    return address !== null && typeof address !== 'string' ? address.port : undefined;
+};
+
+export const reserveUnusedPort = async (): Promise<number> => {
+    const ceiling = await ephemeralPortFloor();
+    if (ceiling === undefined) {
+        const port = await probeListen(0, loopbackHost);
+        if (port === undefined) throw new Error('Port probe did not expose a TCP port');
+        return port;
+    }
+    const sliceSize = Math.floor((ceiling - reservedPortFloor) / reservedPortSlices);
+    const poolId = Number(process.env.VITEST_POOL_ID);
+    const slice = Number.isInteger(poolId) && poolId > 0 ? (poolId - 1) % reservedPortSlices : 0;
+    const first = reservedPortFloor + slice * sliceSize;
+    for (let attempt = 0; attempt < sliceSize; attempt += 1) {
+        const port = first + (reservedPortCursor % sliceSize);
+        reservedPortCursor += 1;
+        if ((await probeListen(port)) === port) return port;
+    }
+    throw new Error(`No free port in ${first}-${first + sliceSize - 1}`);
 };
 
 /**
