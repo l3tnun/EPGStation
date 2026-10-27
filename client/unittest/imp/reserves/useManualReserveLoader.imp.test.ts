@@ -2,6 +2,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { createScrollHistory } from '@/app/scrollHistory'
 import { useManualReserveLoader } from '@/features/reserves/hooks/useManualReserveLoader'
+import { createInitialFormState } from '@/features/reserves/lib/manualReserveForm'
 import type { ReservesApiRepository } from '@/features/reserves/lib/reservesApiTypes'
 import { DefaultSettingsFactory } from '@/shared/settings/defaultSettings'
 
@@ -198,5 +199,27 @@ describe('useManualReserveLoader cancellation and history restore edges', () => 
     await waitFor(() => {
       expect(replaceFormState).toHaveBeenCalledWith(pageInfo)
     })
+  })
+
+  it('[AC 4.2] replaces the form with the initial state, time specification off, when the route changes from a program to the no-query add mode', async () => {
+    const { hook, replaceFormState } = createLoaderHarness({
+      fetchManualProgram: vi.fn(async () => ({
+        ok: true as const,
+        value: { id: 801, name: 'Program', channelId: 1, startAt: 1_000, endAt: 2_000 },
+      })),
+    })
+
+    hook.rerender({ mode: { kind: 'program', programId: 801 }, search: '?programId=801' })
+    await waitFor(() =>
+      expect(replaceFormState).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          timeSpecifiedOption: { name: 'Program', channelId: 1, startAt: 1_000, endAt: 2_000 },
+        }),
+      ),
+    )
+
+    hook.rerender({ mode: { kind: 'add' }, search: '' })
+
+    expect(replaceFormState).toHaveBeenLastCalledWith(createInitialFormState())
   })
 })
