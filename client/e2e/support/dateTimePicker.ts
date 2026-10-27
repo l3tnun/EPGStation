@@ -47,7 +47,7 @@ export async function showCalendarMonth(
   throw new Error(`calendar を ${year}年${month}月へ動かせません`)
 }
 
-// calendar で日を選び、時と分を clock で選ぶ。分は 5 の倍数を指定する。
+// 開いたばかりの dialog の calendar で日を選び、時と分を時刻の列で選ぶ。
 export async function pickDateTime(
   dialog: Locator,
   {
@@ -58,7 +58,11 @@ export async function pickDateTime(
     minute,
   }: { year: number; month: number; day: number; hour: number; minute: number },
 ): Promise<void> {
-  await dialog.getByRole('tab', { name: '日付を選択' }).click()
+  // dialog は calendar の view で開く。
+  await expect(dialog.getByRole('tab', { name: '日付を選択' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  )
   await showCalendarMonth(dialog, year, month)
   // 月の切り替えの間は前の月の週の行も DOM に残るので、1 つになるまで待つ。
   await expect(dialog.getByRole('rowgroup')).toHaveCount(1)
