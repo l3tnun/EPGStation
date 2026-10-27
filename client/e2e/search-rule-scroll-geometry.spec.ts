@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
-import { pickDateTime } from './support/dateTimePicker'
+import { MAY_2026_TODAY, pickDateTime } from './support/dateTimePicker'
 import { getActiveRouteScrollY } from './support/routeScroll'
 import {
   createSearchRuleRequestLog,
@@ -59,6 +59,7 @@ test('keeps the Search duration fields and action row geometry', async ({ page }
 test('sends the Search period chosen in its dialogs and scrolls to the result section', async ({
   page,
 }) => {
+  await page.clock.setFixedTime(MAY_2026_TODAY)
   const requestLog = createSearchRuleRequestLog()
   await installSearchRuleWorkflowApiMocks(page, { requestLog })
   await page.setViewportSize({ width: 390, height: 600 })

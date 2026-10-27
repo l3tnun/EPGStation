@@ -2,14 +2,17 @@ import { expect, test, type CDPSession, type Locator, type Page } from '@playwri
 import { installAppShellApiMocks } from './support/appShellMocks'
 import {
   expectMondayFirstCalendar,
+  MAY_2026_TODAY,
   pickDateTime,
   showCalendarMonth,
+  SIX_WEEK_MONTH_TODAY,
 } from './support/dateTimePicker'
 import { installReservesApiMocks, manualProgramDetail } from './support/reservesMocks'
 import { installSearchRuleWorkflowApiMocks } from './support/searchRuleMocks'
 import { installStoragesUploadApiMocks } from './support/storagesUploadMocks'
 
 test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(MAY_2026_TODAY)
   await installAppShellApiMocks(page, { enableBroadcastWaveNavigation: true })
 })
 
@@ -227,6 +230,8 @@ interface PickerScreen {
   name: string
   dialogName: string
   suffix: RegExp
+  // dialog を開いたときの calendar の週の数。
+  weeks: number
   open: (page: Page) => Promise<Locator>
 }
 
@@ -235,6 +240,7 @@ const pickerScreens: PickerScreen[] = [
     name: 'Recorded Upload',
     dialogName: '日付選択',
     suffix: /T23:59$/,
+    weeks: 6,
     open: async (page) => {
       await installStoragesUploadApiMocks(page)
       await page.goto('/#/recorded/upload')
@@ -246,6 +252,7 @@ const pickerScreens: PickerScreen[] = [
     name: 'Search period',
     dialogName: '期間 開始',
     suffix: /T23:59$/,
+    weeks: 6,
     open: async (page) => {
       await installSearchRuleWorkflowApiMocks(page)
       await page.goto('/#/search')
@@ -260,6 +267,8 @@ const pickerScreens: PickerScreen[] = [
     name: 'Manual Reserve',
     dialogName: '時刻 開始',
     suffix: / 23:59$/,
+    // 開始の欄には番組の開始（2026 年 5 月 6 日）が入っているので、calendar はその月で開く。
+    weeks: 5,
     open: async (page) => {
       await installReservesApiMocks(page)
       await page.goto(`/#/reserves/manual?programId=${manualProgramDetail.id}`)
@@ -381,6 +390,11 @@ async function revealByWheel(page: Page, option: Locator): Promise<void> {
 }
 
 test.describe('picker fits the usable page size without scrolling the dialog', () => {
+  // 値の無い欄の calendar は 6 週の月で開く。
+  test.beforeEach(async ({ page }) => {
+    await page.clock.setFixedTime(SIX_WEEK_MONTH_TODAY)
+  })
+
   for (const screen of pickerScreens) {
     for (const [width, height] of usableSizes) {
       test(`${screen.name} ${width}x${height}`, async ({ page }) => {
@@ -399,6 +413,7 @@ test.describe('picker fits the usable page size without scrolling the dialog', (
         const weeks = dialog.locator('[role="row"][aria-rowindex]').filter({
           has: page.locator('[role="gridcell"]'),
         })
+        await expect(weeks).toHaveCount(screen.weeks)
         const lastWeek = weeks.last()
         await expectVisibleInViewport(page, lastWeek, 'last week')
         const contentBox = await dialog.locator('.MuiDialogContent-root').boundingBox()
@@ -435,6 +450,11 @@ test.describe('picker fits the usable page size without scrolling the dialog', (
 })
 
 test.describe('picker follows the visible area while it stays open', () => {
+  // 値の無い欄の calendar は 6 週の月で開く。
+  test.beforeEach(async ({ page }) => {
+    await page.clock.setFixedTime(SIX_WEEK_MONTH_TODAY)
+  })
+
   for (const screen of pickerScreens) {
     test(`${screen.name} keeps fitting while the viewport changes`, async ({ page }) => {
       await page.setViewportSize({ width: 375, height: 627 })

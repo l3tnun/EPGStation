@@ -1,5 +1,12 @@
 import { expect, type Locator } from '@playwright/test'
 
+// 値の無い欄の日時 picker は、calendar を browser の今日の月で開く。実行する日付に依らず同じ月から
+// 開くよう、test は page.clock.setFixedTime で browser の今日を固定する（timer は止まらない）。
+// 2026 年 5 月の日を選ぶ test の今日。
+export const MAY_2026_TODAY = new Date('2026-05-15T12:00:00+09:00')
+// 2026 年 3 月は 1 日が日曜なので、月曜始まりの calendar が 6 週になる。calendar が最も高くなる月。
+export const SIX_WEEK_MONTH_TODAY = new Date('2026-03-15T12:00:00+09:00')
+
 // 日時 picker dialog の calendar の曜日 header（左の列から順）が月曜始まりの日本語であること。
 export async function expectMondayFirstCalendar(dialog: Locator): Promise<void> {
   await expect(dialog.getByRole('columnheader')).toHaveText([
