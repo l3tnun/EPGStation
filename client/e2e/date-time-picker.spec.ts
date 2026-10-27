@@ -84,6 +84,8 @@ test('Manual Reserve time specification picks the end in a Monday-first calendar
 }) => {
   await installReservesApiMocks(page)
   await page.goto(`/#/reserves/manual?programId=${manualProgramDetail.id}`)
+  // 番組情報を受け取るとフォームを番組の内容で置き換えるので、その後に switch を押す
+  await expect(page.getByRole('heading', { name: manualProgramDetail.name })).toBeVisible()
   await page.getByRole('switch', { name: '時刻指定' }).click()
   await expect(page.getByRole('region', { name: '時刻指定予約' })).toBeVisible()
 
@@ -193,6 +195,8 @@ test.describe('narrow 320x568 viewport', () => {
   test('Manual Reserve picker fits and picks the last week', async ({ page }) => {
     await installReservesApiMocks(page)
     await page.goto(`/#/reserves/manual?programId=${manualProgramDetail.id}`)
+    // 番組情報を受け取るとフォームを番組の内容で置き換えるので、その後に switch を押す
+    await expect(page.getByRole('heading', { name: manualProgramDetail.name })).toBeVisible()
     await page.getByRole('switch', { name: '時刻指定' }).click()
     await expect(page.getByRole('region', { name: '時刻指定予約' })).toBeVisible()
     const field = page.getByRole('textbox', { name: '終了' })
@@ -259,6 +263,8 @@ const pickerScreens: PickerScreen[] = [
     open: async (page) => {
       await installReservesApiMocks(page)
       await page.goto(`/#/reserves/manual?programId=${manualProgramDetail.id}`)
+      // 番組情報を受け取るとフォームを番組の内容で置き換えるので、その後に switch を押す
+      await expect(page.getByRole('heading', { name: manualProgramDetail.name })).toBeVisible()
       await page.getByRole('switch', { name: '時刻指定' }).click()
       await expect(page.getByRole('region', { name: '時刻指定予約' })).toBeVisible()
       return page.getByRole('textbox', { name: '開始' })
