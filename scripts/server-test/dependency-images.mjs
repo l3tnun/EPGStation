@@ -2,19 +2,23 @@
  * Docker image の確認が使う依存 image の計画と、その用意（外部取得）。
  *
  * 確認の本体は外部へ取りに行かない。外部から取る処理（base image の pull、OS の package
- * （apt-get / apk・pip）、npm ci）はすべてここにあり、`prepare-dependency-images.mjs` という
+ * （apt-get / apk）、npm ci）はすべてここにあり、`prepare-dependency-images.mjs` という
  * 本体の前の専用 step からだけ呼ばれる。本体は、ここが決める tag の image が手元にあることを
  * `docker image inspect` で確かめるだけで、無ければ取得せずに失敗する。
  *
- * 層は製品の `Dockerfile.debian`・`Dockerfile.alpine` から導く。各 builder stage（`client-builder`・
- * `server-deps`）で、`FROM` から最初の `npm ci` の行（`\` で続く行を含む）までを依存の部分と
- * する（comment と空行は除く）。層の Dockerfile を手書きで持たない。
- *   1. OS の package の層（server 用だけ）: 依存の部分のうち、最初の `WORKDIR` の直前まで。
- *      tag は層の内容（base の digest を含む）から決まる。lock file が変わっても作り直さない。
- *   2. npm の層: 1 の層（client 用は OS の package を使わないので base 自身）の上に、依存の部分の
- *      残りと manifest（`package.json`・`package-lock.json`）で `npm ci` する。tag はこの層の
- *      内容（1 の層の tag を含む）と manifest の path・sha256 から決まる。lock file が変わると、
- *      変わった側のこの層だけが作り直される。
+ * レイヤは製品の `Dockerfile` と `docker-bake.json` から導く。bake の定義の `group.default.targets` の
+ * target（`debian`・`alpine`）を flavor とし、その `args` で `Dockerfile` の `FROM ${名前}` と値の無い
+ * `ARG 名前` を埋める。各 builder stage（`client-builder`・`server-builder`・`server-prod-deps`）で、
+ * `FROM` から最初の `npm ci` の行（`\` で続く行を含む）までを依存の部分とする（comment と空行は除く）。
+ * レイヤの Dockerfile を手書きで持たない。
+ *   1. OS の package のレイヤ（`server-prod-deps` だけ）: 依存の部分のうち、最初の `WORKDIR` の直前まで。
+ *      tag はレイヤの内容（base の digest を含む）から決まる。lock file が変わっても作り直さない。
+ *   2. npm のレイヤ: 1 のレイヤ（ほかの stage は OS の package を使わないので base 自身）の上に、依存の部分の
+ *      残りと manifest（`package.json`・`package-lock.json`）で `npm ci` する。tag はこのレイヤの
+ *      内容（1 のレイヤの tag を含む）と manifest の path・sha256 から決まる。lock file が変わると、
+ *      変わった側のこのレイヤだけが作り直される。
+ * tag は flavor ではなくレイヤの内容で決まるので、どの flavor でも同じ内容のレイヤ（`client-builder`・
+ * `server-builder`）は 1 つの tag になり、1 回だけ用意される。
  *
  * この module は repository の中身から計画を計算するだけの純粋な部分と、注入された `run` で docker を
  * 呼ぶ部分に分かれている。tag の計算は `scripts/ci-rehearsal/deps-image-tags.mjs`（古い image の削除）も使う。
@@ -23,23 +27,33 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-const DOCKERFILES = Object.freeze(['Dockerfile.debian', 'Dockerfile.alpine']);
+const DOCKERFILE = 'Dockerfile';
+const BAKE_FILE = 'docker-bake.json';
 const IMAGE_ID = /^(?:sha256:)?[0-9a-f]{64}$/u;
 const PINNED_REF = /^(.+)@(sha256:[0-9a-f]{64})$/u;
+const ARG_REF = /^\$\{(\w+)\}$/u;
 
-/** builder stage の名前と、その stage が入れる manifest。server 用だけが OS の package の層を持つ。 */
+/**
+ * builder stage の名前と、その stage のレイヤの kind と manifest。`os` の stage だけが OS の package のレイヤを
+ * 持つ。
+ */
 const BUILDER_STAGES = Object.freeze({
     'client-builder': {
         kind: 'client',
         manifests: ['client/package.json', 'client/package-lock.json'],
     },
-    'server-deps': {
-        kind: 'server',
+    'server-builder': {
+        kind: 'server-build',
         manifests: ['package.json', 'package-lock.json'],
+    },
+    'server-prod-deps': {
+        kind: 'server-prod',
+        manifests: ['package.json', 'package-lock.json'],
+        os: true,
     },
 });
 
-/** 計画を立てられない（Dockerfile から digest や層が決まらない）。入力の誤りで、取得の失敗ではない。 */
+/** 計画を立てられない（Dockerfile から digest やレイヤが決まらない）。入力の誤りで、取得の失敗ではない。 */
 export class DependencyImagePlanError extends Error {
     constructor(reason, message) {
         super(message ?? reason);
@@ -108,13 +122,64 @@ function parseStages(file, text) {
 }
 
 /**
- * 製品の Dockerfile が固定している base を、出現順に返す。外から取る `FROM` は `<tag>@sha256:...`
- * でなければならず、同じ tag が 2 つの固定で別の digest なら失敗する。
+ * bake の定義の target を、`group.default.targets` の順に `{ flavor, args }` で返す。target の名前は
+ * 重複せず、target は object で、`args` は文字列の値だけを持つ object でなければならない。
  */
-function collectBases(parsed) {
+function readBakeTargets(root) {
+    let bake;
+    try {
+        bake = JSON.parse(readFileSync(join(root, BAKE_FILE), 'utf8'));
+    } catch (error) {
+        throw new DependencyImagePlanError('bake-definition-invalid', `${BAKE_FILE} cannot be read: ${error.message}`);
+    }
+    const names = bake?.group?.default?.targets;
+    if (!Array.isArray(names) || names.length === 0 || new Set(names).size !== names.length) {
+        throw new DependencyImagePlanError(
+            'bake-definition-invalid',
+            `${BAKE_FILE} has no group.default.targets or repeats a name`,
+        );
+    }
+    return names.map(name => {
+        const target = bake.target?.[name];
+        if (target === undefined) {
+            throw new DependencyImagePlanError('bake-target-missing', `${BAKE_FILE} has no target ${name}`);
+        }
+        const isObject = value => typeof value === 'object' && value !== null && !Array.isArray(value);
+        const args = isObject(target) ? (target.args ?? {}) : undefined;
+        if (!isObject(args) || Object.values(args).some(value => typeof value !== 'string')) {
+            throw new DependencyImagePlanError(
+                'bake-definition-invalid',
+                `${BAKE_FILE} target ${name} is not an object with string args`,
+            );
+        }
+        return { flavor: name, args };
+    });
+}
+
+/** `FROM` の参照を target の引数で解決する。`${名前}` 以外の参照はそのまま返す。 */
+function resolveRef(ref, { flavor, args }) {
+    const match = ARG_REF.exec(ref);
+    if (match === null) {
+        return ref;
+    }
+    const value = args[match[1]];
+    if (value === undefined) {
+        throw new DependencyImagePlanError(
+            'base-arg-missing',
+            `${DOCKERFILE} uses ${ref}, which target ${flavor} does not set`,
+        );
+    }
+    return value;
+}
+
+/**
+ * target ごとに、Dockerfile が外から取る base を解決し、出現順に返す。外から取る参照は
+ * `<tag>@sha256:...` でなければならず、同じ tag が 2 つの固定で別の digest なら失敗する。
+ */
+function collectBases(targets, stages) {
     const byTag = new Map();
     const bases = [];
-    for (const { stages } of parsed) {
+    for (const target of targets) {
         const names = new Set();
         for (const stage of stages) {
             const earlier = names.has(stage.ref);
@@ -124,23 +189,24 @@ function collectBases(parsed) {
             if (earlier) {
                 continue;
             }
-            const pinned = PINNED_REF.exec(stage.ref);
+            const ref = resolveRef(stage.ref, target);
+            const pinned = PINNED_REF.exec(ref);
             if (pinned === null) {
                 throw new DependencyImagePlanError(
                     'base-digest-missing',
-                    `${stage.ref} is not pinned by a digest in ${stage.file}`,
+                    `${ref} is not pinned by a digest (target ${target.flavor})`,
                 );
             }
             const known = byTag.get(pinned[1]);
             if (known !== undefined && known !== pinned[2]) {
                 throw new DependencyImagePlanError(
                     'base-digest-conflict',
-                    `${pinned[1]} is pinned to ${known} and ${pinned[2]} by the Dockerfiles`,
+                    `${pinned[1]} is pinned to ${known} and ${pinned[2]} by ${BAKE_FILE}`,
                 );
             }
             if (known === undefined) {
                 byTag.set(pinned[1], pinned[2]);
-                bases.push({ tag: pinned[1], digest: pinned[2], ref: stage.ref });
+                bases.push({ tag: pinned[1], digest: pinned[2], ref });
             }
         }
     }
@@ -161,7 +227,7 @@ function dependencyPart(stage, spec) {
     const lines = body.slice(0, rest).filter(line => line.trim() !== '' && !/^\s*#/u.test(line));
     let osLines = [];
     let npmLines = lines;
-    if (spec.kind === 'server') {
+    if (spec.os) {
         const workdir = lines.findIndex(line => line.startsWith('WORKDIR '));
         if (workdir <= 0) {
             throw new DependencyImagePlanError(
@@ -175,6 +241,26 @@ function dependencyPart(stage, spec) {
     return { osLines, npmLines, restLine: stage.from + 1 + rest };
 }
 
+/**
+ * `ARG 名前` の行に target の引数の値を埋める（bake と同じく、target の値が既定値より優先する）。
+ * レイヤは bake を通さずに build するため。target の値も既定値も無い `ARG` は入力の誤り。
+ */
+function fillArgs(lines, { flavor, args }) {
+    return lines.map(line => {
+        const match = /^ARG (\w+)(=.*)?$/u.exec(line);
+        if (match === null || (args[match[1]] === undefined && match[2] !== undefined)) {
+            return line;
+        }
+        if (args[match[1]] === undefined) {
+            throw new DependencyImagePlanError(
+                'build-arg-missing',
+                `${DOCKERFILE} declares ARG ${match[1]}, which target ${flavor} does not set`,
+            );
+        }
+        return `ARG ${match[1]}=${args[match[1]]}`;
+    });
+}
+
 function layerDockerfile(ref, lines) {
     return `FROM ${ref}\n${lines.join('\n')}\n`;
 }
@@ -182,56 +268,81 @@ function layerDockerfile(ref, lines) {
 /**
  * 依存 image の計画。
  *
- * - `bases`: 製品の Dockerfile が固定している base（`ref` は `<tag>@<Dockerfile の digest>`）。
- * - `images`: build 順の依存 image。`layer` が `os` か `npm`。`npm` の層だけが確認の Dockerfile の
- *   `FROM` に使われる（`flavor` と `kind` ごとに 1 つ）。
- * - `stages`: 各 builder stage の依存の部分が占める行（`from` は `FROM` の行、`rest` は依存の部分の
- *   次の行、どちらも 0 起点）と、その stage の npm の層の tag。
+ * - `targets`: bake の定義の target（`{ flavor, args }`）を `group.default.targets` の順で。
+ * - `bases`: target の引数で解決した base（`ref` は `<tag>@<bake の定義の digest>`）。
+ * - `images`: build 順の依存 image。`layer` が `os` か `npm`。`flavors` はそのレイヤを使う flavor。`npm` のレイヤ
+ *   だけが確認の Dockerfile の `FROM` に使われる。
+ * - `stages`: flavor ごとの各 builder stage の依存の部分が占める行（`from` は `FROM` の行、`rest` は
+ *   依存の部分の次の行、どちらも 0 起点）と、その stage の npm のレイヤの tag。
  *
- * tag は、OS の層が `epgstation-deps-os-<flavor>-<kind>:<h12>`（層の内容。base の digest を含む）、
- * npm の層が `epgstation-deps-<flavor>-<kind>:<h12>`（層の内容と manifest の内容。server 用の層は
- * OS の層の tag を含むので、OS の層が変わると npm の層の tag も変わる）。
+ * tag は、OS のレイヤが `epgstation-deps-os-<kind>:<h12>`（レイヤの内容。base の digest を含む）、npm のレイヤが
+ * `epgstation-deps-<kind>:<h12>`（レイヤの内容と manifest の内容。OS のレイヤを持つ stage は OS のレイヤの tag を
+ * 含むので、OS のレイヤが変わると npm のレイヤの tag も変わる）。
  */
 export function planDependencyImages(root) {
-    const parsed = DOCKERFILES.map(file => ({
-        file,
-        flavor: file.slice('Dockerfile.'.length),
-        stages: parseStages(file, readFileSync(join(root, file), 'utf8')),
-    }));
-    const bases = collectBases(parsed);
+    const targets = readBakeTargets(root);
+    const parsed = parseStages(DOCKERFILE, readFileSync(join(root, DOCKERFILE), 'utf8'));
+    const bases = collectBases(targets, parsed);
     const images = [];
+    const byTag = new Map();
+    const addImage = (flavor, image) => {
+        const known = byTag.get(image.tag);
+        if (known === undefined) {
+            const added = { ...image, flavors: [flavor] };
+            byTag.set(image.tag, added);
+            images.push(added);
+        } else if (!known.flavors.includes(flavor)) {
+            known.flavors.push(flavor);
+        }
+    };
     const stages = [];
-    for (const { file, flavor, stages: fileStages } of parsed) {
+    for (const target of targets) {
         for (const [name, spec] of Object.entries(BUILDER_STAGES)) {
-            const stage = fileStages.find(candidate => candidate.name === name);
+            const stage = parsed.find(candidate => candidate.name === name);
             if (stage === undefined) {
-                throw new DependencyImagePlanError('builder-stage-missing', `${file} has no ${name} stage`);
+                throw new DependencyImagePlanError('builder-stage-missing', `${DOCKERFILE} has no ${name} stage`);
             }
+            const baseRef = resolveRef(stage.ref, target);
             const part = dependencyPart(stage, spec);
-            const kind = `${flavor}-${spec.kind}`;
-            let fromRef = stage.ref;
+            let fromRef = baseRef;
             if (part.osLines.length > 0) {
-                const dockerfile = layerDockerfile(stage.ref, part.osLines);
-                const tag = `epgstation-deps-os-${kind}:${hash12(['os-layer', kind, dockerfile])}`;
-                images.push({ kind, layer: 'os', tag, dockerfile, baseRef: stage.ref, manifests: [] });
+                const dockerfile = layerDockerfile(baseRef, fillArgs(part.osLines, target));
+                const tag = `epgstation-deps-os-${spec.kind}:${hash12(['os-layer', spec.kind, dockerfile])}`;
+                addImage(target.flavor, { kind: spec.kind, layer: 'os', tag, dockerfile, baseRef, manifests: [] });
                 fromRef = tag;
             }
-            const dockerfile = layerDockerfile(fromRef, part.npmLines);
+            const dockerfile = layerDockerfile(fromRef, fillArgs(part.npmLines, target));
             const manifests = spec.manifests.map(path => ({ path, sha256: sha256Hex(readFileSync(join(root, path))) }));
-            const tag = `epgstation-deps-${kind}:${hash12([
+            const tag = `epgstation-deps-${spec.kind}:${hash12([
                 'npm-layer',
-                kind,
+                spec.kind,
                 dockerfile,
                 ...manifests.flatMap(manifest => [manifest.path, manifest.sha256]),
             ])}`;
-            images.push({ kind, layer: 'npm', tag, dockerfile, baseRef: stage.ref, manifests });
-            stages.push({ file, flavor, stage: name, kind, from: stage.from, rest: part.restLine, npmTag: tag });
+            addImage(target.flavor, { kind: spec.kind, layer: 'npm', tag, dockerfile, baseRef, manifests });
+            stages.push({
+                flavor: target.flavor,
+                stage: name,
+                kind: spec.kind,
+                from: stage.from,
+                rest: part.restLine,
+                npmTag: tag,
+            });
         }
     }
-    return { bases, images, stages };
+    return { targets, bases, images, stages };
 }
 
-/** 現在の manifest に対する依存 image の tag（両方の層）。古い image の削除が使う。 */
+/** 計画の中の flavor の target の引数。bake の定義に無い flavor は `bake-target-missing`。 */
+export function targetArgs(plan, flavor) {
+    const target = plan.targets.find(entry => entry.flavor === flavor);
+    if (target === undefined) {
+        throw new DependencyImagePlanError('bake-target-missing', `${BAKE_FILE} has no target ${flavor}`);
+    }
+    return target.args;
+}
+
+/** 現在の manifest に対する依存 image の tag（両方のレイヤ）。古い image の削除が使う。 */
 export function dependencyImageTags(root) {
     return planDependencyImages(root).images.map(image => image.tag);
 }
@@ -267,7 +378,7 @@ async function withFetchRetry({ what, attempt, sleep, log, attempts, delayMs }) 
  * 依存 image を手元に揃える。外部への取得はここだけ。
  *
  * 揃っているものには何もしない（`docker image inspect` だけ）。無いものだけを、base は
- * Dockerfile の digest で pull、層は `docker buildx build` で build する。取得は `attempts` 回まで、1 回ごとに上限時間を持ち、
+ * Dockerfile の digest で pull、レイヤは `docker buildx build` で build する。取得は `attempts` 回まで、1 回ごとに上限時間を持ち、
  * 超えたら `DependencyFetchError` で止める。
  *
  * `run(argv, { timeoutMs })` は `{ code, stdout, stderr }` を返す（時間切れは `code: null`）。

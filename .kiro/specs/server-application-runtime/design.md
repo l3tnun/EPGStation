@@ -141,8 +141,8 @@ tuner一覧の取得に失敗した場合も、先に登録済みのevent bindin
 ## 5. Node.jsと起動失敗
 
 最低対応環境はNode.js 24、追加互換検証対象はNode.js 26とする。rootのversion宣言、型定義、開発環境、および
-`Dockerfile.debian`と`Dockerfile.alpine`のserver build/runtime stageはNode.js 24を基準とし、client builderのNode.js 26と
-は役割を分ける。24未満を対応対象として表明せず、Node.js 26の成功によって最低対応版を26へ引き上げない。
+公開用Docker image（`Dockerfile`と`docker-bake.json`）のclient・serverのbuild stageとruntime stageはNode.js 24を基準とする。
+24未満を対応対象として表明せず、Node.js 26の成功によって最低対応版を26へ引き上げない。
 
 `mise.toml`（rootと`client/`）は開発と検証で使うNode.js・npmの版を固定するためのもので、利用者の導入手順の前提にしない。
 `package.json`の`all-install`・`build-client`はclientへ`cd client && npm ...`で移り、PATHにある`npm`をそのまま使う。mise
@@ -1188,19 +1188,19 @@ owner判断を新設するopen decisionはない。Implementation時は承認済
     preparation token/resource lock/exact-ID deletion。
 -   PM `EncodeCompletionSink` payload/registration port、Event-owned provider registration、Workflow process-local event
     binding入口、およびRuntimeから同入口への一回呼出し。
--   coverage scope/exclusion、Vitest config、`Dockerfile.debian`・`Dockerfile.alpine`の構成、`docker.yml`のaction・platform・tag。
+-   coverage scope/exclusion、Vitest config、`Dockerfile`・`docker-bake.json`の構成、`docker.yml`のaction・platform・tag。
 -   TypeScript parserの`getChildren`が返す葉のtokenとJSDocの扱い、prettierの`trailingComma`の設定（§12.3.1のtoken列の正規化の前提）。
 -   gitの一時indexによる中身のtreeの求め方、Node.js matrixのworkspaceの作り方、模擬runnerへの中身の渡し方（§12.3.2）。
 
 ## 17. 公開用Docker imageの構築・起動確認と公開（Requirement 10・11）
 
-本節の内容は、`scripts/server-test/`・`test/server/application-runtime/`・`.github/workflows/docker.yml` に実装されている。Docker Hub への公開、ARM の runner での arm64 の構築、job の間の digest の受け渡し、gha cache の保存・復元は §17.9 のとおり最初の実行まで確かめていない。
+本節の内容は、`Dockerfile`・`docker-bake.json`・`scripts/server-test/`・`test/server/application-runtime/`・`.github/workflows/docker.yml` に実装されている。Docker Hub への公開、ARM の runner での arm64 の構築、job の間の digest の受け渡し、gha cache の保存・復元は、§17.9 のとおり workflow の実行で確かめる。
 
 ### 17.1 Boundary Commitments
 
 #### This Spec Owns
-- `Dockerfile.debian`・`Dockerfile.alpine` から linux/amd64 向けの image を手元で構築し、起動した server が Web・API に応答することを確かめる確認（Requirement 10）。
-- その確認の前に外部からの取得を済ませる依存の準備（OS の package の層と npm の層、準備済みの確認、取得失敗の終了 code、層の再利用）。
+- `Dockerfile` と `docker-bake.json` の Debian 版・Alpine 版の target から linux/amd64 向けの image を手元で構築し、起動した server が Web・API に応答することを確かめる確認（Requirement 10）。
+- その確認の前に外部からの取得を済ませる依存の準備（OS の package のレイヤと npm のレイヤ、準備済みの確認、取得失敗の終了 code、レイヤの再利用）。
 - 確認が作る container・network・image の片付け。
 - 公開用 image の構築と Docker Hub への公開を行う `.github/workflows/docker.yml`（Requirement 11）: trigger、matrix、tag、認証情報の渡し方、`permissions`。
 
@@ -1212,14 +1212,15 @@ owner判断を新設するopen decisionはない。Implementation時は承認済
 - Docker Hub 側の repository・secret の登録、`master` と tag の運用、公開の可否の判断。
 
 #### Allowed Dependencies
-- 製品の Dockerfile（読むだけ。変更しない）、`package.json`・`package-lock.json`（client・server）、`config/config.yml.template`・`config/*LogConfig.sample.yml`。
+- 製品の Dockerfile と bake の定義（`Dockerfile`・`docker-bake.json`。読むだけ。変更しない）、`package.json`・`package-lock.json`（client・server）、`config/config.yml.template`・`config/*LogConfig.sample.yml`。
 - Docker CLI と、container A（hosted runner 模擬）の nested daemon、または host の daemon。
 - GitHub Actions の公式・Docker 公式の action（`docker.yml` のみ。commit SHA で固定）。
 - §12.2 の共通 test 基盤（`test/server/`、`vitest.server.config.ts`、`run-tests.mjs`、`serialized-real-process-files.mjs`）。
 
 #### Revalidation Triggers
-- Dockerfile の stage 構成の変更（依存の部分を導く規則 17.4 が前提にする行の並び: builder stage の名前、server の最初の `WORKDIR`、`npm ci` の行）。
-- base image の digest の変更、client・server の `package.json`・`package-lock.json` の変更（npm の層の tag が変わる）。
+- Dockerfile の stage 構成の変更（依存の部分を導く規則 17.4 が前提にする行の並び: builder stage の名前（`client-builder`・`server-builder`・`server-prod-deps`）、`server-prod-deps` の最初の `WORKDIR`、`npm ci` の行）。
+- `docker-bake.json` の target の名前と、target ごとの引数（`DISTRO`・`BUILDER_IMAGE`・`NODE_IMAGE`）の名前。
+- base image の digest の変更、client・server の `package.json`・`package-lock.json` の変更（npm のレイヤの tag が変わる）。
 - 起動時に server が tuner server へ行う問い合わせの変更（代役の契約 17.4）。
 - `docker.yml` の action の版、platform の一覧、tag の付け方、secret 名の変更。
 
@@ -1227,11 +1228,11 @@ owner判断を新設するopen decisionはない。Implementation時は承認済
 
 | 項目 | 現状 | locator |
 | --- | --- | --- |
-| 依存の層 | OS の package の層（server のみ）と npm の層を、tag 付き image として準備 step が用意する。tag は base の digest・層の内容・manifest の sha256 の hash。本体は `docker image inspect` だけ | `scripts/server-test/dependency-images.mjs`（`planDependencyImages`、`prepareDependencyImages`） |
+| 依存のレイヤ | OS の package のレイヤ（`server-prod-deps` のみ）と npm のレイヤを、tag 付き image として準備 step が用意する。tag は base の digest・レイヤの内容・manifest の sha256 の hash。本体は `docker image inspect` だけ | `scripts/server-test/dependency-images.mjs`（`planDependencyImages`、`prepareDependencyImages`） |
 | 準備 step | 取得は 3 回・15 秒間隔・種類ごとの上限時間。exit 0 / 75 / 2 / 1 | `scripts/server-test/prepare-dependency-images.mjs` |
-| 層の Dockerfile | 製品の Dockerfile の依存の部分から導く（手書きの層の Dockerfile と Node の header の取得は持たない）。製品の Dockerfile は header を取らず、base image 同梱の header を `npm_package_config_node_gyp_nodedir` で使う | `scripts/server-test/dependency-images.mjs`（`planDependencyImages`）、`Dockerfile.debian`・`Dockerfile.alpine` の server-deps |
+| レイヤの Dockerfile | 製品の Dockerfile の依存の部分から、bake の定義の引数で `FROM` と `ARG` を埋めて導く（手書きのレイヤの Dockerfile と Node の header の取得は持たない）。製品の Dockerfile は header を取らず、base image 同梱の header を `npm_package_config_node_gyp_nodedir` で使う | `scripts/server-test/dependency-images.mjs`（`planDependencyImages`）、`Dockerfile` の `client-builder`・`server-builder`・`server-prod-deps`、`docker-bake.json` |
 | preflight | `deps-prepare`（container A と host）→ `docker-gate-node24`（container A）。node-matrix の Node 24 の回も同じ file を host の daemon で実行 | `scripts/release-preflight.sh`、`scripts/ci-rehearsal/job.sh`、`scripts/server-test/run-node-acceptance-matrix.mjs` |
-| 公開用 workflow | `master` への push と全 tag で、distro（debian・alpine）と arch（amd64・arm64）の組を各 arch のネイティブの runner で構築し、digest からまとめた multi-arch の image を Docker Hub へ公開する。action は commit SHA で固定する | `.github/workflows/docker.yml` |
+| 公開用 workflow | `master` への push と全 tag で、arch（amd64・arm64）ごとにネイティブの runner で 1 回の bake から debian・alpine の image を構築し、digest からまとめた multi-arch の image を Docker Hub へ公開する。action は commit SHA で固定する | `.github/workflows/docker.yml` |
 
 ### 17.3 構成
 
@@ -1251,7 +1252,7 @@ flowchart LR
         Inspect[Image Content Inspector]
         Clean[Resource Cleaner]
     end
-    PD[Dockerfile.debian / alpine] --> Plan
+    PD[Dockerfile / docker-bake.json] --> Plan
     PD --> Derive
     Plan --> Prep
     Prep -->|tag 付き依存 image| Store[(daemon の image store)]
@@ -1267,8 +1268,8 @@ flowchart LR
     PD --> WF
 ```
 
-- 準備と本体は同じ `Dependency Plan`（Dockerfile から導く層と tag）を共有する。違いは、取得してよいのが準備だけという点。
-- 公開用の構築（`docker.yml`）は手元の確認と独立した経路で、同じ製品の Dockerfile を入力とする。手元の確認は公開を行わず、公開は手元の確認を呼ばない。
+- 準備と本体は同じ `Dependency Plan`（Dockerfile と bake の定義から導くレイヤと tag）を共有する。違いは、取得してよいのが準備だけという点。
+- 公開用の構築（`docker.yml`）は手元の確認と独立した経路で、同じ製品の Dockerfile と bake の定義を入力とする。手元の確認は公開を行わず、公開は手元の確認を呼ばない。
 
 ### 17.4 手元の確認の設計（Requirement 10）
 
@@ -1276,25 +1277,27 @@ flowchart LR
 
 | 項目 | 契約 |
 | --- | --- |
-| base の一覧 | `Dockerfile.debian`・`Dockerfile.alpine` の `FROM ...@sha256:...` をすべて読む。同じ tag が別の digest なら `DependencyImagePlanError`（exit 2） |
-| 依存の部分の導出 | 各 builder stage（`client-builder`・`server-deps`）で、`FROM` から最初の `npm ci` の行（`\` で続く行を含む）までを依存の部分とする。comment と空行は除く。層の `FROM` は `<tag>@<digest>`（`--platform=…` の指定があれば外す）。導けない形（`npm ci` の行が無い、server の `WORKDIR` の前に OS の package の行が無いなど）は exit 2 |
-| OS の package の層 | server の依存の部分のうち、最初の `WORKDIR` の直前まで。tag は `epgstation-deps-os-<kind>:<hash12>`（base の digest と層の内容） |
-| npm の層 | OS の層（client は base）の上に、残りの依存の部分と manifest。tag は `epgstation-deps-<kind>:<hash12>`（層の内容と manifest の path・sha256。server は OS の層の tag を含む） |
-| 再利用 | `package.json` または `package-lock.json` が変わると、その側（client または server）の npm の層だけ tag が変わる。OS の層と base は tag が変わらない（10.6・10.7） |
-| 取得 | base の pull、層の `docker buildx build --no-cache --pull=false --load`。Node の header の取得は持たない（製品の Dockerfile が base 同梱の header を使う） |
-| build context（層） | manifest を製品の配置どおり（`package.json`・`package-lock.json`、`client/package.json`・`client/package-lock.json`）に置く。製品の `COPY client/package*.json /app/client/` が層の Dockerfile でもそのまま通る |
+| target の一覧 | `docker-bake.json` の `group.default.targets` の順（`debian`・`alpine`）を flavor とし、各 target の `args` をその flavor の引数とする。読めない、target の名前が重複する、target が無い、target が object でない、`args` が文字列の値だけを持つ object でないときは `DependencyImagePlanError`（exit 2） |
+| base の一覧 | flavor ごとに、`Dockerfile` の `FROM` の参照を引数で解決したもの（`${名前}` は `args` の値。先に定義した stage を指す `FROM` は除く）をすべて読む。引数に無い名前、`<tag>@sha256:...` でない参照、同じ tag が別の digest のときは exit 2 |
+| 依存の部分の導出 | 各 builder stage（`client-builder`・`server-builder`・`server-prod-deps`）で、`FROM` から最初の `npm ci` の行（`\` で続く行を含む）までを依存の部分とする。comment と空行は除く。レイヤの `FROM` は解決した `<tag>@<digest>`（`--platform=…` の指定があれば外す）。`ARG <名前>` の行は、flavor がその引数を持てばレイヤでは `ARG <名前>=<flavor の引数の値>` にする（bake と同じく target の値が既定値より優先する）。値も既定値も無い `ARG` と、導けない形（`npm ci` の行が無い、`server-prod-deps` の `WORKDIR` の前に OS の package の行が無いなど）は exit 2 |
+| OS の package のレイヤ | `server-prod-deps` の依存の部分のうち、最初の `WORKDIR` の直前まで。tag は `epgstation-deps-os-server-prod:<hash12>`（base の digest とレイヤの内容） |
+| npm のレイヤ | OS のレイヤ（`client-builder`・`server-builder` は base）の上に、残りの依存の部分と manifest。tag は `epgstation-deps-<kind>:<hash12>`（kind は `client`・`server-build`・`server-prod`。レイヤの内容と manifest の path・sha256。`server-prod` は OS のレイヤの tag を含む） |
+| 共通のレイヤ | tag は flavor ではなくレイヤの内容で決まる。`client-builder`・`server-builder` のレイヤは、どの flavor でも同じ base（`BUILDER_IMAGE`）と同じ行を持つので 1 つの tag になり、1 回だけ用意する |
+| 再利用 | `package.json` または `package-lock.json` が変わると、その側（client または server）の npm のレイヤだけ tag が変わる（server の manifest は `server-build` と `server-prod` のレイヤが使う）。OS のレイヤと base は tag が変わらない（10.6・10.7） |
+| 取得 | base の pull、レイヤの `docker buildx build --no-cache --pull=false --load`。Node の header の取得は持たない（製品の Dockerfile が base 同梱の header を使う） |
+| build context（レイヤ） | manifest を製品の配置どおり（`package.json`・`package-lock.json`、`client/package.json`・`client/package-lock.json`）に置く。製品の `COPY client/package*.json /app/client/` がレイヤの Dockerfile でもそのまま通る |
 
 #### Prepared Verifier（`scripts/server-test/docker-image-check.mjs`）
 
-`docker image inspect` だけで、base（Dockerfile の digest と一致）と npm の層（現在の tag）が手元にあることを確かめる。無ければ理由 `not-prepared` と準備 step の command を示して失敗する。外部へは取りに行かない（10.10）。
+`docker image inspect` だけで、bake の定義のすべての target の base（bake の定義の digest と一致）と、その flavor の各 builder stage の npm のレイヤ（現在の tag）が手元にあることを確かめる。無ければ理由 `not-prepared` と準備 step の command を示して失敗する。外部へは取りに行かない（10.10）。
 
 #### Image Dockerfile Deriver（同 module）
 
-製品の Dockerfile を読み、各 builder stage の依存の部分を `FROM <npm の層の tag> AS <stage>` の 1 行に置き換えた Dockerfile を生成する。それ以外の行（client の source の copy と `RUN npm run bundle`、最終 stage と同じ base の上で `server-deps` の node_modules を受け取る `server-builder`・`server-prod-deps` の stage、build context の `COPY . /app/` に各 stage の成果物を重ねる最終 stage）は製品のまま。出力は `test/server/.artifacts/docker-image-check/<id>/Dockerfile` に置く。
+製品の `Dockerfile` を読み、その flavor の各 builder stage の依存の部分を `FROM <npm のレイヤの tag> AS <stage>` の 1 行に置き換えた Dockerfile を生成する。それ以外の行（先頭の `ARG`、client の source の copy と `RUN npm run bundle`、`server-builder` の `tsconfig.json`・`api.d.ts`・`src` の copy と compile、build context の `COPY . /app/` に各 stage の成果物を重ねる最終 stage）は製品のまま。出力は `test/server/.artifacts/docker-image-check/<id>/Dockerfile` に置く。
 
 #### Image Builder
 
-`docker build --platform linux/amd64 --network=none --pull=false --no-cache -f <導いた Dockerfile> -t epgstation-docker-check-<flavor>:<id> --label epgstation.docker-check.owner=<id> <repository root>`。context は repository root で、`.dockerignore` が効く（公開用の構築と同じ context の決め方）。build 後に `docker image inspect` で `Os=linux`・`Architecture=amd64` を確かめる（10.1）。上限時間は`BUILD_TIMEOUT_MS`（準備の build と同じ `FETCH_TIMEOUT_MS.osBuild`）で、hang を止めるための上限である。
+`docker build --platform linux/amd64 --network=none --pull=false --no-cache --build-arg <名前>=<値>… -f <導いた Dockerfile> -t epgstation-docker-check-<flavor>:<id> --label epgstation.docker-check.owner=<id> <repository root>`。`--build-arg` には flavor の bake の引数をすべて渡し、公開用の構築と同じ値で最終 stage の `FROM ${NODE_IMAGE}` を解決する。context は repository root で、`.dockerignore` が効く（公開用の構築と同じ context の決め方）。build 後に `docker image inspect` で `Os=linux`・`Architecture=amd64` を確かめる（10.1）。上限時間は`BUILD_TIMEOUT_MS`（準備の build と同じ `FETCH_TIMEOUT_MS.osBuild`）で、hang を止めるための上限である。
 
 #### Tuner Stub
 
@@ -1317,7 +1320,7 @@ server container の中で `docker exec <id> node -e "fetch('http://127.0.0.1:88
 
 #### Image Content Inspector
 
-応答の確認のあと、同じ server container の中で `docker exec <id> node -e ...` を実行して image の中身を調べる（10.13）。`/app/package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules/<名前>` に無いこと、`dependencies` の `express` が在ること、`/app/client/node_modules` が無いこと、`/app/client/dist/index.html` が在ること、`/app/.git` と `/app/.github` が無いことを確かめ、満たさなければ `image-content-invalid`。製品の Dockerfile は、`server-prod-deps` の stage で `npm prune --omit=dev` を実行して開発用の package を除いた `node_modules` を、最終 stage へ重ねる。client は build（`npm run bundle`）の成果物の `client/dist` だけを最終 stage へ重ね、build context の client の `node_modules` は `.dockerignore`（`**/node_modules/`）で除く。どちらも network を使わない（`--network=none` の構築で通る）。git の管理情報（`.git`）と GitHub の設定（`.github`）は、`.dockerignore` で build context から除く（`COPY . ` で image に入れない）。
+応答の確認のあと、同じ server container の中で `docker exec <id> node -e ...` を実行して image の中身を調べる（10.13）。`/app/package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules/<名前>` に無いこと、`dependencies` の `express` が在ること、`/app/client/node_modules` が無いこと、`/app/client/dist/index.html` が在ること、`/app/.git` と `/app/.github` が無いことを確かめ、満たさなければ `image-content-invalid`。製品の Dockerfile は、`server-prod-deps` の stage で `npm ci --omit=dev` により開発用の package を入れずに作った `node_modules` を、最終 stage へ重ねる。client は build（`npm run bundle`）の成果物の `client/dist` だけを最終 stage へ重ね、build context の client の `node_modules` は `.dockerignore`（`**/node_modules/`）で除く。どちらも network を使わない（`--network=none` の構築で通る）。git の管理情報（`.git`）と GitHub の設定（`.github`）は、`.dockerignore` で build context から除く（`COPY . ` で image に入れない）。
 
 #### Resource Cleaner
 
@@ -1340,12 +1343,12 @@ server container の中で `docker exec <id> node -e "fetch('http://127.0.0.1:88
 
 ```
 scripts/server-test/
-├── dependency-images.mjs            # 製品の Dockerfile から層を導く（Node の header の取得と手書きの層の Dockerfile を持たない）
+├── dependency-images.mjs            # 製品の Dockerfile と bake の定義からレイヤを導く（Node の header の取得と手書きのレイヤの Dockerfile を持たない）
 ├── prepare-dependency-images.mjs    # 取得の対象は base image・OS の package・npm の依存関係だけ
 └── docker-image-check.mjs           # Prepared Verifier、Image Dockerfile Deriver、docker 実行 helper（上限時間・argv ledger）
 test/server/application-runtime/
 ├── docker-image.integration.test.ts          # 確認の本体。Debian・Alpine の 2 case（describe.each）
-└── docker-dependency-images.spec.test.ts     # 依存の準備の test（層の導出、再利用、取得失敗、exit code）
+└── docker-dependency-images.spec.test.ts     # 依存の準備の test（レイヤの導出、再利用、取得失敗、exit code）
 .github/workflows/docker.yml                  # 公開用 workflow（17.8）。恒久の test は持たない（17.9）
 ```
 
@@ -1365,8 +1368,8 @@ sequenceDiagram
     participant Pre as deps-prepare
     participant T as docker-image.integration
     participant D as Docker daemon
-    Pre->>D: base を digest で pull、層を build（外部取得はここだけ）
-    T->>D: image inspect（base・npm の層）
+    Pre->>D: base を digest で pull、レイヤを build（外部取得はここだけ）
+    T->>D: image inspect（base・npm のレイヤ）
     D-->>T: 在る（無ければ not-prepared で失敗）
     T->>D: build（導いた Dockerfile、--network=none）
     T->>D: network、stub、server を起動
@@ -1381,7 +1384,7 @@ sequenceDiagram
 
 | step | 内容 | 実行場所 |
 | --- | --- | --- |
-| `deps-prepare` | base・OS の package の層・npm の層を揃える。外部取得はこの step だけ。失敗は 75 で、test の step は始めない | container A の nested daemon と host の daemon |
+| `deps-prepare` | base・OS の package のレイヤ・npm のレイヤを揃える。外部取得はこの step だけ。失敗は 75 で、test の step は始めない | container A の nested daemon と host の daemon |
 | `server-check` | root の lint・typecheck・format check（PR の server `check` job と同じ検査） | container A（hosted runner 模擬、CPU 帯は §12.3.4） |
 | `docker-gate-node24` | `docker-image.integration.test.ts` を単独で実行。Debian・Alpine の構築・起動・応答・片付け | container A（hosted runner 模擬、CPU 帯は §12.3.4） |
 
@@ -1390,6 +1393,25 @@ sequenceDiagram
 - `--only docker-gate-node24` の前に `--only deps-prepare` が要る運用は変えない。
 
 ### 17.8 公開用 workflow の設計（Requirement 11）
+
+#### Dockerfile と bake の定義
+
+Debian 版と Alpine 版は 1 つの `Dockerfile` から作り、`docker-bake.json` の target（`debian`・`alpine`）がそれぞれの引数を渡す。
+
+| stage | base | 内容 | 1 回の bake での実行 |
+| --- | --- | --- | --- |
+| `client-builder` | `BUILDER_IMAGE` | client の `npm ci` と `npm run bundle` | 1 回 |
+| `server-builder` | `BUILDER_IMAGE` | `npm ci --ignore-scripts`、`tsconfig.json`・`api.d.ts`・`src` の copy、`npm run compile` | 1 回 |
+| `server-prod-deps` | `NODE_IMAGE` | `DISTRO` に応じた compiler・make・python3（alpine は `pkgconf` も）の導入、`npm ci --omit=dev`（native addon の build を含む） | distro ごと |
+| 最終 stage | `NODE_IMAGE` | `COPY . /app/` に `server-prod-deps` の `node_modules`、`dist`、`client/dist` を重ねる | distro ごと |
+
+| 設計 | 理由 |
+| --- | --- |
+| base image は `docker-bake.json` の引数で渡し、digest で固定した参照はそこにまとめる。`BUILDER_IMAGE` はどの target でも同じ値にする | `BUILDER_IMAGE` の上の stage はどの target でも同じ内容になり、1 回の bake の中で 1 回だけ build されて両方の image に使われる（11.7） |
+| `server-builder` の `npm ci` は install script を走らせない（`--ignore-scripts`）。compile の入力（`tsconfig.json`・`api.d.ts`・`src`）は `npm ci` のあとで copy する | compile は native addon を使わない。依存は manifest だけで決まるので、compile の入力の変更では依存を入れ直さない |
+| `server-prod-deps` は `npm ci --omit=dev` で実行時の依存だけを入れる | 開発用の package を image に入れない（10.13）。native addon は distro と arch ごとに build する |
+| npm の cache mount（`/root/.npm`）はどの `npm ci` でも `sharing=locked` で使う | `npm ci` が 1 つずつ実行され、後から実行する `npm ci` は先に取得された package を使うので、同じ package を 2 度取得しない |
+| 先頭に `# check=skip=InvalidDefaultArgInFrom` を置く | `ARG BUILDER_IMAGE`・`ARG NODE_IMAGE` は既定値を持たず、bake の定義から渡す。既定値を書くと digest を 2 か所で持つことになる |
 
 `.github/workflows/docker.yml` は次の内容にする。action は commit SHA で固定する。契約は下の「workflow の設計判断と理由」の表と 17.10 が正で、yaml は実装の参照である。
 
@@ -1405,8 +1427,9 @@ permissions: {}
 env:
   MAIN_DISTRO: debian
 jobs:
-  # arch ごとにネイティブの runner でビルドする。arch ごとの image は tag を付けずに digest で push し、
-  # build ジョブで digest を multi-arch manifest にまとめて tag を付ける。
+  # arch ごとにネイティブの runner で、1 回の bake から debian 版と alpine 版の image を作る。
+  # client/dist と dist は 2 つの image で共有され、1 回だけ build される。arch ごとの image は tag を
+  # 付けずに digest で push し、build ジョブで digest を multi-arch manifest にまとめて tag を付ける。
   build-arch:
     name: Build images per arch
     runs-on: ${{ matrix.runner }}
@@ -1414,12 +1437,6 @@ jobs:
       contents: read
     strategy:
       matrix:
-        distro:
-          - alpine
-          - debian
-        arch:
-          - amd64
-          - arm64
         include:
           - arch: amd64
             runner: ubuntu-latest
@@ -1436,30 +1453,39 @@ jobs:
         with:
           username: <secrets.DOCKERHUB_USER>
           password: <secrets.DOCKERHUB_TOKEN>
+      # build context は checkout した directory にする（bake-action の既定は Git の URL）。
+      # platform・image の名前・digest での push は CI に固有なので、docker-bake.json ではなくここで上書きする。
+      # cache の scope は target ごとに分ける。同じ scope に 2 つの target が書くと、後に書いた方が scope を
+      # 上書きし、先に書いた方の cache が使われなくなる。
       - name: Build and push by digest
-        id: build
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        id: bake
+        uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
         with:
-          context: .
-          file: Dockerfile.${{ matrix.distro }}
-          platforms: linux/${{ matrix.arch }}
-          tags: ${{ secrets.DOCKERHUB_IMAGE }}
-          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=${{ matrix.distro }}-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.distro }}-${{ matrix.arch }}
+          source: .
           provenance: false
-      # digest を file 名にして、build ジョブへ artifact で渡す。
-      - name: Export digest
+          set: |
+            *.platform=linux/${{ matrix.arch }}
+            *.tags=${{ secrets.DOCKERHUB_IMAGE }}
+            *.output=type=image,push-by-digest=true,name-canonical=true,push=true
+            debian.cache-from=type=gha,scope=debian-${{ matrix.arch }}
+            debian.cache-to=type=gha,mode=max,scope=debian-${{ matrix.arch }}
+            alpine.cache-from=type=gha,scope=alpine-${{ matrix.arch }}
+            alpine.cache-to=type=gha,mode=max,scope=alpine-${{ matrix.arch }}
+      # target ごとの digest を distro の directory の下の file 名にして、build ジョブへ 1 つの artifact で渡す。
+      - name: Export digests
         env:
-          DIGEST: ${{ steps.build.outputs.digest }}
+          METADATA: ${{ steps.bake.outputs.metadata }}
         run: |
-          mkdir -p "$RUNNER_TEMP/digests"
-          touch "$RUNNER_TEMP/digests/${DIGEST#sha256:}"
-      - name: Upload digest
+          for distro in debian alpine; do
+            digest=$(jq -er --arg target "$distro" '.[$target]["containerimage.digest"]' <<<"$METADATA")
+            mkdir -p "$RUNNER_TEMP/digests/$distro"
+            touch "$RUNNER_TEMP/digests/$distro/${digest#sha256:}"
+          done
+      - name: Upload digests
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: digests-${{ matrix.distro }}-${{ matrix.arch }}
-          path: ${{ runner.temp }}/digests/*
+          name: digests-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/
           if-no-files-found: error
           retention-days: 1
   build:
@@ -1487,11 +1513,12 @@ jobs:
             type=ref,event=tag,enable=${{ matrix.distro == env.MAIN_DISTRO }}
             type=raw,value=${{ matrix.distro }},enable=${{ github.ref_type == 'tag' }}
             type=raw,value=latest,enable=${{ github.ref_type == 'tag' && matrix.distro == env.MAIN_DISTRO }}
+      # 各 arch の artifact は distro ごとの directory を持つ。まとめて展開し、この distro の directory を使う。
       - name: Download digests
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: ${{ runner.temp }}/digests
-          pattern: digests-${{ matrix.distro }}-*
+          pattern: digests-*
           merge-multiple: true
       - name: Login to Docker Hub
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -1500,7 +1527,7 @@ jobs:
           password: <secrets.DOCKERHUB_TOKEN>
       # amd64・arm64 の digest を 1 つの multi-arch manifest にまとめ、全タグに付ける。
       - name: Create multi-arch manifest
-        working-directory: ${{ runner.temp }}/digests
+        working-directory: ${{ runner.temp }}/digests/${{ matrix.distro }}
         env:
           IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}
           TAGS: ${{ steps.meta.outputs.tags }}
@@ -1527,12 +1554,15 @@ trigger（`master` への push と全 tag）、matrix の distro・arch・runner
 | --- | --- |
 | action は Node 24 の版を使い、commit SHA で固定する | Node 12 の action は今の runner では動かない。tag は動かせる参照のため、`DOCKERHUB_TOKEN` を渡す job では SHA で固定する |
 | trigger に `workflow_dispatch` を持たない | 手動の実行は、実行した ref の名前の tag（例: `v3`）で Docker Hub へ公開し、過去の tag から実行すると `latest`・`debian`・`alpine` を古い版へ付け替える |
-| arch ごとに job を分け、amd64 は `ubuntu-latest`、arm64 は `ubuntu-24.04-arm` の runner でネイティブに構築する（`platforms` は `linux/<arch>` の 1 つ） | public repository では ARM の runner を追加の費用なく使え、arm64 をその arch の上で構築できる |
-| arch ごとの image は tag を付けずに digest で push し（`push-by-digest=true`・`name-canonical=true`）、digest を artifact で `build` job へ渡して `docker buildx imagetools create` で multi-arch の image にまとめ、そこへ tag を付ける | Docker Hub の tag を 11.3・11.4 のものだけにする（11.6）。途中の image に tag を付けると、push のたびに Docker Hub に残る |
+| arch ごとに job を分け、amd64 は `ubuntu-latest`、arm64 は `ubuntu-24.04-arm` の runner でネイティブに構築する（`platform` は `linux/<arch>` の 1 つ） | public repository では ARM の runner を追加の費用なく使え、arm64 をその arch の上で構築できる |
+| job の中で `docker/bake-action` の 1 回の bake で `debian`・`alpine` の target を構築する | distro に依存しない stage を 1 回だけ build して両方の image に使う（11.7） |
+| bake-action に `source: .` を指定する | bake-action は既定で Git の URL を build context にする。checkout した directory を context にし、手元の確認と同じ `.dockerignore` を効かせる |
+| platform・image の名前・出力・cache は `set` で上書きし、`docker-bake.json` には書かない | CI に固有の値なので、手元の確認と手元の bake も使う bake の定義には持たせない |
+| arch ごとの image は tag を付けずに digest で push し（`push-by-digest=true`・`name-canonical=true`）、bake の metadata の target ごとの `containerimage.digest` を distro の directory の下の file 名にして arch ごとに 1 つの artifact で `build` job へ渡す。`build` job はすべての artifact を展開して自分の distro の directory の digest を `docker buildx imagetools create` で multi-arch の image にまとめ、そこへ tag を付ける | Docker Hub の tag を 11.3・11.4 のものだけにする（11.6）。途中の image に tag を付けると、push のたびに Docker Hub に残る |
 | まとめる前に、digest が 2 つ（amd64・arm64）あることを確かめる | 片方の arch が欠けた image を公開しない |
 | tag は `docker/metadata-action` で計算する（`flavor: latest=false`。`latest` は tag の push の Debian 版にだけ明示して付ける） | branch 名・tag 名を Docker の tag に使える文字へ直す。自動の `latest` を付けない |
-| cache は `cache-from` / `cache-to` を `type=gha`（scope は distro と arch の組ごと）にする | `type=gha` は追加の action が要らず、scope を分けると matrix の 4 job が同じ cache を上書きし合わない |
-| `provenance: false` を指定する | build-push-action は v4 以降、指定しないと attestation を付けて multi-arch の index に entry が増える。attestation の無い image を出す |
+| cache は `cache-from` / `cache-to` を `type=gha`（scope は target と arch の組ごと）にする | `type=gha` は追加の action が要らない。1 つの scope に 2 つの target が書くと後に書いた方が scope を上書きし、先の target の cache が使われなくなる |
+| `provenance: false` を指定する | 指定しないと attestation が付き、multi-arch の index に entry が増える。attestation の無い image を出す |
 | `${{ secrets.DOCKERHUB_IMAGE }}`・digest・tag の一覧を `env` で shell へ渡す | script への展開を避ける |
 | job に `permissions: contents: read` を与える（top-level は `{}`） | `{}` のままでは GITHUB_TOKEN に権限が無く、private repository の checkout が取得できない |
 | env を `MAIN_DISTRO` だけにする | runner 上の step が他の env を読まない |
@@ -1541,17 +1571,17 @@ trigger（`master` への push と全 tag）、matrix の distro・arch・runner
 
 ### 17.9 Testing Strategy
 
-恒久の test は 2 file である。1 つは「製品の Docker image を build して起動する確認」（`docker-image.integration.test.ts`、integration、Requirement 10 の AC 1〜4・11〜13）。もう 1 つは、要件を持つ依存の準備の道具の test（`docker-dependency-images.spec.test.ts`、spec。層の導出、lock 変更時の npm の層だけの作り直し、取得失敗の終了 code。AC 5〜10）である。`docker.yml` には恒久の test を置かない。
+恒久の test は 2 file である。1 つは「製品の Docker image を build して起動する確認」（`docker-image.integration.test.ts`、integration、Requirement 10 の AC 1〜4・11〜13）。もう 1 つは、要件を持つ依存の準備の道具と導いた Dockerfile の構築の test（`docker-dependency-images.spec.test.ts`、spec。レイヤの導出、導いた Dockerfile と構築の引数、lock 変更時の npm のレイヤだけの作り直し、取得失敗の終了 code。AC 1・2・5〜10）である。`docker.yml` には恒久の test を置かない。
 
 | ID | 確認項目 | 手段 | 対応する要件 |
 | --- | --- | --- | --- |
-| DC-1 | 準備済みの確認: base と npm の層が手元に無いとき、取得せず `not-prepared` で失敗する | `docker-image.integration.test.ts` の先頭。無い状態の再現は、`docker-dependency-images.spec.test.ts` が fake の `run` で（取得の argv が 0 件であることを確認）。実 Docker の本体は準備済みの前提 | 10.8, 10.10 |
-| DC-2 | 製品の Dockerfile から導いた Dockerfile で linux/amd64 の image を `--network=none` で構築し、base が Dockerfile の digest と一致する | 同 integration（Debian・Alpine）。image の `Architecture`・`Os`、導いた Dockerfile の `FROM` が準備済みの npm の層の tag で、それ以外の行が製品の Dockerfile と一致することを spec test で | 10.1, 10.2 |
+| DC-1 | 準備済みの確認: base と npm のレイヤが手元に無いとき、取得せず `not-prepared` で失敗する | `docker-image.integration.test.ts` の先頭。無い状態の再現は、`docker-dependency-images.spec.test.ts` が fake の `run` で（取得の argv が 0 件であることを確認）。実 Docker の本体は準備済みの前提 | 10.8, 10.10 |
+| DC-2 | 製品の Dockerfile から導いた Dockerfile と flavor の bake の引数で linux/amd64 の image を `--network=none` で構築し、base が bake の定義の digest と一致する | 同 integration（Debian・Alpine）。image の `Architecture`・`Os`、導いた Dockerfile の `FROM` が準備済みの npm のレイヤの tag で、それ以外の行が製品の Dockerfile と一致すること、構築に flavor の bake の引数を渡すことを spec test で | 10.1, 10.2 |
 | DC-3 | 起動して `GET /api/version`（200、version が `package.json` と一致）と `GET /`（200、HTML）を返す | 同 integration | 10.3 |
 | DC-4 | 実 tuner server へ接続しない: server の `mirakurunPath` が stub の container 名で、container は専用 network 内のみ | 同 integration（生成した config の値と network の構成を確認） | 10.4 |
-| DC-5 | 準備だけが外部取得を行う: 準備の取得（pull・build・再試行・上限時間）、層の再利用（lock 変更で npm の層だけ変わる、OS の層・base は変わらない）、揃っていれば inspect だけ | `docker-dependency-images.spec.test.ts`（fake の `run`）。本体の argv に pull・curl・取得を伴う build が無いことは integration の ledger で | 10.5, 10.6, 10.7, 10.8 |
+| DC-5 | 準備だけが外部取得を行う: 準備の取得（pull・build・再試行・上限時間）、レイヤの再利用（lock 変更で npm のレイヤだけ変わる、OS のレイヤ・base は変わらない）、揃っていれば inspect だけ | `docker-dependency-images.spec.test.ts`（fake の `run`）。本体の argv に pull・curl・取得を伴う build が無いことは integration の ledger で | 10.5, 10.6, 10.7, 10.8 |
 | DC-6 | 取得失敗の終了 code: 75（取得）、2（入力）、1（想定外）。確認の失敗（vitest の 1）と区別できる | `docker-dependency-images.spec.test.ts`（`prepare-dependency-images.mjs` の `main` を fake の `run` で） | 10.9 |
-| DC-7 | 層の導出: 製品の Dockerfile の形が規則に合わないとき exit 2 | 同 spec test（Dockerfile の複製を壊して） | 10.2, 10.9 |
+| DC-7 | レイヤの導出: 製品の Dockerfile と bake の定義の形が規則に合わないとき exit 2 | 同 spec test（Dockerfile と bake の定義の複製を壊して） | 10.2, 10.9 |
 | DC-8 | registry へ公開しない: 呼んだ docker の argv に `push`・`login`・`--push`・registry への `--output` が無い | `docker-image.integration.test.ts` の ledger の検査 | 10.11 |
 | DC-9 | 片付け: 成功・失敗のどちらでも container・network・検査用 image が残らず、依存 image は残る | 同 integration の後確認（失敗の経路は、build 失敗を起こす入力で spec test が cleaner を呼ぶ） | 10.12 |
 | DC-10 | image の中身: 起動した server の container で、`package.json` の `devDependencies` の代表（`typescript`・`eslint`・`prettier`・`vitest`）が `/app/node_modules` に無く、`dependencies` の `express` は在り、`/app/client/node_modules` が無く、client の build 済みの成果物（`/app/client/dist`）が在り、`/app/.git`・`/app/.github` が無い | 同 integration（Debian・Alpine）。比較する名前は test が `package.json` から読み、代表が `devDependencies` に在ることも確かめる | 10.13 |
@@ -1561,34 +1591,36 @@ trigger（`master` への push と全 tag）、matrix の distro・arch・runner
 `.github/workflows/docker.yml` の形（trigger、matrix、action の版、secret の参照）は恒久の test にしない。次を実装時に一度だけ行い、結果を実装の記録に残す。
 
 - `Docker tags` step の `docker/metadata-action`（yaml と同じ commit SHA の版）に yaml と同じ `tags`・`flavor` を与え、`GITHUB_REF` を `refs/heads/master` と `refs/tags/v2.10.0`、distro を `debian` と `alpine` の 4 通りで実行し、期待する tag 列（Requirement 11 AC 3・4）と一致することを確かめる。`images` はダミーを使う。
-- 手元に registry を立て、`build-arch` job の `Build and push by digest` と同じ引数の `docker buildx build`（`--platform linux/<arch>`、`--output type=image,push-by-digest=true,name-canonical=true,push=true`）で amd64・arm64 を push し、`Create multi-arch manifest` と同じ `docker buildx imagetools create` で digest からまとめる。registry の tag がまとめた分だけであること（11.6）と、まとめた image が amd64・arm64 の 2 つを持つこと（11.2）を確かめる。手元に無い arch は emulation（QEMU）で構築するので、ARM の runner の上での構築はこの確認では確かめず、最初の実行で確かめる。
+- 手元で `docker buildx bake --progress=plain` を実行し、`npm run bundle` と `npm run compile` がそれぞれ 1 回だけ実行され、`debian`・`alpine` の両方の image ができることを確かめる（11.7）。
+- 手元に registry を立て、`build-arch` job の `Build and push by digest` と同じ `set` の bake（`*.platform=linux/<arch>`、`*.output=type=image,push-by-digest=true,name-canonical=true,push=true`）で amd64・arm64 を push し、`Create multi-arch manifest` と同じ `docker buildx imagetools create` で digest からまとめる。registry の tag がまとめた分だけであること（11.6）と、まとめた image が amd64・arm64 の 2 つを持つこと（11.2）を確かめる。手元に無い arch は emulation（QEMU）で構築するので、ARM の runner の上での構築はこの確認では確かめず、workflow の実行で確かめる。
 - `actionlint` が使えれば、構文を検査する。
 
-Docker Hub への実際の公開、ARM の runner での構築、artifact での digest の受け渡し、gha cache の保存・復元は offline では確かめられない。最初の公開の実行で確かめる。
+Docker Hub への実際の公開、ARM の runner での構築、artifact での digest の受け渡し、gha cache の保存・復元は offline では確かめられず、workflow の実行で確かめる。
 
 ### 17.10 Requirements Traceability
 
 | Requirement | Summary | Components | Test |
 | --- | --- | --- | --- |
-| 10.1 | 両 Dockerfile から linux/amd64 の image を構築 | Image Dockerfile Deriver、Image Builder | DC-2 |
-| 10.2 | base を Dockerfile の digest と同じにする | Dependency Plan（base の一覧）、Prepared Verifier | DC-2, DC-7 |
+| 10.1 | Dockerfile と bake の定義の 2 target から linux/amd64 の image を構築 | Image Dockerfile Deriver、Image Builder | DC-2 |
+| 10.2 | base を bake の定義の digest と同じにする | Dependency Plan（base の一覧）、Prepared Verifier | DC-2, DC-7 |
 | 10.3 | 起動して Web・API が正常応答 | Server Runner、HTTP Probe | DC-3 |
 | 10.4 | tuner の代役、実機へ接続しない | Tuner Stub、Server Runner | DC-4 |
 | 10.5 | 外部取得は準備の段階だけ | Dependency Preparer、Prepared Verifier | DC-5 |
-| 10.6 | OS の package と npm を別々に保持し再利用 | Dependency Plan（OS の層・npm の層） | DC-5 |
-| 10.7 | lock 変更で変わった側の npm の層だけ用意し直す | Dependency Plan（tag の決まり方） | DC-5 |
+| 10.6 | OS の package と npm を別々に保持し再利用 | Dependency Plan（OS のレイヤ・npm のレイヤ） | DC-5 |
+| 10.7 | lock 変更で変わった側の npm のレイヤだけ用意し直す | Dependency Plan（tag の決まり方） | DC-5 |
 | 10.8 | 揃っていれば外へ取りに行かない | Dependency Preparer（inspect のみ） | DC-1, DC-5 |
 | 10.9 | 取得失敗を本体を始めずに、区別できる終了 code で報告 | `prepare-dependency-images.mjs`（75）、`release-preflight.sh` | DC-6, DC-7 |
 | 10.10 | 揃っていなければ取らず「準備されていない」で失敗 | Prepared Verifier | DC-1 |
 | 10.11 | registry へ公開しない | docker 実行 helper の argv ledger | DC-8 |
 | 10.12 | 成功・失敗どちらでも container と構築した image を片付け、依存は残す | Resource Cleaner | DC-9 |
-| 10.13 | image に開発用 package、client の node_modules、`.git`・`.github` を含めない | 製品の Dockerfile（`npm prune --omit=dev`、最終 stage へ重ねる client の成果物は `client/dist` だけ）、`.dockerignore`、Image Content Inspector | DC-10 |
-| 11.1 | master への push・tag で、両 Dockerfile から構築して Docker Hub へ公開 | `docker.yml` | 実装時の確認（構文）、最初の実行 |
-| 11.2 | Debian・Alpine の platform の一覧 | `docker.yml` の `build-arch` job の matrix（distro × arch） | 実装時の確認（手元の registry）、最初の実行 |
+| 10.13 | image に開発用 package、client の node_modules、`.git`・`.github` を含めない | 製品の Dockerfile（`server-prod-deps` の `npm ci --omit=dev`、最終 stage へ重ねる client の成果物は `client/dist` だけ）、`.dockerignore`、Image Content Inspector | DC-10 |
+| 11.1 | master への push・tag で、Dockerfile と bake の定義から構築して Docker Hub へ公開 | `docker.yml` | 実装時の確認（構文）、workflow の実行 |
+| 11.2 | Debian・Alpine の platform の一覧 | `docker.yml` の `build-arch` job の matrix（arch）と bake の target（distro） | 実装時の確認（手元の registry）、workflow の実行 |
 | 11.3 | master の push の tag | `docker.yml` の `Docker tags`（`docker/metadata-action`） | 実装時の確認（tag の計算の 4 通り） |
 | 11.4 | git tag の tag | 同 | 実装時の確認（tag の計算の 4 通り） |
 | 11.5 | PR の検査では実行しない | `docker.yml` の trigger | 実装時の確認（trigger に `pull_request` が無いこと） |
-| 11.6 | Docker Hub に付く tag は 11.3・11.4 のものだけ | `docker.yml` の digest での push と `Create multi-arch manifest` | 実装時の確認（手元の registry）、最初の実行 |
+| 11.6 | Docker Hub に付く tag は 11.3・11.4 のものだけ | `docker.yml` の digest での push と `Create multi-arch manifest` | 実装時の確認（手元の registry）、workflow の実行 |
+| 11.7 | arch ごとに 1 回の構築で両 distro を作り、distro に依存しない成果物は 1 回だけ作る | `Dockerfile`（`BUILDER_IMAGE` の上の `client-builder`・`server-builder`）、`docker-bake.json`、`docker.yml` の bake | 実装時の確認（手元の bake の log）、workflow の実行 |
 
 ## Primary production source ownership
 

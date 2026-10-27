@@ -9,8 +9,9 @@ permissions: {}
 env:
   MAIN_DISTRO: debian
 jobs:
-  # arch ごとにネイティブの runner でビルドする。arch ごとの image は tag を付けずに digest で push し、
-  # build ジョブで digest を multi-arch manifest にまとめて tag を付ける。
+  # arch ごとにネイティブの runner で、1 回の bake から debian 版と alpine 版の image を作る。
+  # client/dist と dist は 2 つの image で共有され、1 回だけ build される。arch ごとの image は tag を
+  # 付けずに digest で push し、build ジョブで digest を multi-arch manifest にまとめて tag を付ける。
   build-arch:
     name: Build images per arch
     runs-on: ${{ matrix.runner }}
@@ -18,12 +19,6 @@ jobs:
       contents: read
     strategy:
       matrix:
-        distro:
-          - alpine
-          - debian
-        arch:
-          - amd64
-          - arm64
         include:
           - arch: amd64
             runner: ubuntu-latest
@@ -40,30 +35,39 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      # build context は checkout した directory にする（bake-action の既定は Git の URL）。
+      # platform・image の名前・digest での push は CI に固有なので、docker-bake.json ではなくここで上書きする。
+      # cache の scope は target ごとに分ける。同じ scope に 2 つの target が書くと、後に書いた方が scope を
+      # 上書きし、先に書いた方の cache が使われなくなる。
       - name: Build and push by digest
-        id: build
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        id: bake
+        uses: docker/bake-action@018cb6412ab401ebaa809aa5f85966b74628600f # v7.4.0
         with:
-          context: .
-          file: Dockerfile.${{ matrix.distro }}
-          platforms: linux/${{ matrix.arch }}
-          tags: ${{ secrets.DOCKERHUB_IMAGE }}
-          outputs: type=image,push-by-digest=true,name-canonical=true,push=true
-          cache-from: type=gha,scope=${{ matrix.distro }}-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.distro }}-${{ matrix.arch }}
+          source: .
           provenance: false
-      # digest を file 名にして、build ジョブへ artifact で渡す。
-      - name: Export digest
+          set: |
+            *.platform=linux/${{ matrix.arch }}
+            *.tags=${{ secrets.DOCKERHUB_IMAGE }}
+            *.output=type=image,push-by-digest=true,name-canonical=true,push=true
+            debian.cache-from=type=gha,scope=debian-${{ matrix.arch }}
+            debian.cache-to=type=gha,mode=max,scope=debian-${{ matrix.arch }}
+            alpine.cache-from=type=gha,scope=alpine-${{ matrix.arch }}
+            alpine.cache-to=type=gha,mode=max,scope=alpine-${{ matrix.arch }}
+      # target ごとの digest を distro の directory の下の file 名にして、build ジョブへ 1 つの artifact で渡す。
+      - name: Export digests
         env:
-          DIGEST: ${{ steps.build.outputs.digest }}
+          METADATA: ${{ steps.bake.outputs.metadata }}
         run: |
-          mkdir -p "$RUNNER_TEMP/digests"
-          touch "$RUNNER_TEMP/digests/${DIGEST#sha256:}"
-      - name: Upload digest
+          for distro in debian alpine; do
+            digest=$(jq -er --arg target "$distro" '.[$target]["containerimage.digest"]' <<<"$METADATA")
+            mkdir -p "$RUNNER_TEMP/digests/$distro"
+            touch "$RUNNER_TEMP/digests/$distro/${digest#sha256:}"
+          done
+      - name: Upload digests
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: digests-${{ matrix.distro }}-${{ matrix.arch }}
-          path: ${{ runner.temp }}/digests/*
+          name: digests-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/
           if-no-files-found: error
           retention-days: 1
   build:
@@ -91,11 +95,12 @@ jobs:
             type=ref,event=tag,enable=${{ matrix.distro == env.MAIN_DISTRO }}
             type=raw,value=${{ matrix.distro }},enable=${{ github.ref_type == 'tag' }}
             type=raw,value=latest,enable=${{ github.ref_type == 'tag' && matrix.distro == env.MAIN_DISTRO }}
+      # 各 arch の artifact は distro ごとの directory を持つ。まとめて展開し、この distro の directory を使う。
       - name: Download digests
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           path: ${{ runner.temp }}/digests
-          pattern: digests-${{ matrix.distro }}-*
+          pattern: digests-*
           merge-multiple: true
       - name: Login to Docker Hub
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -104,7 +109,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       # amd64・arm64 の digest を 1 つの multi-arch manifest にまとめ、全タグに付ける。
       - name: Create multi-arch manifest
-        working-directory: ${{ runner.temp }}/digests
+        working-directory: ${{ runner.temp }}/digests/${{ matrix.distro }}
         env:
           IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}
           TAGS: ${{ steps.meta.outputs.tags }}

@@ -183,7 +183,7 @@ if [ "$KIND" = server-check ] || [ "$KIND" = client-check ]; then
   run_step "Format check" "$BASE" "$(step_script "$check_workflow" $JOB 'Format check')"
 elif [ "$KIND" = deps-prepare ]; then
   # Puts what the Docker image gate consumes into this container's nested daemon (base images by the
-  # digest the product Dockerfiles pin, the OS-package and npm dependency layers, the gitleaks
+  # digest docker-bake.json pins, the OS-package and npm dependency layers, the gitleaks
   # image). The gate's test body fetches nothing, so this is the one place that goes out to a
   # registry or a package mirror; with everything already present it only inspects local images. It
   # needs no node_modules: the script imports nothing outside the repository and node:*. Exit 75 means

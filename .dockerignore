@@ -7,6 +7,7 @@ node_modules/
 # 残るので除く。
 client/dist/
 Dockerfile*
+docker-bake.json
 .devcontainer
 # git の管理情報と GitHub の設定は、image に要らない。
 .git

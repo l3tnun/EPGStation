@@ -260,14 +260,14 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
 
 ### Requirement 10: 公開用 Docker image の構築と起動の手元での確認
 
-**目的:** 保守者として、公開用の Debian 版・Alpine 版 Docker image が製品の Dockerfile から構築でき、起動した server が Web・API に応答することを、リリース前に手元で確かめたい。依存の取得は確認の前に済ませ、回線の状態で確認の結果が変わらないようにしたい。
+**目的:** 保守者として、公開用の Debian 版・Alpine 版 Docker image が製品の Dockerfile と bake の定義から構築でき、起動した server が Web・API に応答することを、リリース前に手元で確かめたい。依存の取得は確認の前に済ませ、回線の状態で確認の結果が変わらないようにしたい。
 
-**境界:** 対象は repository の `Dockerfile.debian` と `Dockerfile.alpine` から作る image の構築と起動。image の中の個別機能（予約、録画、番組表など）の振る舞いは各機能の test が確かめる。手元の確認は linux/amd64（x86_64）向けの構築だけを対象とし、他の architecture 向けの構築は Requirement 11 の公開用の構築が行う。image の registry への公開（Requirement 11）、実チューナー・実 tuner server への接続は対象外。
+**境界:** 対象は repository の `Dockerfile` と `docker-bake.json` が定める Debian 版（target `debian`）と Alpine 版（target `alpine`）の image の構築と起動。image の中の個別機能（予約、録画、番組表など）の振る舞いは各機能の test が確かめる。手元の確認は linux/amd64（x86_64）向けの構築だけを対象とし、他の architecture 向けの構築は Requirement 11 の公開用の構築が行う。image の registry への公開（Requirement 11）、実チューナー・実 tuner server への接続は対象外。
 
 #### Acceptance Criteria
 
-1. When Docker image を確認するとき, the Docker image 確認 shall `Dockerfile.debian` と `Dockerfile.alpine` のそれぞれから、server と client を含む linux/amd64 向けの image を手元で構築する
-2. The Docker image 確認 shall 構築に使う base image を、製品の Dockerfile が digest で固定したものと同じにする
+1. When Docker image を確認するとき, the Docker image 確認 shall `Dockerfile` と `docker-bake.json` の Debian 版・Alpine 版の target のそれぞれから、server と client を含む linux/amd64 向けの image を手元で構築する
+2. The Docker image 確認 shall 構築に使う base image を、`docker-bake.json` が digest で固定したものと同じにする
 3. When 構築した image を起動したとき, the Docker image 確認 shall image 内の server が起動を完了し、Web・API の要求に正常応答を返すことを Debian 版・Alpine 版それぞれで確かめる
 4. When 構築した image を起動するとき, the Docker image 確認 shall 外部の tuner server の代わりに起動に必要な応答だけを返す代役を使い、実チューナーと実 tuner server へ接続しない
 5. The 依存の準備 shall 構築に要る外部からの取得（base image、OS の package、npm の依存関係）を、確認の本体より前の準備の段階だけで行う
@@ -288,9 +288,10 @@ coverage の計測の道具を一度だけ所有して提供し、本機能自�
 
 #### Acceptance Criteria
 
-1. When `master` branch へ push されたとき, or git tag が作られたとき, the 公開用 image の構築 shall GitHub Actions で `Dockerfile.debian` と `Dockerfile.alpine` のそれぞれから image を構築して Docker Hub へ公開する
+1. When `master` branch へ push されたとき, or git tag が作られたとき, the 公開用 image の構築 shall GitHub Actions で `Dockerfile` と `docker-bake.json` から Debian 版・Alpine 版の image を構築して Docker Hub へ公開する
 2. The 公開用 image の構築 shall Debian 版・Alpine 版のどちらも linux/amd64・linux/arm64 向けに構築する（Node.js 24 以降は 32-bit ARM の公式 build を提供しないため、linux/arm/v6・linux/arm/v7 は対象外とする）
 3. When `master` branch へ push されたとき, the 公開用 image の構築 shall `<branch>-debian`・`<branch>-alpine` の tag を付け、Debian 版には `<branch>` の tag も付ける
 4. When git tag が作られたとき, the 公開用 image の構築 shall `<tag>-debian`・`<tag>-alpine`・`debian`・`alpine` の tag を付け、Debian 版には `<tag>` と `latest` の tag も付ける
 5. While pull request の検査を行うとき, the 公開用 image の構築 shall 実行しない
 6. The 公開用 image の構築 shall Docker Hub の image に 3・4 の tag だけを付け、architecture ごとの構築の途中の image には tag を付けない
+7. The 公開用 image の構築 shall architecture ごとに 1 回の構築で Debian 版と Alpine 版の image を作り、distro に依存しない成果物（server の compile の成果物と client の build 済みの成果物）はその構築の中で 1 回だけ作って両方の image に使う
