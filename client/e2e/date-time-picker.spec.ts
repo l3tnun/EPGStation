@@ -363,7 +363,7 @@ async function revealByWheel(page: Page, option: Locator): Promise<void> {
     test.info().project.use.isMobile === true &&
     page.context().browser()?.browserType().name() === 'webkit'
   )
-  for (let step = 0; step < 80; step += 1) {
+  for (let step = 0; step < 20; step += 1) {
     const columnBox = await column.boundingBox()
     const optionBox = await option.boundingBox()
     expect(columnBox).not.toBeNull()
@@ -374,7 +374,11 @@ async function revealByWheel(page: Page, option: Locator): Promise<void> {
     ) {
       return
     }
-    const delta = optionBox!.y < columnBox!.y ? -150 : 150
+    // option が列の見える範囲に入るのに要る分だけ回す。
+    const delta =
+      optionBox!.y < columnBox!.y
+        ? Math.floor(optionBox!.y - columnBox!.y)
+        : Math.ceil(optionBox!.y + optionBox!.height - (columnBox!.y + columnBox!.height))
     if (canWheel) {
       await page.mouse.move(
         columnBox!.x + columnBox!.width / 2,
