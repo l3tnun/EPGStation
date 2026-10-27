@@ -994,7 +994,7 @@ describe('Service Interface formal real OpenAPI carrier [SI-2.1/SI-2.2/SI-2.3]',
             expect(rawRename).not.toHaveBeenCalled();
             expect(domain.addUploadedVideoFile).not.toHaveBeenCalled();
             await expect(readFile(adoptedSentinel, 'utf8')).resolves.toBe('parent-owned-sentinel');
-            await expect(readdir(join(uploadRoot, 'incoming'))).resolves.toEqual([]);
+            await vi.waitFor(async () => expect(await readdir(join(uploadRoot, 'incoming'))).toEqual([]));
         } finally {
             harness.cleanup();
             if (adoptedSentinel !== '') await rm(dirname(adoptedSentinel), { force: true, recursive: true });
