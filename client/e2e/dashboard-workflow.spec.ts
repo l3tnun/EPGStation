@@ -1,6 +1,4 @@
 import { expect, test, type Page } from '@playwright/test'
-import { createServer } from 'node:http'
-import { Server as SocketIOServer } from 'socket.io'
 import { installAppShellApiMocks } from './support/appShellMocks'
 import { replaceApiMocks } from './support/apiMockReplacement'
 import {
@@ -12,6 +10,7 @@ import {
 } from './support/dashboardMocks'
 import { clickWithoutPointerStabilityWait } from './support/pointerInteractions'
 import { expectAnnounced } from './support/notificationObservation'
+import { createRealtimeHarness } from './support/realtimeHarness'
 
 test.beforeEach(async ({ page }) => {
   await installAppShellApiMocks(page, { enableBroadcastWaveNavigation: true })
@@ -206,25 +205,11 @@ test('renders Dashboard empty and failure states without empty copy', async ({ p
 test('refreshes visible Dashboard summaries from a real Socket.IO updateStatus event', async ({
   page,
 }) => {
-  const httpServer = createServer()
-  const socketServer = new SocketIOServer(httpServer, {
-    cors: { origin: '*' },
-    path: '/socket.io',
-  })
-
-  await new Promise<void>((resolve) => {
-    httpServer.listen(0, '127.0.0.1', resolve)
-  })
-
-  const address = httpServer.address()
-  if (address === null || typeof address === 'string') {
-    throw new Error('Socket.IO test server did not bind to a TCP port')
-  }
+  await page.unrouteAll()
+  const realtime = await createRealtimeHarness(page)
 
   try {
     const requestLog = createDashboardRequestLog()
-    await page.unrouteAll()
-    await installAppShellApiMocks(page, { socketIOPort: address.port })
     const realtimeMocks = await installDashboardRealtimeApiMocks(page, { requestLog })
 
     await page.goto('/')
@@ -236,16 +221,14 @@ test('refreshes visible Dashboard summaries from a real Socket.IO updateStatus e
     // v3 realtime contract: a real Socket.IO server/client pair is used here (no mock), so this
     // just confirms the browser's socket has actually connected before the updateStatus event is
     // emitted below; there is no v2 source for a specific client count.
-    await expect
-      .poll(() => socketServer.engine.clientsCount, { timeout: 10_000 })
-      .toBeGreaterThan(0)
+    await realtime.waitForClient()
 
     const recordingRequestCountBeforeUpdate = requestLog.methods.filter(
       (method) => method === 'GET /api/recording',
     ).length
 
     realtimeMocks.clearSummaries()
-    socketServer.emit('updateStatus')
+    realtime.emitUpdateStatus()
 
     await expect(page.getByRole('heading', { name: '録画中 0/0' })).toBeVisible()
     await expect(page.getByRole('heading', { name: '録画済み 0/0' })).toBeVisible()
@@ -258,10 +241,6 @@ test('refreshes visible Dashboard summaries from a real Socket.IO updateStatus e
       requestLog.methods.filter((method) => method === 'GET /api/recording').length,
     ).toBeGreaterThan(recordingRequestCountBeforeUpdate)
   } finally {
-    await new Promise<void>((resolve) => {
-      socketServer.close(() => {
-        httpServer.close(() => resolve())
-      })
-    })
+    await realtime.close()
   }
 })
