@@ -54,14 +54,33 @@ describe('[AR-9.18] preflight resources are decided from the CPUs and memory of 
         });
     });
 
-    it('gives container B every CPU after container A when each CPU is its own core', () => {
+    it('gives container B every CPU after container A when each CPU is its own core, capping Playwright at 8 workers', () => {
         expect(plan({ cpus: range(0, 15), hostMemory: 32 * GIB, dockerMemory: 32 * GIB })).toMatchObject({
             parallel: true,
             cpusetA: '0-3',
             cpusetB: '4-15',
             cpusetBrowser: '0-15',
-            playwrightWorkers: 15,
+            containerMemory: 16 * GIB,
+            playwrightWorkers: 8,
         });
+    });
+
+    it('caps Playwright at 8 workers on more than 8 cores with SMT', () => {
+        // 16 core・32 thread の機械で、CPU i と i+16 が同じ物理 core の thread であるときの core の組。
+        const cores = range(0, 15).map(core => [core, core + 16]);
+        expect(plan({ cpus: range(0, 31), cores, hostMemory: 64 * GIB, dockerMemory: 64 * GIB })).toMatchObject({
+            cpusetBrowser: '0-31',
+            containerMemory: 16 * GIB,
+            playwrightWorkers: 8,
+        });
+        expect(
+            plan({
+                cpus: range(0, 17),
+                cores: range(0, 8).map(core => [core, core + 9]),
+                hostMemory: 64 * GIB,
+                dockerMemory: 64 * GIB,
+            }),
+        ).toMatchObject({ playwrightWorkers: 8 });
     });
 
     it('runs the chains at once on 8 cores and gives client-browser all 8 CPUs', () => {

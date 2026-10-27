@@ -30,6 +30,10 @@ const PLAYWRIGHT_WORKER_MEMORY = 1 * GIB;
 // memory 帯域を使い、その競合は CPU 帯の分離では避けられない。同時に流すと、coverage:gate の既定（8 workers）では
 // upload-submit.spec.test.tsx の重い test が 5000ms の timeout を超えた。この値では落ちない。
 const PARALLEL_CLIENT_COVERAGE_WORKERS = 4;
+// Playwright の worker 数の上限。e2e と visual がすべて通ることを確かめた最大の数で、8 core・16 thread の機械で、8 workers の
+// e2e は 10.6 分で通り、12 workers は 9.8 分で click の timeout により 1 test が落ちた。物理 core が 8 より多い機械でも、
+// この数なら 1 worker が使える CPU は確かめた条件より少なくならない。
+const PLAYWRIGHT_MAX_WORKERS = 8;
 
 const CPU_LIST = /^\d+(-\d+)?(,\d+(-\d+)?)*$/;
 
@@ -158,9 +162,9 @@ export const planPreflightResources = (machine, env) => {
     const coverageByMemory = workersByMemory(containerMemory, CLIENT_COVERAGE_WORKER_MEMORY);
     const clientCoverageWorkers = Math.min(cpus.length, 8, coverageByMemory);
     const playwrightWorkers = Math.min(
-        // 物理 core の数。8 core・16 thread の機械で、8 workers の e2e は 10.6 分で通り、12 workers は 9.8 分で click の
-        // timeout により 1 test が落ちた。
+        // 1 worker に 1 つの物理 core
         new Set(cpus.map(coreKey)).size,
+        PLAYWRIGHT_MAX_WORKERS,
         workersByMemory(containerMemory, PLAYWRIGHT_WORKER_MEMORY),
     );
     return {

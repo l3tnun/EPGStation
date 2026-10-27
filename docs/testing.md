@@ -192,9 +192,9 @@ worker 数は、CPU の数と、memory から求めた上限（(memory − 1 GiB
 | --- | --- | --- |
 | `node-matrix` の server test（`EPGSTATION_TEST_MAX_WORKERS`） | 使える CPU の数 | host の memory から 0.75 GiB |
 | `client` の `coverage:gate`（`EPGSTATION_COVERAGE_GATE_MAX_WORKERS`） | `client` の CPU 帯の CPU 数と 8 の小さい方。同時に流すときは 4 以下 | container B の上限から 0.75 GiB |
-| `client-browser` の Playwright（`PLAYWRIGHT_WORKERS`） | 使える CPU の物理 core の数 | container B の上限から 1 GiB |
+| `client-browser` の Playwright（`PLAYWRIGHT_WORKERS`） | 使える CPU の物理 core の数と 8 の小さい方 | container B の上限から 1 GiB |
 
-同時に流すときの `coverage:gate` の上限 4 は、`docker-gate-node24`（CPU の pinning では隔離できない I/O・メモリ帯域の重い job）と同時に走るときに timeout しない値である。`--only` で選んだ step は 1 つずつ流し、`client` にも使える CPU のすべてを渡す。
+同時に流すときの `coverage:gate` の上限 4 は、`docker-gate-node24`（CPU の pinning では隔離できない I/O・メモリ帯域の重い job）と同時に走るときに timeout しない値である。Playwright の上限 8 は、e2e と visual がすべて通ることを確かめた最大の worker 数である。`--only` で選んだ step は 1 つずつ流し、`client` にも使える CPU のすべてを渡す。
 
 決めた構成は開始時に表示し、`summary.tsv` の 2 行目（`# resources`）に記録する。次の環境変数で決め打ちできる。
 

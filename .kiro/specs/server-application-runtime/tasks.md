@@ -1002,7 +1002,7 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
 
     -   `preflight-resources.spec.test.ts`で、SMTの機械（CPU iとi+8が同じcore）でcontainer Bの`client`の帯がcontainer Aと
         物理coreを共有しないこと、すべてのcoreがAと共有されるときは順に流すこと、`client-browser`の帯が使えるCPUのすべてであること、
-        Playwrightのworker数が使えるCPUの物理coreの数になること、`thread_siblings_list`から物理coreを読むことをassertする。
+        Playwrightのworker数が使えるCPUの物理coreの数で決まること、`thread_siblings_list`から物理coreを読むことをassertする。
     -   `release-preflight-resources.integration.test.ts`で、`client`と`client-browser`の初めにcontainer Bの帯を
         `docker update --cpuset-cpus`で合わせること、`client-browser`がAの系統と`client`の両方が終わってから始まることをassertする。
     -   実装の前に流し、物理coreを読まないことと`docker update`が無いことで失敗するのを確かめる。
@@ -1028,6 +1028,25 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
     -   _Boundary: Preflight Steps_
     -   _Verification: `npm run preflight -- --all`_
     -   _Depends: 17.2_
+
+-   [x] 18. Playwrightのworker数を8以下にする
+
+-   [x] 18.1 物理coreが8より多い機械でのPlaywrightのworker数のtestを書く
+
+    -   `preflight-resources.spec.test.ts`で、物理coreが8より多い機械（SMTの有無の両方）で、memoryが足りていてもPlaywrightの
+        worker数が8になることをassertする。
+    -   実装の前に流し、物理coreの数のworker数になって失敗するのを確かめる。
+    -   _Requirements: 9.18_
+    -   _Boundary: Preflight Steps_
+
+-   [x] 18.2 構成の道具と説明を§12.3.4に合わせる
+
+    -   `scripts/preflight-resources.mjs`のPlaywrightのworker数を、物理coreの数と8の小さい方にする。
+    -   `docs/testing.md`と`client/playwright.config.ts`の構成の説明を§12.3.4に合わせる。
+    -   完了時には、18.1のtestがすべて通る。
+    -   _Requirements: 9.18_
+    -   _Boundary: Preflight Steps_
+    -   _Depends: 18.1_
 
 ## Leaf execution contract
 
@@ -1092,6 +1111,8 @@ Major 14はDesign §12.3.2を実装する。treeのidは「何を検証したか
 | 17.1 | `test/server/application-runtime/spec/preflight-resources.spec.test.ts`<br>`test/server/application-runtime/release-preflight-resources.integration.test.ts` | `unittest/spec`、`integration` | `16.3` | `npm run test:server:spec -- test/server/application-runtime/spec/preflight-resources.spec.test.ts`<br>`npm run test:server:integration -- test/server/application-runtime/release-preflight-resources.integration.test.ts` |
 | 17.2 | `scripts/preflight-resources.mjs`<br>`scripts/release-preflight.sh`<br>`docs/testing.md`<br>`AGENTS.md`<br>`client/playwright.config.ts` | 17.1のtest | `17.1` | 17.1と同じ |
 | 17.3 | なし（判定のみ） | preflightの実行 | `17.2` | `npm run preflight -- --all`（4 core・7.5 GiB、8 core、8 core・16 thread） |
+| 18.1 | `test/server/application-runtime/spec/preflight-resources.spec.test.ts` | `unittest/spec` | `17.3` | `npm run test:server:spec -- test/server/application-runtime/spec/preflight-resources.spec.test.ts` |
+| 18.2 | `scripts/preflight-resources.mjs`<br>`docs/testing.md`<br>`client/playwright.config.ts` | 18.1のtest | `18.1` | 18.1と同じ |
 
 ## Implementation Notes
 

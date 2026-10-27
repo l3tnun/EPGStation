@@ -862,10 +862,12 @@ worker数は、CPUの数とmemoryから求めた上限の小さい方にする�
 | --- | --- | --- | --- |
 | node-matrixのserver test | `EPGSTATION_TEST_MAX_WORKERS` | `n` | hostのmemory、0.75 GiB |
 | `client`の`coverage:gate` | `EPGSTATION_COVERAGE_GATE_MAX_WORKERS` | `client`のCPU帯のCPU数と8の小さい方。同時に流すときは4以下 | container Bの上限、0.75 GiB |
-| `client-browser`のPlaywright | `PLAYWRIGHT_WORKERS` | 使えるCPUの物理coreの数 | container Bの上限、1 GiB |
+| `client-browser`のPlaywright | `PLAYWRIGHT_WORKERS` | 使えるCPUの物理coreの数と8の小さい方 | container Bの上限、1 GiB |
 
 同時に流すときの`coverage:gate`の上限4は、`docker-gate-node24`のimageのbuildとのdisk I/O・memory帯域の競合を避ける値で、
 CPU帯の分離では避けられない。
+Playwrightの上限8は、e2eとvisualがすべて通ることを確かめた最大のworker数である。物理coreが8より多い機械でも、8 workers
+なら1 workerが使えるCPUは確かめた条件より少なくならない。
 
 **指定による上書き。** `EPGS_PREFLIGHT_CPUSET_A`（container AのCPU帯）、`EPGS_PREFLIGHT_CPUSET_B`（同時に流すときのcontainer Bの
 `client`のCPU帯）、`EPGS_PREFLIGHT_PARALLEL`（`1`で同時、`0`で順）、`EPGS_PREFLIGHT_CLIENT_COVERAGE_GATE_MAX_WORKERS`（同時に流す
@@ -884,6 +886,7 @@ BのCPU帯が重なるときは、AC 19の失敗とする。
 | PRES-3 | hostのmemoryとDockerのmemoryを分けて求める | 模擬containerはDockerのcgroupで動き、node-matrixはpreflightのcgroupで動く。片方の上限でもう片方を絞らない | 1つの値にまとめる: preflightのcgroupの上限で、その上限が掛からないcontainerまで絞る |
 | PRES-4 | `client-browser`はAの系統の後に、使えるCPUのすべてで流す | Aの系統（約2分）は`client`（約4分）より先に終わる。Aの系統と同時に走る間だけPlaywrightのworkerを絞ると、その後のCPUが空いたまま残る | Aの系統と同時に流し、Playwrightのworker数を絞る: 8 coreの機械で`client-browser`が約2倍の時間になる |
 | PRES-5 | 同時に走る2系統のCPU帯を物理coreで分ける | SMTの機械では、番号の離れたCPUが同じ物理coreを共有する。番号だけで分けると、2系統が同じcoreの演算器を取り合う | CPU番号の順で分ける: SMTの機械で帯が分かれず、同時に流す利点が消える |
+| PRES-6 | Playwrightのworker数を8以下にする | 8は、e2eとvisualがすべて通ることを確かめた最大のworker数である。worker数を増やすと、`vite preview`の配信や負荷で延びる待ちの余裕が、確かめた条件と変わる | 物理coreの数のまま増やす: 物理coreが8より多い機械で、確かめていないworker数で流れる |
 
 #### 12.3.5 §12.3.4が関わるfile
 
