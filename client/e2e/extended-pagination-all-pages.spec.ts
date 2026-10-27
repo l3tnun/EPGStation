@@ -143,7 +143,7 @@ for (const { screen, hash } of SCREENS) {
       await expect(nav.getByRole('button', { name: '最後のページへ移動' })).toBeEnabled()
     })
 
-    test('moves through the page number dialog and refuses invalid input', async ({ page }) => {
+    test('refuses invalid input in the page number dialog', async ({ page }) => {
       await prepare(page, { enabled: true })
       await openList(page, hash, 24)
       const nav = paginationNav(page)
@@ -161,7 +161,17 @@ for (const { screen, hash } of SCREENS) {
         ).toBeVisible()
         expect(currentRoutePage(page)).toBe(24)
       }
+    })
 
+    test('moves through the page number dialog', async ({ page }) => {
+      await prepare(page, { enabled: true })
+      await openList(page, hash, 24)
+      const nav = paginationNav(page)
+
+      await nav.getByRole('button', { name: 'ページ数を入力して移動' }).click()
+      const dialog = page.getByRole('dialog', { name: 'ページ数を入力' })
+      await expect(dialog).toBeVisible()
+      const input = dialog.getByRole('textbox', { name: 'ページ数' })
       await input.fill('30')
       await input.press('Enter')
       await expect(dialog).toBeHidden()

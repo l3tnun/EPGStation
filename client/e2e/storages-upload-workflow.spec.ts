@@ -121,7 +121,7 @@ test('renders storage usage and keeps blank empty/error states', async ({ page }
   await expect(page.getByTestId('storages-page')).toHaveCount(0)
 })
 
-test('uploads recorded metadata and video file with progress feedback', async ({ page }) => {
+test('shows the upload form labels, required marks, and select geometry', async ({ page }) => {
   await page.goto('/#/recorded/upload')
 
   await expect(
@@ -161,6 +161,12 @@ test('uploads recorded metadata and video file with progress feedback', async ({
     'height',
     '48px',
   )
+})
+
+test('sets the upload date from its dialog and clears the upload text fields', async ({ page }) => {
+  await page.goto('/#/recorded/upload')
+  await waitForUploadFormReady(page)
+
   await page.getByLabel('日付※').click()
   await expect(page.getByRole('dialog', { name: '日付選択' })).toBeVisible()
   await page.getByRole('button', { name: '設定' }).click()
@@ -174,6 +180,10 @@ test('uploads recorded metadata and video file with progress feedback', async ({
   await page.getByLabel('sub directory', { exact: true }).fill('synthetic/video/sub')
   await page.getByRole('button', { name: 'sub directoryをクリア' }).click()
   await expect(page.getByLabel('sub directory', { exact: true })).toHaveValue('')
+})
+
+test('uploads recorded metadata and video file with progress feedback', async ({ page }) => {
+  await page.goto('/#/recorded/upload')
   await fillUploadForm(page)
 
   await page.getByRole('button', { name: 'アップロード' }).click()

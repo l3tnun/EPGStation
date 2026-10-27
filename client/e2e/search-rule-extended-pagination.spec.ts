@@ -252,7 +252,7 @@ function defineWidthTests(width: number, isTouch: boolean): void {
       expect(currentRoutePage(page)).toBe(3)
     })
 
-    test('moves through the page number dialog and refuses invalid input', async ({ page }) => {
+    test('refuses invalid input in the page number dialog', async ({ page }) => {
       await openRuleList(page, 24)
       const nav = paginationNav(page)
 
@@ -276,7 +276,16 @@ function defineWidthTests(width: number, isTouch: boolean): void {
         expect(currentRoutePage(page)).toBe(24)
         await expect(dialog).toBeVisible()
       }
+    })
 
+    test('moves through the page number dialog and keeps the page on cancel', async ({ page }) => {
+      await openRuleList(page, 24)
+      const nav = paginationNav(page)
+
+      await activate(nav.getByRole('button', { name: 'ページ数を入力して移動' }), isTouch)
+      const dialog = page.getByRole('dialog', { name: 'ページ数を入力' })
+      await expect(dialog).toBeVisible()
+      const input = dialog.getByRole('textbox', { name: 'ページ数' })
       await input.fill('30')
       await input.press('Enter')
       await expect(dialog).toBeHidden()
