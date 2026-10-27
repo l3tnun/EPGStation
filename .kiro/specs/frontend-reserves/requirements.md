@@ -99,7 +99,7 @@ Reserves は予約一覧、状態別 route、delete/unskip/unoverlap、edit mode
 9. edit mode の保存では、EPGStation フロントエンドは `PUT /reserves/:reserveId` を呼び、成功時は `予約を更新しました。`、失敗時は `予約の更新に失敗しました。` を snackbar で通知する。
 10. add/edit 成功後、EPGStation フロントエンドは既存 delay を維持して前の route へ戻る。
 11. cancel action を実行したとき、EPGStation フロントエンドは API call なしで前の route へ戻る。
-12. programId mode では `GET /schedules/detail/:programId?isHalfWidth=<setting>` 成功後、program information を表示し、name、channelId、startAt、endAt を `timeSpecifiedOption` へコピーする。
+12. programId mode では `GET /schedules/detail/:programId?isHalfWidth=<setting>` 成功後、program information を表示し、name、channelId、startAt、endAt を `timeSpecifiedOption` へコピーする。取得の結果で変える入力はこの 4 field だけとし、取得が終わる前にユーザーが変えた 時刻指定 switch、reserve option、save option、encode option はそのまま保つ（18 の history restore をする場合を除く）。
     時刻指定 switch を on にした場合、EPGStation フロントエンドは program information section を非表示にし、代わりに time-specified target fields を表示する。switch を off に戻した場合は program information section を再表示し、time-specified target fields を非表示にする。
 13. Manual Reserve の fetch failure は、existing reserve fetch 失敗で `予約情報取得に失敗`、program fetch 失敗で `番組情報取得に失敗` を snackbar で通知する。
 14. add payload は `allowEndLack` に加え、program mode では `programId`、time-specified mode では `{ name, channelId, startAt, endAt }` milliseconds を送る。
