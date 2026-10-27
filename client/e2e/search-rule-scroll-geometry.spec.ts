@@ -145,7 +145,9 @@ test('keeps Search top FAB outside the permanent drawer and scrolls the active i
   await installSearchRuleWorkflowApiMocks(page)
   await page.setViewportSize({ width: 1264, height: 900 })
 
-  await page.goto('/#/search?keyword=Synthetic')
+  // timestamp の無い URL は画面が後から timestamp を付けた URL へ置き換え、そのとき iOS 以外では
+  // fix-address-bar2 を外す。下で付ける fix-address-bar2 が外れないよう、初めから timestamp を付けて開く。
+  await page.goto('/#/search?keyword=Synthetic&timestamp=search-top-fab')
   await expect(page.getByRole('heading', { name: '検索' })).toBeVisible()
 
   const desktopGeometry = await page.evaluate(() => {
