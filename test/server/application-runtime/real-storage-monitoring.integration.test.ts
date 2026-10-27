@@ -54,7 +54,11 @@ const seedRecordings = async (operator: OperatorHandle): Promise<void> => {
     const base = Date.now() - 48 * hour;
     // id 1 is the newest and id 3 the oldest, so deleting by id order would be told apart from oldest-first.
     const startTimes = [base + 2 * hour, base + hour, base];
+    // The running Operator checks the storage every second. Write the files first and insert all three rows in one
+    // transaction, so a check never sees only some of the programs or removes a row before its file exists.
+    await Promise.all(startTimes.map((_, index) => writeFile(join(operator.root, 'recorded', `program-${index + 1}.ts`), 'data')));
     await withDatabase(operator.root, database => {
+        database.exec('BEGIN');
         startTimes.forEach((startAt, index) => {
             const id = index + 1;
             database
@@ -68,8 +72,8 @@ const seedRecordings = async (operator: OperatorHandle): Promise<void> => {
                 )
                 .run('synthetic', `program-${id}.ts`, 'ts', `program-${id}.ts`, id);
         });
+        database.exec('COMMIT');
     });
-    await Promise.all(startTimes.map((_, index) => writeFile(join(operator.root, 'recorded', `program-${index + 1}.ts`), 'data')));
 };
 
 const recordedIds = (operator: OperatorHandle): Promise<number[]> =>
