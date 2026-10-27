@@ -92,6 +92,75 @@ describe('Manual Reserve add form', () => {
     })
   })
 
+  it('[AC 4.12] keeps the switch and options changed while loading manual program detail and copies only the program target', async () => {
+    window.history.replaceState(null, '', '/#/reserves/manual?programId=801')
+    const reservesRepository = createReservesRepository()
+    const programDetail =
+      createDeferred<Awaited<ReturnType<ReservesApiRepository['fetchManualProgram']>>>()
+    vi.mocked(reservesRepository.fetchManualProgram).mockReturnValueOnce(programDetail.promise)
+
+    render(
+      <App
+        settings={new DefaultSettingsFactory().create()}
+        apiRepository={createShellRepository()}
+        reservesApiRepository={reservesRepository}
+        osPrefersDark={false}
+        viewportWidth={1440}
+        initialDrawerState="none"
+      />,
+    )
+
+    await screen.findByTestId('manual-reserve-page')
+    fireEvent.click(screen.getByRole('switch', { name: '時刻指定' }))
+    fireEvent.change(screen.getByLabelText('name'), {
+      target: { value: 'Typed before program detail' },
+    })
+    await selectManualOption('directory', 'synthetic-parent')
+    fireEvent.change(screen.getByLabelText('sub directory'), {
+      target: { value: 'synthetic-directory' },
+    })
+
+    await act(async () => {
+      programDetail.resolve({
+        ok: true,
+        value: {
+          id: 801,
+          name: 'Synthetic program detail',
+          channelId: 401,
+          startAt: Date.parse('2026-05-05T12:00:00+09:00'),
+          endAt: Date.parse('2026-05-05T12:30:00+09:00'),
+        },
+      })
+    })
+    await waitFor(() => expect(screen.getByRole('button', { name: '保存' })).toBeEnabled())
+
+    expect(screen.getByRole('switch', { name: '時刻指定' })).toBeChecked()
+    expect(screen.getByLabelText('name')).toHaveValue('Synthetic program detail')
+    expect(screen.getByLabelText('開始')).toHaveValue('2026-05-05 12:00')
+    expect(screen.getByLabelText('終了')).toHaveValue('2026-05-05 12:30')
+    expect(screen.getByLabelText('sub directory')).toHaveValue('synthetic-directory')
+
+    vi.useFakeTimers()
+    fireEvent.click(screen.getByRole('button', { name: '保存' }))
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0)
+    })
+
+    expect(reservesRepository.addManualReserve).toHaveBeenCalledWith({
+      allowEndLack: true,
+      timeSpecifiedOption: {
+        name: 'Synthetic program detail',
+        channelId: 401,
+        startAt: Date.parse('2026-05-05T12:00:00+09:00'),
+        endAt: Date.parse('2026-05-05T12:30:00+09:00'),
+      },
+      saveOption: {
+        parentDirectoryName: 'synthetic-parent',
+        directory: 'synthetic-directory',
+      },
+    })
+  })
+
   it('[AC 4.6] rejects invalid time-specified input through the generic snackbar without API calls', async () => {
     window.history.replaceState(null, '', '/#/reserves/manual')
     const reservesRepository = createReservesRepository()

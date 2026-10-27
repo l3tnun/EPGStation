@@ -3,8 +3,8 @@ import type { ShellSnackbarState } from '@/app/AppShell'
 import type { useScrollHistory } from '@/app/scrollHistory'
 import type { SettingsConsumerValue } from '@/shared/settings'
 import {
+  copyProgramToFormState,
   createFormStateFromPageInfo,
-  createFormStateFromProgram,
   createFormStateFromReserve,
   createInitialFormState,
   createPageInfoFromFormState,
@@ -93,7 +93,8 @@ export function useManualReserveLoader({
       setSubmitting(false)
       setLoading(mode.kind !== 'add')
       setProgramDetail(null)
-      replaceFormState(createInitialFormState())
+      formStateRef.current = createInitialFormState()
+      replaceFormState(formStateRef.current)
 
       if (mode.kind === 'edit') {
         const reserveResult = await apiRepository.fetchManualReserve({
@@ -155,7 +156,7 @@ export function useManualReserveLoader({
         })
         replaceFormState(
           restored === null
-            ? createFormStateFromProgram(programResult.value)
+            ? copyProgramToFormState(formStateRef.current, programResult.value)
             : createFormStateFromPageInfo(restored),
         )
         scrollHistory.clearRestoreHistory()

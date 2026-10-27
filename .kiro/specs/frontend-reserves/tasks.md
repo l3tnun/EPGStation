@@ -34,7 +34,7 @@
   - fixture に実番組名、実 channel 名、実 URL、実ロゴ、認証情報を含めない。
   - _Requirements: 1.1-1.13, 2.1-2.24, 3.1-3.12, 4.1-4.32, 5.1-5.5, 6.1-6.3_
 
-- [ ] 6. programId mode の番組情報の取得で、取得の前に変えた入力を保つ
+- [x] 6. programId mode の番組情報の取得で、取得の前に変えた入力を保つ
   - 番組情報を受け取ったとき、form 全体を置き換えず、`timeSpecifiedOption` の name、channelId、startAt、endAt だけを番組の値にする。
   - 取得が終わる前に変えた 時刻指定 switch と reserve/save/encode option が、取得の後も残り、保存の payload に入ることを `unittest/spec` で確かめる。
   - _Requirements: 4.12_

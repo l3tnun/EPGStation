@@ -20,7 +20,7 @@ export async function openDarkManualReserveTimeSpecifiedForm(page: Page): Promis
   await installAppShellApiMocks(page, { forceDarkTheme: true })
   await installReservesApiMocks(page)
   await page.goto(`/#/reserves/manual?programId=${manualProgramDetail.id}`)
-  // 番組情報を受け取るとフォームを番組の内容で置き換えるので、その後に switch を押す
+  // 番組情報を受け取ると時刻指定の欄を番組の値で上書きするので、受け取ってから時刻指定の欄を操作する
   await expect(page.getByRole('heading', { name: manualProgramDetail.name })).toBeVisible()
   await page.getByRole('switch', { name: '時刻指定' }).click()
 }

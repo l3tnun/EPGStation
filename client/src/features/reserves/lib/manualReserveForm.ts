@@ -68,9 +68,13 @@ export function createPageInfoFromFormState(
   }
 }
 
-export function createFormStateFromProgram(program: ManualProgramDetail): ManualReserveFormState {
+// 番組の name・channelId・startAt・endAt を時刻指定の欄へ入れる。ほかの入力はそのまま保つ。
+export function copyProgramToFormState(
+  formState: ManualReserveFormState,
+  program: ManualProgramDetail,
+): ManualReserveFormState {
   return {
-    ...createInitialFormState(),
+    ...formState,
     timeSpecifiedOption: {
       name: program.name,
       channelId: program.channelId,
