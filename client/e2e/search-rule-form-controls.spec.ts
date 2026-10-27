@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
 import {
   muiSelectCombobox,
@@ -125,9 +125,7 @@ test('shows clear actions for Search and Rule text fields', async ({ page }) => 
   await expect(ruleSearchMenu.getByRole('textbox', { name: 'キーワード' })).toHaveValue('')
 })
 
-test('keeps Search selects, checkboxes, period, duplicate, and encode option controls operable', async ({
-  page,
-}) => {
+test('keeps Search selects and duration fields operable and sends them', async ({ page }) => {
   const requestLog = createSearchRuleRequestLog()
   await installSearchRuleWorkflowApiMocks(page, { requestLog })
 
@@ -170,6 +168,23 @@ test('keeps Search selects, checkboxes, period, duplicate, and encode option con
       times: [{ start: 10, range: 3 }],
     },
   })
+})
+
+// 検索して Rule option の card を出す。
+async function searchForRuleOption(page: Page): Promise<void> {
+  await page.goto('/#/search')
+  await expect(page.getByRole('heading', { name: '検索' })).toBeVisible()
+  await page.getByLabel('keyword', { exact: true }).fill('Synthetic')
+  await page.getByTestId('search-rule-page').getByRole('button', { name: '検索' }).click()
+  await expect(page.getByText('1 件ヒット')).toBeVisible()
+  await expect(page.locator('form[class*="ruleOptionCard"]')).toBeVisible()
+}
+
+test('keeps Rule option checkboxes, duplicate period, and directory controls operable', async ({
+  page,
+}) => {
+  await installSearchRuleWorkflowApiMocks(page)
+  await searchForRuleOption(page)
 
   await page.getByLabel('有効').uncheck()
   await page.getByLabel('状況に応じて末尾がかけることを許可').uncheck()
@@ -215,6 +230,14 @@ test('keeps Search selects, checkboxes, period, duplicate, and encode option con
       'directory select keeps source-like compact width',
     )
     .resolves.toBeLessThanOrEqual(160)
+})
+
+test('keeps Rule option encode 1 to 3 controls operable and adds them to the rule', async ({
+  page,
+}) => {
+  const requestLog = createSearchRuleRequestLog()
+  await installSearchRuleWorkflowApiMocks(page, { requestLog })
+  await searchForRuleOption(page)
 
   await expect(muiSelectCombobox(page, 'mode1')).toBeVisible()
   await selectMuiOption({ page, name: 'mode1', value: 'synthetic-encode-main' })

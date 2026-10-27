@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
 import {
   installReservesApiMocks,
@@ -92,19 +92,22 @@ test('exports the Reserves mock-data contract fields', () => {
   })
 })
 
-test('renders Reserves list table/card states and drives dialog and menu actions', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 })
-  const reservesMocks = await installReservesApiMocks(page)
-  const searchRuleRequestLog = createSearchRuleRequestLog()
-  await installSearchRuleWorkflowApiMocks(page, { requestLog: searchRuleRequestLog })
+// 想定外の console error を集める。test の最後に空であることを確かめる。
+function collectConsoleErrors(page: Page): string[] {
   const consoleErrors: string[] = []
   page.on('console', (message) => {
     if (message.type() === 'error' && !isExpectedBrowserConsoleNoise(message.text())) {
       consoleErrors.push(message.text())
     }
   })
+  return consoleErrors
+}
+
+test('renders Reserves list table/card states and opens the reserve dialog', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await installReservesApiMocks(page)
+  await installSearchRuleWorkflowApiMocks(page)
+  const consoleErrors = collectConsoleErrors(page)
 
   await page.goto('/#/reserves')
 
@@ -127,6 +130,18 @@ test('renders Reserves list table/card states and drives dialog and menu actions
     dialog.getByRole('link', { name: 'https://example.invalid/reserve-info' }),
   ).toHaveAttribute('href', 'https://example.invalid/reserve-info')
   await dialog.getByRole('button', { name: '閉じる' }).click()
+  await expect(dialog).toHaveCount(0)
+  expect(consoleErrors).toEqual([])
+})
+
+test('deletes a reserve from the Reserves card menu', async ({ page }) => {
+  await page.setViewportSize({ width: 800, height: 900 })
+  const reservesMocks = await installReservesApiMocks(page)
+  await installSearchRuleWorkflowApiMocks(page)
+  const consoleErrors = collectConsoleErrors(page)
+
+  await page.goto('/#/reserves')
+  await expect(page.getByTestId('reserves-page')).toHaveAttribute('data-reserves-layout', 'card')
 
   await openReservesMenu(page, reserveDeleteTarget.name)
   await page.getByRole('menuitem', { name: 'delete' }).click()
@@ -135,6 +150,27 @@ test('renders Reserves list table/card states and drives dialog and menu actions
   )
   await page.getByRole('button', { name: '削除' }).click()
   await expectAnnounced(page, `${reserveDeleteTarget.name} を削除`)
+  expect(consoleErrors).toEqual([])
+  expect(reservesMocks.calls).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ method: 'GET', pathname: '/api/reserves' }),
+      expect.objectContaining({
+        method: 'DELETE',
+        pathname: `/api/reserves/${reserveDeleteTarget.id}`,
+      }),
+    ]),
+  )
+})
+
+test('opens Recorded and the rule edit search from the Reserves card menu', async ({ page }) => {
+  await page.setViewportSize({ width: 800, height: 900 })
+  await installReservesApiMocks(page)
+  const searchRuleRequestLog = createSearchRuleRequestLog()
+  await installSearchRuleWorkflowApiMocks(page, { requestLog: searchRuleRequestLog })
+  const consoleErrors = collectConsoleErrors(page)
+
+  await page.goto('/#/reserves')
+  await expect(page.getByTestId('reserves-page')).toHaveAttribute('data-reserves-layout', 'card')
 
   await openReservesMenu(page, reserveDeleteTarget.name)
   await page.getByRole('menuitem', { name: 'recorded' }).click()
@@ -162,16 +198,6 @@ test('renders Reserves list table/card states and drives dialog and menu actions
     .toBeGreaterThan(0)
   expect(consoleErrors).toEqual([])
   expect(searchRuleRequestLog.methods).toContain('POST /api/schedules/search')
-
-  expect(reservesMocks.calls).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({ method: 'GET', pathname: '/api/reserves' }),
-      expect.objectContaining({
-        method: 'DELETE',
-        pathname: `/api/reserves/${reserveDeleteTarget.id}`,
-      }),
-    ]),
-  )
 })
 
 test('bulk deletes selected reserves through edit mode without optimistic removal', async ({

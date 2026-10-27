@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { installAppShellApiMocks } from './support/appShellMocks'
 import { muiSelectCombobox, muiSelectInput, selectMuiOption } from './support/muiSelect'
 import {
@@ -18,13 +18,17 @@ test.beforeEach(async ({ page }) => {
   await installAppShellApiMocks(page, { enableBroadcastWaveNavigation: true })
 })
 
-test('keeps ui-problem6 Search select visual parity in a real browser', async ({ page }) => {
-  const requestLog = createSearchRuleRequestLog()
-  await installSearchRuleWorkflowApiMocks(page, { requestLog })
-
+async function openSearch(page: Page): Promise<void> {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/#/search')
   await expect(page.getByRole('heading', { name: '検索' })).toBeVisible()
+}
+
+test('keeps ui-problem6 Search select placeholders and spacing in a real browser', async ({
+  page,
+}) => {
+  await installSearchRuleWorkflowApiMocks(page)
+  await openSearch(page)
 
   await expect(page.locator('[data-channel-select-wrapper] [role="combobox"]')).toContainText(
     'channel',
@@ -72,6 +76,13 @@ test('keeps ui-problem6 Search select visual parity in a real browser', async ({
   if (rangeBox !== null && mondayBox !== null) {
     expect(mondayBox.y - (rangeBox.y + rangeBox.height)).toBeGreaterThanOrEqual(8)
   }
+})
+
+test('keeps ui-problem6 Search channel multi-select and its clear button in a real browser', async ({
+  page,
+}) => {
+  await installSearchRuleWorkflowApiMocks(page)
+  await openSearch(page)
 
   await toggleChannelOption(page, '4101')
   await expect(page.getByRole('listbox')).toBeVisible()
@@ -176,6 +187,14 @@ test('keeps ui-problem6 Search select visual parity in a real browser', async ({
   await expect(page.locator('[data-channel-select-wrapper] [role="combobox"]')).toContainText(
     'channel',
   )
+})
+
+test('keeps ui-problem6 Search genre, start, and range selects and sends them in a real browser', async ({
+  page,
+}) => {
+  const requestLog = createSearchRuleRequestLog()
+  await installSearchRuleWorkflowApiMocks(page, { requestLog })
+  await openSearch(page)
 
   await toggleChannelOption(page, '4101')
   await expect(page.getByRole('listbox')).toBeVisible()
@@ -216,14 +235,9 @@ test('keeps ui-problem6 Search select visual parity in a real browser', async ({
   })
 })
 
-test('keeps ui-problem6 Rule option spacing and clear controls exhaustive in a real browser', async ({
-  page,
-}) => {
+test('keeps ui-problem6 Search condition clear controls in a real browser', async ({ page }) => {
   await installSearchRuleWorkflowApiMocks(page)
-
-  await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/#/search')
-  await expect(page.getByRole('heading', { name: '検索' })).toBeVisible()
+  await openSearch(page)
 
   await toggleChannelOption(page, '4101')
   await page.getByRole('listbox').press('Escape')
@@ -243,6 +257,12 @@ test('keeps ui-problem6 Rule option spacing and clear controls exhaustive in a r
   await page.getByRole('switch', { name: '時刻指定' }).click()
   await expectTextClear(page, '終了', '23:30')
   await page.getByRole('switch', { name: '時刻指定' }).click()
+})
+
+// 検索して Rule option の card を出し、エンコード 2・3 の欄を開く。
+async function openRuleOptionWithAllEncodes(page: Page): Promise<void> {
+  await installSearchRuleWorkflowApiMocks(page)
+  await openSearch(page)
 
   await page.getByLabel('keyword', { exact: true }).fill('Synthetic')
   await page.getByTestId('search-rule-page').getByRole('button', { name: '検索' }).click()
@@ -253,6 +273,12 @@ test('keeps ui-problem6 Rule option spacing and clear controls exhaustive in a r
   await expect(muiSelectCombobox(page, 'mode2')).toBeVisible()
   await clickWithoutPointerStabilityWait(page.locator('summary[data-title="エンコード3"]'))
   await expect(muiSelectCombobox(page, 'mode3')).toBeVisible()
+}
+
+test('keeps ui-problem6 Rule option spacing and save and encode 1 clear controls in a real browser', async ({
+  page,
+}) => {
+  await openRuleOptionWithAllEncodes(page)
 
   await expectRuleOptionFieldGaps(page, [
     'sub directory',
@@ -279,6 +305,13 @@ test('keeps ui-problem6 Rule option spacing and clear controls exhaustive in a r
   await page.getByRole('listbox').press('Escape')
   await expectSelectClear(page, 'directory1', 'archive-root')
   await expectTextClear(page, 'sub directory1', 'synthetic/sub1')
+})
+
+test('keeps ui-problem6 Rule option encode 2 and 3 clear controls in a real browser', async ({
+  page,
+}) => {
+  await openRuleOptionWithAllEncodes(page)
+
   await expectSelectClear(page, 'directory2', 'backup-root')
   await expectTextClear(page, 'sub directory2', 'synthetic/sub2')
   await expectSelectClear(page, 'mode2', 'synthetic-encode-sub')

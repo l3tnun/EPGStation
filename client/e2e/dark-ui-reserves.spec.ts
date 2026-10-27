@@ -43,9 +43,7 @@ for (const viewport of VIEWPORTS) {
       await page.setViewportSize(viewport)
     })
 
-    test('audits the card list, title menu, item menu, and bulk dialog', async ({
-      page,
-    }, testInfo) => {
+    test('audits the title menu and the card list', async ({ page }, testInfo) => {
       await installReservesApiMocks(page)
       await page.goto('/#/reserves')
       await page.getByTestId('title-bar').getByRole('button', { name: '予約メニュー' }).click()
@@ -74,7 +72,11 @@ for (const viewport of VIEWPORTS) {
         rootSelector: '[data-testid="reserves-page"]',
       })
       await attachAudit(testInfo, 'dark-reserves-card-list-audit.json', listRows)
+    })
 
+    test('audits the item menu', async ({ page }, testInfo) => {
+      await installReservesApiMocks(page)
+      await page.goto('/#/reserves')
       await page.getByRole('button', { name: `予約メニュー: ${reserveDeleteTarget.name}` }).click()
       const itemMenuRows = await collectVisibleUiAuditRows(page, {
         page: 'reserves',
@@ -87,8 +89,11 @@ for (const viewport of VIEWPORTS) {
         rootSelector: '.MuiPopover-root',
       })
       await attachAudit(testInfo, 'dark-reserves-item-menu-audit.json', itemMenuRows)
-      await page.keyboard.press('Escape')
+    })
 
+    test('audits the bulk delete dialog', async ({ page }, testInfo) => {
+      await installReservesApiMocks(page)
+      await page.goto('/#/reserves')
       await page.getByTestId('title-bar').getByRole('button', { name: '予約メニュー' }).click()
       await page.getByRole('menuitem', { name: '編集' }).click()
       await page.getByRole('button', { name: 'すべて選択' }).click()
