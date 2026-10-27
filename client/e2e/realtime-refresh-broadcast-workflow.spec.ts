@@ -210,15 +210,28 @@ test('refreshes On Air list/watch and Recorded watch info from real Socket.IO up
       locator: page.getByTestId('recorded-watch-info-card'),
       expected: 'Synthetic Recorded Watch After Socket Update',
     })
+  } finally {
+    await realtime.close()
+  }
+})
 
-    recordedWatchMocks.renameRecordedWatchProgram(
-      'Synthetic Recorded Streaming Watch After Socket Update',
-    )
+test('refreshes Recorded streaming watch info from a real Socket.IO updateStatus event', async ({
+  page,
+}) => {
+  const realtime = await createRealtimeHarness(page)
+
+  try {
+    const recordedWatchMocks = await installVideoPlaybackRealtimeApiMocks(page)
+    // 画面を直接開くので、番組情報の取得は最初の 1 回だけになる。初回の接続では取り直さないので、
+    // 名前を変えた後に取り直すのは updateStatus を受けたときだけである。
     await page.goto(
       `/#/recorded/streaming/${SYNTHETIC_STREAMING_VIDEO_FILE_ID}?streamingType=hls&fileType=encoded&mode=0&recordedId=${SYNTHETIC_RECORDED_ID}`,
     )
     await expect(page.getByTestId('recorded-watch-info-card')).toContainText(
-      'Synthetic Recorded Watch After Socket Update',
+      'Synthetic Playback Program',
+    )
+    recordedWatchMocks.renameRecordedWatchProgram(
+      'Synthetic Recorded Streaming Watch After Socket Update',
     )
     await emitUntilTextAppears({
       emit: realtime.emitUpdateStatus,
