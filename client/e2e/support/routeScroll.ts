@@ -38,20 +38,23 @@ export async function scrollActiveRouteTo(page: Page, y: number): Promise<void> 
 }
 
 // route の scroll 位置を「離れた時の位置」として比べる test は、scroll root の下に高さ spacer を
-// 足してから scroll する。画面の data が描画されて scroll 位置より上の内容が伸びると、browser の
-// scroll anchoring が scrollTop を動かす（WebKit で /encode は 720 から 1143 へ 423px）。scroll を
-// 置く前に、その画面の一覧が描画済みであること（`renderedLocator` が見えること）を待つ。描画後は
-// scrollTop が scrollActiveRouteTo の置いた値で止まるので、test はその値との一致で確かめる。
+// 足してから scroll する。scroll の後に scroll 位置より上の内容の高さが変わると、browser の
+// scroll anchoring が scrollTop を動かす（WebKit で /encode は data の描画で 720 から 1143 へ 423px、
+// /storages は web font が届いて名前の折り返しが変わり 720 から 692 へ 28px）。scroll を置く前に、
+// test はその画面の一覧が描画済みであること（`renderedLocator` が見えること）を待ち、この helper は
+// web font の読み込みを待つ。その後は scrollTop が scrollActiveRouteTo の置いた値で止まるので、
+// test はその値との一致で確かめる。
 export async function addRouteScrollSpacer(
   page: Page,
   options: { styleTestId: string; heightPx: number; extraCss?: string },
 ): Promise<void> {
-  await page.evaluate(({ styleTestId, heightPx, extraCss }) => {
+  await page.evaluate(async ({ styleTestId, heightPx, extraCss }) => {
     const style = document.createElement('style')
     style.dataset.testid = styleTestId
     style.textContent =
       `[data-testid="shell-main"]::after { content: ""; display: block; height: ${heightPx}px; }` +
       (extraCss === undefined ? '' : ` ${extraCss}`)
     document.head.appendChild(style)
+    await document.fonts.ready
   }, options)
 }
