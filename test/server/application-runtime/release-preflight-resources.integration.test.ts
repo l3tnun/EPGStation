@@ -242,7 +242,15 @@ describe('[AR-9.18] release-preflight.sh passes the decided resources to every s
             `setup name=epgs-runner-rehearsal-b cpuset=${bandB} memory=${MACHINE_MEMORY}`,
         ]);
         const clientStart = recorded.indexOf('start client-static coverage=2 playwright=4');
-        expect(recorded[clientStart - 1]).toBe(`docker update --cpuset-cpus ${bandB} epgs-runner-rehearsal-b`);
+        expect(clientStart).toBeGreaterThan(0);
+        // Chain A writes to the same log at the same time, so its lines can fall between chain B's docker update and
+        // its client-static start. Only chain B updates the container, so check the last update before client-static.
+        expect(
+            recorded
+                .slice(0, clientStart)
+                .filter(line => line.startsWith('docker update '))
+                .at(-1),
+        ).toBe(`docker update --cpuset-cpus ${bandB} epgs-runner-rehearsal-b`);
         expect(clientStart).toBeLessThan(recorded.indexOf('end server-check'));
         const browserStart = recorded.indexOf('start client-browser coverage=4 playwright=4');
         expect(recorded[browserStart - 1]).toBe(`docker update --cpuset-cpus ${band} epgs-runner-rehearsal-b`);
