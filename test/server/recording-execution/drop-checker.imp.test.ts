@@ -17,8 +17,7 @@ const startDropChecker = async (
     target.attach(srcFilePath, readableStream);
 };
 
-// packetDrop / packetError / packetScrambling の log 追記は event handler から await されずに
-// 発火するため、getResult() の完了時点で書き込みが終わっているとは限らない。内容を読む test は
+// getResult() は解析結果の通知であり、batchと集計の追記完了を意味しない。内容を読む test は
 // 現れるまで待つ。
 async function readLogUntilContains(path: string, expected: string): Promise<string> {
     const deadline = Date.now() + 5_000;
@@ -122,10 +121,7 @@ const buildPatSection = (pmtPid: number): Buffer => {
     return withSectionCrc(Buffer.concat([header, afterLength]));
 };
 
-const buildPmtSection = (
-    streams: Array<{ streamType: number; elementaryPid: number }>,
-    pcrPid = 0x1fff,
-): Buffer => {
+const buildPmtSection = (streams: Array<{ streamType: number; elementaryPid: number }>, pcrPid = 0x1fff): Buffer => {
     const streamPart = Buffer.concat(
         streams.map(({ streamType, elementaryPid }) => {
             const entry = Buffer.alloc(5);
@@ -238,9 +234,7 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
         const result = await checker.getResult();
 
         expect(result[0x0101]).toEqual({ packet: 3, error: 0, drop: 1, scrambling: 0 });
-        expect(await readLogUntilContains(checker.getFilePath()!, 'drop (pid: 0x0101')).toContain(
-            'drop (pid: 0x0101',
-        );
+        expect(await readLogUntilContains(checker.getFilePath()!, 'drop (pid: 0x0101')).toContain('drop (pid: 0x0101');
     });
 
     it('counts an error and skips drop/scrambling accounting for a transport_error_indicator packet', async () => {
@@ -293,7 +287,12 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
     it('tolerates a second stop() call without throwing', async () => {
         const root = await makeRoot();
         const checker = makeChecker();
-        await startDropChecker(checker, root, 'synthetic.ts', buildStream([buildPacket({ pid: 0x0105, continuityCounter: 0 })]));
+        await startDropChecker(
+            checker,
+            root,
+            'synthetic.ts',
+            buildStream([buildPacket({ pid: 0x0105, continuityCounter: 0 })]),
+        );
 
         await checker.stop();
         await expect(checker.stop()).resolves.toBeUndefined();
@@ -380,9 +379,7 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
         const packets = [
             buildPsiPacket(0x0000, buildPatSection(pmtPid), 0),
             buildPsiPacket(pmtPid, buildPmtSection(setIndexStreams), 0),
-            ...setIndexStreams.map(({ elementaryPid }) =>
-                buildPacket({ pid: elementaryPid, continuityCounter: 0 }),
-            ),
+            ...setIndexStreams.map(({ elementaryPid }) => buildPacket({ pid: elementaryPid, continuityCounter: 0 })),
         ];
 
         await startDropChecker(checker, root, 'synthetic-pmt-set-index.ts', buildStream(packets));
@@ -413,8 +410,7 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
         const packets = [0, 1, 3].map(cc => buildPacket({ pid: 0x0120, continuityCounter: cc }));
         const appendFailure = new Error('synthetic onFinish append failure');
         let appendCalls = 0;
-        // First append is the mid-stream drop line (no .catch on the event handler).
-        // Subsequent appends are onFinish blank-line + per-PID summary (both .catch bodies).
+        // First append is the detail batch; the second contains the blank line and all PID summaries.
         const append = vi.spyOn(FileUtil, 'appendFile').mockImplementation(async () => {
             appendCalls += 1;
             if (appendCalls === 1) {
@@ -433,11 +429,13 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
         });
         const appendErrorMessages = logger.system.error.mock.calls
             .map(call => call[0])
-            .filter((message): message is string => typeof message === 'string' && message.startsWith('append error: '));
-        // Blank-line catch (L150–153) and per-PID summary catch (L163–166) each log message + err.
-        expect(appendErrorMessages.length).toBeGreaterThanOrEqual(2);
+            .filter(
+                (message): message is string => typeof message === 'string' && message.startsWith('append error: '),
+            );
+        // One failed summary batch reports its destination and error.
+        expect(appendErrorMessages).toHaveLength(1);
         expect(logger.system.error).toHaveBeenCalledWith(appendFailure);
-        expect(append.mock.calls.length).toBeGreaterThanOrEqual(3);
+        expect(append).toHaveBeenCalledTimes(2);
         append.mockRestore();
     });
 
@@ -469,10 +467,10 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
         const observedTime = new Date(Date.UTC(2024, 0, 5, 15, 6, 7));
 
         (checker as any).tsSectionAnalyzer.emit('time', observedTime);
-        (checker as any).tsPacketAnalyzer.emit('packetScrambling', 0x0150);
+        (checker as any).tsPacketAnalyzer.emit('packetDrop', 0x0150, 3, 2);
 
-        const log = await readLogUntilContains(checker.getFilePath()!, 'scrambling (pid: 0x0150');
-        expect(log).toContain('scrambling (pid: 0x0150, time: 2024/01/06 00:06:07)');
+        const log = await readLogUntilContains(checker.getFilePath()!, 'drop (pid: 0x0150');
+        expect(log).toContain('drop (pid: 0x0150, counter: 3, expected: 2, time: 2024/01/06 00:06:07)');
 
         await checker.stop();
     });
@@ -561,20 +559,22 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
             expect(log).toMatch(/error: \(pid: 0x0162, counter: \S+, expected: \S+, time: -\)\n/);
         });
 
-        it('separates the per-PID summary from scrambling lines with one blank line', async () => {
+        it('keeps the scrambling count and separator without per-packet scrambling lines', async () => {
             const root = await makeRoot();
             const checker = makeChecker();
 
-            await startDropChecker(checker, root, 'synthetic-scrambling-blank.ts', buildStream([scramblingPacket(0x0163)]));
+            await startDropChecker(
+                checker,
+                root,
+                'synthetic-scrambling-blank.ts',
+                buildStream([scramblingPacket(0x0163)]),
+            );
             await checker.getResult();
 
             await readCompleteLog(
                 checker.getFilePath()!,
-                [
-                    'scrambling (pid: 0x0163, time: -)\n',
-                    'pid: 0x0163, error: 0, drop: 0, scrambling: 1, packet: 1, name: -\n',
-                ],
-                3,
+                ['pid: 0x0163, error: 0, drop: 0, scrambling: 1, packet: 1, name: -\n'],
+                2,
             );
         });
 
@@ -599,15 +599,17 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
             const checker = makeChecker();
             const packets = [
                 buildPsiPacket(0x0014, buildTdtSection(), 0),
-                scramblingPacket(0x0170),
-                scramblingPacket(0x0171),
+                buildPacket({ pid: 0x0170, continuityCounter: 0, transportErrorIndicator: 1 }),
+                buildPacket({ pid: 0x0171, continuityCounter: 0, transportErrorIndicator: 1 }),
             ];
 
             await startDropChecker(checker, root, 'synthetic-tdt.ts', buildStream(packets));
             await checker.getResult();
 
-            const log = await readLogUntilContains(checker.getFilePath()!, 'scrambling (pid: 0x0171');
-            expect(log).toMatch(/scrambling \(pid: 0x0171, time: 2024\/01\/0[56] \d\d:\d\d:\d\d\)/);
+            const log = await readLogUntilContains(checker.getFilePath()!, 'error: (pid: 0x0171');
+            expect(log).toMatch(
+                /error: \(pid: 0x0171, counter: -, expected: -, time: 2024\/01\/0[56] \d\d:\d\d:\d\d\)/,
+            );
         });
 
         it('does not report a stream error or stop early when the source ends normally', async () => {
@@ -702,8 +704,8 @@ describe('[Task 3.6] DropCheckerModel drop/error/scrambling characterization', (
         });
 
         it.each([
-            ['the blank line', (text: string) => text === '\n'],
-            ['a per-PID summary line', (text: string) => text.startsWith('pid: ')],
+            ['the detail batch', (text: string) => text.startsWith('drop ')],
+            ['the summary batch', (text: string) => text.startsWith('\npid: ')],
         ])('reports a failed append of %s with the destination and the error', async (_name, shouldFail) => {
             const root = await makeRoot();
             const checker = makeChecker();

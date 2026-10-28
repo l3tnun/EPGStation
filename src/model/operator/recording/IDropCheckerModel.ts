@@ -21,7 +21,7 @@ export default interface IDropCheckerModel {
      * @param readableStream 監視対象の TS ストリーム
      */
     attach(srcFilePath: string, readableStream: stream.Readable): void;
-    /** ドロップチェックを終了し、監視していたストリームから切り離す。 */
+    /** ドロップチェックを終了する。明細と集計のログ追記のsettlementを待ち、ストリームから切り離す。 */
     stop(): Promise<void>;
     /**
      * 生成したログファイルのパスを取得する。
@@ -29,7 +29,7 @@ export default interface IDropCheckerModel {
      */
     getFilePath(): string | null;
     /**
-     * 集計結果を取得する。呼び出し時点で終了処理が済んでいなければ完了を待ってから返す。
+     * 集計結果を取得する。解析結果が確定するまで待つ。ログ追記の完了待ちはstopが担当する。
      * @returns ドロップ・エラー・スクランブルの集計結果
      */
     getResult(): Promise<aribts.Result>;

@@ -12,11 +12,11 @@ import IDropCheckerModel from './IDropCheckerModel.js';
 
 /** `IDropCheckerModel` の実装。詳細は `IDropCheckerModel` を参照。aribts の解析器群を
  *  数珠つなぎに pipe し、`start`〜`stop` の間に検知したドロップ・エラー・スクランブルを
- *  ログファイルへ逐次追記しつつ集計する。 */
+ *  集計する。drop/error明細はまとめて追記し、scramblingはPID別集計だけを出力する。 */
 @injectable()
 class DropCheckerModel implements IDropCheckerModel {
     private log: ILogger;
-    /** `getResult`が終了処理の完了を待ち合わせるための内部専用 event。`onFinish`完了時に発行する。 */
+    /** `getResult`が解析結果の確定を待つ内部専用event。ログ追記の完了より先に発行する。 */
     private listener: events.EventEmitter = new events.EventEmitter();
     /** 生成したログファイルのパス。`start`で確定し、以後の追記先として使う。 */
     private dest: string | null = null;
@@ -29,7 +29,13 @@ class DropCheckerModel implements IDropCheckerModel {
      *  ログメッセージのタイムスタンプ（`getTime`）に使う。未取得の間は`null`。 */
     private time: Date | null = null;
     private hasError: boolean = false; // パケットチェック中にエラーを検知したか？
-    private isFinished: boolean = false; // 終了処理が終わっているか？
+    private static readonly LOG_BATCH_BYTES = 64 * 1024;
+    private static readonly LOG_BATCH_INTERVAL_MS = 100;
+    private logBuffer: string[] = [];
+    private logBufferBytes = 0;
+    private logFlushTimer: NodeJS.Timeout | null = null;
+    private logWriteTail: Promise<void> = Promise.resolve();
+    private finishPromise: Promise<void> | null = null;
 
     private transformStream: stream.Transform | null = null;
     private tsReadableConnector: aribts.TsReadableConnector | null = null;
@@ -95,7 +101,7 @@ class DropCheckerModel implements IDropCheckerModel {
         });
 
         this.tsPacketAnalyzer.on('packetError', (pid, counter, expected) => {
-            this.appendFile(
+            this.queueLogLine(
                 `error: (pid: ${this.pidToString(pid)}, counter: ${counter || '-'}, expected: ${
                     expected || '-'
                 }, time: ${this.getTime()})\n`,
@@ -104,7 +110,7 @@ class DropCheckerModel implements IDropCheckerModel {
         });
 
         this.tsPacketAnalyzer.on('packetDrop', (pid, counter, expected) => {
-            this.appendFile(
+            this.queueLogLine(
                 `drop (pid: ${this.pidToString(pid)}, counter: ${counter || '-'}, expected: ${
                     expected || '-'
                 }, time: ${this.getTime()})\n`,
@@ -112,8 +118,7 @@ class DropCheckerModel implements IDropCheckerModel {
             this.hasError = true;
         });
 
-        this.tsPacketAnalyzer.on('packetScrambling', pid => {
-            this.appendFile(`scrambling (pid: ${this.pidToString(pid)}, time: ${this.getTime()})\n`);
+        this.tsPacketAnalyzer.on('packetScrambling', () => {
             this.hasError = true;
         });
 
@@ -150,12 +155,14 @@ class DropCheckerModel implements IDropCheckerModel {
      * 終了処理
      * @returns Promise<void>
      */
-    private async onFinish(): Promise<void> {
-        if (this.isFinished === true) {
-            return;
+    private onFinish(): Promise<void> {
+        if (this.finishPromise === null) {
+            this.finishPromise = this.finishResult();
         }
-        this.isFinished = true;
+        return this.finishPromise;
+    }
 
+    private async finishResult(): Promise<void> {
         if (this.tsPacketAnalyzer === null) {
             return;
         }
@@ -165,21 +172,20 @@ class DropCheckerModel implements IDropCheckerModel {
         this.result = result;
         this.listener.emit(DropCheckerModel.FINISH_EVENT);
 
-        if (this.hasError) {
-            await this.appendFile('\n').catch(err => {
-                this.log.system.error(`append error: ${this.dest}`);
-                this.log.system.error(err);
-            });
-        }
+        await this.flushLogBuffer();
+        const summary: string[] = this.hasError ? ['\n'] : [];
         for (const pid of Object.keys(result)) {
             const pidNum = parseInt(pid, 10);
-            await this.appendFile(
+            summary.push(
                 `pid: ${this.pidToString(pidNum)}, error: ${result[pid as any].error}, drop: ${
                     result[pid as any].drop
                 }, scrambling: ${result[pid as any].scrambling}, packet: ${
                     result[pid as any].packet
                 }, name: ${this.getPIDName(pidNum)}\n`,
-            ).catch(err => {
+            );
+        }
+        if (summary.length > 0) {
+            await this.appendFile(summary.join('')).catch(err => {
                 this.log.system.error(`append error: ${this.dest}`);
                 this.log.system.error(err);
             });
@@ -267,8 +273,44 @@ class DropCheckerModel implements IDropCheckerModel {
         this.pidIndex[pid] = name;
     }
 
+    /** drop/error明細を発生順にまとめ、finish開始後の追加を止める。 */
+    private queueLogLine(line: string): void {
+        if (this.finishPromise !== null) {
+            return;
+        }
+        this.logBuffer.push(line);
+        this.logBufferBytes += Buffer.byteLength(line);
+        if (this.logBufferBytes >= DropCheckerModel.LOG_BATCH_BYTES) {
+            void this.flushLogBuffer();
+        } else if (this.logFlushTimer === null) {
+            this.logFlushTimer = setTimeout(() => {
+                void this.flushLogBuffer();
+            }, DropCheckerModel.LOG_BATCH_INTERVAL_MS);
+        }
+    }
+
+    private flushLogBuffer(): Promise<void> {
+        if (this.logFlushTimer !== null) {
+            clearTimeout(this.logFlushTimer);
+            this.logFlushTimer = null;
+        }
+        if (this.logBuffer.length === 0) {
+            return this.logWriteTail;
+        }
+        const lines = this.logBuffer;
+        this.logBuffer = [];
+        this.logBufferBytes = 0;
+        this.logWriteTail = this.logWriteTail
+            .then(() => this.appendFile(lines.join('')))
+            .catch(err => {
+                this.log.system.error(`append error: ${this.dest}`);
+                this.log.system.error(err);
+            });
+        return this.logWriteTail;
+    }
+
     /**
-     * log 追記
+     * log追記（1バッチにつき1要求）
      * @param str
      * @return Promise<void>
      */
@@ -444,12 +486,14 @@ class DropCheckerModel implements IDropCheckerModel {
             if (this.result !== null) {
                 resolve();
             } else {
-                this.listener.once(DropCheckerModel.FINISH_EVENT, () => {
+                const onFinish = (): void => {
+                    clearTimeout(timer);
                     resolve();
-                });
+                };
+                this.listener.once(DropCheckerModel.FINISH_EVENT, onFinish);
 
-                setTimeout(() => {
-                    this.listener.removeAllListeners();
+                const timer = setTimeout(() => {
+                    this.listener.removeListener(DropCheckerModel.FINISH_EVENT, onFinish);
                     reject(new Error('GetResultTimeout'));
                 }, 10 * 1000);
             }

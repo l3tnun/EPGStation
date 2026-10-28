@@ -1544,16 +1544,16 @@ const COVERAGE_EXCLUSION_EXTERNAL_COMMAND_SYNC_THROW_CATCH_MARKER =
 // Two independent `X === null` guards, both provably unreachable at their own call sites.
 // (a) `DropCheckerModel.appendFile`'s `if (this.dest === null) throw ...`: `this.dest` is assigned in `prepare`,
 //     and `RecorderModel` calls `attach` only after `prepare` succeeded; every `aribts` event listener that can
-//     ever lead to `appendFile` is registered inside `attach`, and `onFinish` (the only other path that
+//     ever lead to `appendFile` is registered inside `attach`, and `finishResult` (the only other path that
 //     could run ahead of listener wiring) returns early while `tsPacketAnalyzer` is still
 //     `null` -- nothing ever resets `dest` back to `null` afterward.
 // (b) `DropCheckerModel.getResult`'s `if (this.result === null) throw ...`: `setResult`'s Promise only resolves
 //     either because `result` (aribts' own `Result` object, never `null`) was already assigned before the
-//     Promise was even created, or because `FINISH_EVENT` fired (in `onFinish`) strictly after `this.result =
+//     Promise was even created, or because `FINISH_EVENT` fired (in `finishResult`) strictly after `this.result =
 //     result` already ran. Either way, by the time `getResult`'s `await this.setResult()`
 //     returns, `this.result` is already non-null.
-// The approval binds to `appendFile`, `getResult`, and the units (a) and (b) rely on: `prepare`, `attach`, `onFinish` and
-// `setResult`.
+// The approval binds to `appendFile`, `getResult`, and the units (a) and (b) rely on: `prepare`, `attach`,
+// `onFinish`, `finishResult`, `queueLogLine`, `flushLogBuffer` and `setResult`. Only the same two null guards are excluded.
 const COVERAGE_EXCLUSION_DROP_CHECKER_MODEL_NULL_GUARDS_MARKER =
     '__EPGSTATION_COVERAGE_EXCLUSION_DROP_CHECKER_MODEL_NULL_GUARDS_20260924';
 
@@ -1943,9 +1943,12 @@ export const COVERAGE_EXCLUSION_AUTHORIZATIONS = Object.freeze([
             Object.freeze({ codeSha256: 'c0f1a2b20e217dadb09b228cc68cacd1109d9a8fd674ba9db947339b2a5e7fb7', name: 'DropCheckerModel.appendFile' }),
             Object.freeze({ codeSha256: '9ac2fe60391959c4dff6f1e6682e479f70f91d532bb60409374d5c3966c43a4c', name: 'DropCheckerModel.getResult' }),
             Object.freeze({ codeSha256: '26de67877ed6ffe9ae6a04f9a2bb5410fb7244665be04554d77e796d7db06d2a', name: 'DropCheckerModel.prepare' }),
-            Object.freeze({ codeSha256: '46dbc24044947a2d64d379eedf8231d6b85db835a26db7f800b2b296162412c7', name: 'DropCheckerModel.attach' }),
-            Object.freeze({ codeSha256: '93e9b2830bef537b1774356657dfa484bae815aa80f685ff43db8ce4783b3665', name: 'DropCheckerModel.onFinish' }),
-            Object.freeze({ codeSha256: '5414ba959c2b6667aa741fd9d417a4bcf5246bbc9a4e72477829d1a90ce37625', name: 'DropCheckerModel.setResult' }),
+            Object.freeze({ codeSha256: 'a569885e06f6dfa38cbef0963fc3b24d4e1e3effdd84242c880e1d8de098e9aa', name: 'DropCheckerModel.attach' }),
+            Object.freeze({ codeSha256: '9ae5be2719e58deec292025a1703d3c71d7d75147883e7279921bcdd75d42709', name: 'DropCheckerModel.onFinish' }),
+            Object.freeze({ codeSha256: 'fda610e194aa20c30bb90546b2bc74459636bca695d348cd147d2fed0d1a42f0', name: 'DropCheckerModel.setResult' }),
+            Object.freeze({ codeSha256: 'e7a02b81041eb9bb9538c3060513649032558de4e156a59e32dd76498ee26242', name: 'DropCheckerModel.finishResult' }),
+            Object.freeze({ codeSha256: '6eb1f760d4e5251b5494118d5056f3ede37cc231f0e3aa677b7fb832c5915382', name: 'DropCheckerModel.queueLogLine' }),
+            Object.freeze({ codeSha256: '6ada0f351d61342555de5480982a88f2e160f35f20974dc85623d0844ccecc53', name: 'DropCheckerModel.flushLogBuffer' }),
         ]),
         branchAnchors: Object.freeze([
             Object.freeze({
