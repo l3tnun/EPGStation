@@ -10,12 +10,12 @@
 - [x] 2. direct / streaming player mapping と recorded info card を実装する
   - recorded direct、recorded HLS/WebM/MP4 streaming、live watch の player mapping を API/media URL builder と `PlaybackShell.tsx` の `PlaybackPlayerContainer` に接続する。
   - recorded info card fetch failure は playback 非 fatal として `番組情報取得に失敗` snackbar を表示し、live info card は On Air owner に残す。
-  - HLS readiness polling は `GET /streams?isHalfWidth=<isHalfWidthDisplayed>` を使い、recorded direct watch route は通常 entrypoint boundary に従う。
+  - HLS readiness check は `GET /streams?isHalfWidth=<isHalfWidthDisplayed>` を使い、stream ID 取得直後、waiting 中の `updateStatus`、1000ms の補助 timer で対象 stream の enabled 状態を確認する。recorded direct watch route は通常 entrypoint boundary に従う。
   - React dev server で実 HLS を確認するため、`/streamfiles` proxy の設定を regression guard（`viteConfig.imp.test.ts`）に含める。`#EXTM3U` manifest の到達は実 backend での手動確認とする。
   - _Requirements: 2.1-2.11_
 
 - [x] 3. HLS lifecycle、direct stream、platform constraints を実装する
-  - HLS start/keep/stop、readiness check、timeout/abort、seek commit 後の restart、generation token cleanup を実装する。recorded HLS の seek bar drag/input 中は表示値 preview に留め、commit 前に `ss` 更新や stream 再作成を行わない。
+  - HLS start/keep/stop、即時・通知・timer の readiness check、同一 generation の request 集約、timeout/abort、seek commit 後の restart、generation token cleanup を実装する。recorded HLS の seek bar drag/input 中は表示値 preview に留め、commit 前に `ss` 更新や stream 再作成を行わない。
   - WebM/MP4 direct stream は frontend start/keep/stop API を呼ばず、recorded out-of-range seek は `ss` 付き URL rebuild で復元する。
   - iOS Safari recorded direct playback は MP4・raw TS ともに ready（unsupported UI は出さない）、M2TS-LL mpegts.js support check と snackbar/error 文言を requirements に従って扱う。
   - _Requirements: 3.1-3.14_

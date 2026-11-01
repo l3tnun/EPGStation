@@ -117,10 +117,9 @@ describe('usePlaybackLifecycle contract', () => {
       readinessUrl: './api/streams?isHalfWidth=false',
     })
 
-    // playbackLifecycleControllerBase readinessPollMs: the first readiness poll fires 1000ms
-    // after start, and the mocked fetch reports the stream enabled on that first poll.
+    // Start and the immediate readiness response settle without advancing the clock.
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(0)
     })
     expect(result.current.lifecycleSnapshot.state).toBe('ready')
     vi.useRealTimers()

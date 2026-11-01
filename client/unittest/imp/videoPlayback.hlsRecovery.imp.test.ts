@@ -293,7 +293,7 @@ describe('Video playback HLS lifecycle and direct stream constraints', () => {
 
     const startPromise = controller.start()
     await flushMicrotasks()
-    await vi.advanceTimersByTimeAsync(1000)
+    await vi.advanceTimersByTimeAsync(0)
     expect(controller.snapshot()).toMatchObject({ state: 'waiting' })
 
     await vi.advanceTimersByTimeAsync(1000)

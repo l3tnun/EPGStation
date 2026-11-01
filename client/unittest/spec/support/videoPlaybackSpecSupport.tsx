@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { vi } from 'vitest'
 import App from '@/App'
+import type { RealtimeConnectionFactory } from '@/app/realtime'
 import type { NavigationConfigState } from '@/app/navigation'
 import type { ServerApiRepository, ServerConfigNavigationState } from '@/app/serverApi'
 import type { OnAirApiRepository } from '@/features/onair/onairApi'
@@ -90,6 +91,7 @@ export interface RenderPlaybackOptions {
   onAirRepository?: OnAirApiRepository
   navigationConfig?: ServerConfigNavigationState | NavigationConfigState
   apiRepository?: ServerApiRepository
+  realtimeConnectionFactory?: RealtimeConnectionFactory
 }
 
 export function renderPlayback({
@@ -100,6 +102,7 @@ export function renderPlayback({
   onAirRepository = createOnAirRepository(),
   navigationConfig = createPlaybackNavigationConfig(),
   apiRepository = createShellRepository(),
+  realtimeConnectionFactory,
 }: RenderPlaybackOptions) {
   window.history.replaceState(null, '', hash)
 
@@ -107,6 +110,7 @@ export function renderPlayback({
     <App
       settings={settings}
       apiRepository={apiRepository}
+      realtimeConnectionFactory={realtimeConnectionFactory}
       recordedApiRepository={recordedRepository}
       onAirApiRepository={onAirRepository}
       navigationConfig={navigationConfig}
@@ -198,6 +202,7 @@ export function mockHlsFetch({
 }: HlsFetchOptions = {}) {
   const calls: string[] = []
   let readinessPollCount = 0
+  let currentEnabled = enabled
   const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
     const url =
       typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url
@@ -213,13 +218,19 @@ export function mockHlsFetch({
       if (disappearsAfterPolls !== undefined && readinessPollCount > disappearsAfterPolls) {
         return new Response(JSON.stringify({ items: [] }))
       }
-      return new Response(JSON.stringify({ items: [{ streamId, isEnable: enabled }] }))
+      return new Response(JSON.stringify({ items: [{ streamId, isEnable: currentEnabled }] }))
     }
 
     return new Response('{}')
   })
 
-  return { spy, calls }
+  return {
+    spy,
+    calls,
+    setEnabled(value: boolean) {
+      currentEnabled = value
+    },
+  }
 }
 
 export function defineNavigatorForTest({

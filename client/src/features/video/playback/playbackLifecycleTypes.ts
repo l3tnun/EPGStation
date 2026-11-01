@@ -34,6 +34,7 @@ export interface HlsLifecycleSnapshot {
 
 export interface HlsLifecycleControllerOptions {
   repository: HlsLifecycleRepository
+  subscribeReadiness?: (listener: () => void) => () => void
   readinessPollMs?: number
   readinessTimeoutMs?: number
   keepIntervalMs?: number

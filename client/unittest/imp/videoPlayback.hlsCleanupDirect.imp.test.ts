@@ -80,6 +80,7 @@ describe('Video playback HLS lifecycle and direct stream constraints', () => {
     await flushMicrotasks()
     await flushMicrotasks()
     expect(controller.snapshot()).toMatchObject({ state: 'waiting' })
+    expect(repository.fetchStreams).toHaveBeenCalledTimes(1)
     controller.cleanup()
     await flushMicrotasks()
     await flushMicrotasks()
@@ -90,7 +91,7 @@ describe('Video playback HLS lifecycle and direct stream constraints', () => {
       streamId: null,
     })
     await vi.advanceTimersByTimeAsync(10000)
-    expect(repository.fetchStreams).not.toHaveBeenCalled()
+    expect(repository.fetchStreams).toHaveBeenCalledTimes(1)
     expect(repository.keep).not.toHaveBeenCalled()
     await startPromise
   })

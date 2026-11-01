@@ -218,7 +218,7 @@ freshness と reconnect behavior を確認できる。
 
 1. route が変更されたとき、EPGStation フロントエンドは selected navigation
    state を更新し、表示中の version 情報を refresh する。
-2. application state update event を受信したとき、EPGStation フロントエンドは表示中の version 情報を refresh する。
+2. application state update event を受信したとき、EPGStation フロントエンドは表示中の version 情報を refresh し、waiting 中の HLS lifecycle subscriber へ readiness 再確認の契機を通知する。subscriber がない場合も既存の query invalidation と version refresh を実行する。
 3. version 情報を取得できないとき、EPGStation フロントエンドは error snackbar `バージョン情報取得に失敗`
    でユーザーへ通知する。
 4. realtime connection が disconnected の間、EPGStation フロントエンドは full-screen disconnected overlay を表示する。
@@ -229,7 +229,7 @@ freshness と reconnect behavior を確認できる。
 7. route が変更されたとき、EPGStation フロントエンドは表示中 snackbar を閉じ、scroll history state を更新し、browser
    history restore ではない通常遷移では active page scroll container を `{ x: 0, y: 0 }` に戻す。
 8. navigation drawer header には現在の version string を表示し、route change と application state update
-   event 後の version refresh 結果を反映する。
+   event 後の version refresh 結果を反映する。HLS readiness subscriber への通知は version refresh の完了を待たない。
 9. realtime connection が disconnected したとき、EPGStation フロントエンドは `接続が切断されました`
    snackbar を表示する。
 10. realtime connection restored は、過去に disconnected overlay を表示した後の socket connect 成功として扱う。

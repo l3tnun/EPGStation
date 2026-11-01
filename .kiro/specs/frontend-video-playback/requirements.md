@@ -46,7 +46,7 @@ Video playback は live watch、recorded direct watch、recorded streaming watch
 6. recorded info card fetch failure は playback 非 fatal とし、`番組情報取得に失敗` を snackbar で通知する。live info card fetch と `ストリーム情報取得に失敗` snackbar は `frontend-onair` が所有する。
 7. recorded display data がない場合、EPGStation フロントエンドは recorded info card を描画しない。
 8. recorded direct watch route は raw video API source を使うが、通常 entrypoint では encoded file かつ `isPreferredPlayingOnWeb=true` の場合だけ生成される。
-9. HLS playback の readiness polling は `GET /streams?isHalfWidth=<isHalfWidthDisplayed>` を使い、対象 stream が enabled になるまで timer で確認する。`isHalfWidthDisplayed` は settings-storage の channel display contract から読む。
+9. HLS playback の readiness check は `GET /streams?isHalfWidth=<isHalfWidthDisplayed>` を使う。stream ID の取得直後に一度確認し、対象 stream が enabled になるまで Socket.IO `updateStatus` と timer を契機に同じ endpoint で再確認する。`isHalfWidthDisplayed` は settings-storage の channel display contract から読む。
 10. React dev server 経由で HLS playback を確認するとき、EPGStation フロントエンドは `/streamfiles/stream:streamId.m3u8` を backend へ proxy し、playlist response が Vite SPA fallback HTML ではなく HLS manifest (`#EXTM3U`) になる構成を維持する。
 11. recorded info card は `name` が無い場合タイトルを空文字として表示し、`startAt` または `endAt` が無い場合は時間帯行を、`channelName` が無い場合はチャンネル名行を描画しない。
 
@@ -56,13 +56,13 @@ Video playback は live watch、recorded direct watch、recorded streaming watch
 
 #### 受け入れ条件
 
-1. HLS playback では、EPGStation フロントエンドは stream start/keep/stop と readiness check を lifecycle として扱う。
-2. HLS readiness timer、keep interval、pending wait は、stream が enabled にならないまま component destruction された場合でも cleanup される。
+1. HLS playback では、EPGStation フロントエンドは stream start/keep/stop と readiness check を lifecycle として扱う。live と recorded のどちらも stream ID の取得直後に readiness を確認し、waiting 中の Socket.IO `updateStatus` を再確認の契機にする。通知だけでは ready にせず、status response に同じ stream ID があり `isEnabled` の場合だけ ready にする。
+2. HLS readiness timer、通知 subscription、未完了の status request、keep interval、pending wait は、stream が enabled にならないまま component destruction された場合でも cleanup される。同じ generation の status request は一度に一件とし、確認中の追加契機は一件の follow-up check に集約する。
 3. out-of-range seek 後に stream を restart するとき、EPGStation フロントエンドは playback rate と paused/playing state を維持する。
 4. iOS Safari の recorded direct playback は encode 生成 MP4 と raw TS のどちらも ready として扱う。raw TS direct playback に controlled unsupported UI は表示せず、media element の decode/network error に委ねる。
 5. media decode/network error の shared overlay は、別途 player-error design が追加されるまで導入しない。
 6. HLS lifecycle error は shared media decode/network overlay ではなく stream lifecycle error として扱う。
-7. HLS start failure、missing stream id、readiness timeout/abort は loading のままにせず、recoverable error state を表示し、timer/keep interval/pending wait を破棄する。
+7. HLS start failure、missing stream id、readiness timeout/abort は loading のままにせず、recoverable error state を表示し、timer、通知 subscription、未完了の status request、keep interval、pending wait を破棄する。
 8. HLS lifecycle snackbar は `ストリーム開始に失敗`、`ストリーム id 取得に失敗`、`ストリーム停止に失敗` を維持する。`ストリーム停止に失敗` は unmount 中の stop 失敗で出るため snackbar host が残らず、`unittest/imp` の HLS controller test が検証する。
 9. WebM/MP4 recorded streaming と live WebM/MP4 は direct stream response を `<video>` に渡し、frontend は start/keep/stop API を呼ばない。
 10. WebM/MP4 direct stream は backend が HTTP request close で keep/stop を管理する。

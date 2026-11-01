@@ -92,6 +92,9 @@ describe('On Air card and ProgramDialog actions', () => {
     })
 
     const player = await screen.findByTestId('video-player-container')
+    await waitFor(() => {
+      expect(player).toHaveAttribute('data-playback-lifecycle-state', 'ready')
+    })
     const video = player.querySelector('video')
     expect(video).not.toBeNull()
     act(() => {

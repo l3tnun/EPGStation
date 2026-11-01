@@ -158,13 +158,12 @@ describe('Video Playback HLS lifecycle controller race conditions (start/poll/ti
 
     const firstStart = controller.start()
     await vi.advanceTimersByTimeAsync(0)
-    await vi.advanceTimersByTimeAsync(1000)
+    // Restart before the next fallback check can observe the new stream.
 
     const secondStart = controller.start()
     await vi.advanceTimersByTimeAsync(0)
 
-    // The first controller's readiness timeout (2000ms from its own start) fires while
-    // the second start's wait is in flight, and must be treated as a stale generation.
+    // Advancing past the previous generation's deadline must leave the new stream ready.
     await vi.advanceTimersByTimeAsync(1000)
     await vi.advanceTimersByTimeAsync(0)
 
@@ -184,7 +183,10 @@ describe('Video Playback HLS lifecycle controller race conditions (start/poll/ti
         .fn()
         .mockImplementationOnce(async () => ({ streamId: 131 }))
         .mockImplementationOnce(async () => ({ streamId: 133 })),
-      fetchStreams: vi.fn(async () => []),
+      fetchStreams: vi.fn(async () => [
+        { streamId: 131, isEnabled: false },
+        { streamId: 133, isEnabled: false },
+      ]),
       keep: vi.fn(async () => undefined),
       stop: vi
         .fn()

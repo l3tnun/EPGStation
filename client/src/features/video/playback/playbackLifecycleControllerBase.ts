@@ -8,6 +8,9 @@ import {
 } from './playbackLifecycleTypes'
 
 export class HlsLifecycleControllerBase {
+  protected readonly subscribeReadiness?: (listener: () => void) => () => void
+  protected unsubscribeReadiness: (() => void) | undefined
+  protected requestReadinessCheck: (() => void) | undefined
   protected readonly repository: HlsLifecycleRepository
   protected readonly readinessPollMs: number
   protected readonly readinessTimeoutMs: number
@@ -31,6 +34,7 @@ export class HlsLifecycleControllerBase {
 
   constructor({
     repository,
+    subscribeReadiness,
     readinessPollMs = 1000,
     // Safety net only: /api/streams distinguishes "still starting" (isEnabled: false,
     // streamId present) from "failed/stopped" (streamId absent) -- see
@@ -47,6 +51,7 @@ export class HlsLifecycleControllerBase {
     playlistBasePath = './streamfiles',
     onChange,
   }: HlsLifecycleControllerOptions) {
+    this.subscribeReadiness = subscribeReadiness
     this.repository = repository
     this.readinessPollMs = readinessPollMs
     this.readinessTimeoutMs = readinessTimeoutMs
@@ -77,12 +82,19 @@ export class HlsLifecycleControllerBase {
     this.onChange?.(this.snapshot())
   }
 
-  protected clearAbortableResources(): void {
+  protected clearReadinessResources(): void {
+    this.unsubscribeReadiness?.()
+    this.unsubscribeReadiness = undefined
+    this.requestReadinessCheck = undefined
     this.readinessTimerId = clearTimer(this.readinessTimerId)
     if (this.readinessTimeoutId !== undefined) {
       clearTimeout(this.readinessTimeoutId)
       this.readinessTimeoutId = undefined
     }
+  }
+
+  protected clearAbortableResources(): void {
+    this.clearReadinessResources()
     this.keepTimerId = clearTimer(this.keepTimerId)
     this.resolveReadinessWait?.()
     this.resolveReadinessWait = undefined

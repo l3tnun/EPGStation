@@ -1,5 +1,6 @@
 import { act, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import type { RealtimeEventName } from '@/app/realtime'
 import { createRecordedRepository } from './recorded/recordedSpecRepository'
 import {
   IOS_SAFARI_USER_AGENT,
@@ -27,28 +28,63 @@ describe('Video playback requirement 3: stream lifecycle and platform constraint
     vi.restoreAllMocks()
   })
 
-  it('[AC 3.1] runs the HLS lifecycle start → readiness → ready and hands the playlist to the player', async () => {
-    // Enabled before render(): the readiness poll's setInterval is created during the initial
-    // mount, so fake timers must already be active to control it below.
-    vi.useFakeTimers()
-    const { calls } = mockHlsFetch({ streamId: 82 })
+  it.each([RECORDED_HLS, '/#/onair/watch?type=hls&channel=301&mode=0'])(
+    '[AC 3.1] immediately checks HLS readiness for %s',
+    async (hash) => {
+      // Enabled before render(): the readiness poll's setInterval is created during the initial
+      // mount, so fake timers must already be active to control it below.
+      vi.useFakeTimers()
+      const { calls } = mockHlsFetch({ streamId: 82 })
 
-    renderPlayback({ hash: RECORDED_HLS })
-    await act(async () => {
-      await Promise.resolve()
-    })
-    const player = screen.getByTestId('video-player-container')
-    // playbackLifecycleControllerBase readinessPollMs: the first readiness poll fires 1000ms
-    // after start, and mockHlsFetch reports the stream enabled on that first poll.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1000)
-    })
-    expect(player).toHaveAttribute('data-playback-lifecycle-state', 'ready')
-    expect(player).toHaveAttribute('data-playback-stream-id', '82')
-    expect(player).toHaveAttribute('data-playback-playlist-url', './streamfiles/stream82.m3u8')
-    expect(calls[0]).toContain('/streams/recorded/701/hls?mode=0&ss=0')
-    expect(calls.some((url) => url.includes('/streams?isHalfWidth=true'))).toBe(true)
-  })
+      renderPlayback({ hash })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      const player = screen.getByTestId('video-player-container')
+      expect(player).toHaveAttribute('data-playback-lifecycle-state', 'ready')
+      expect(player).toHaveAttribute('data-playback-stream-id', '82')
+      expect(player).toHaveAttribute('data-playback-playlist-url', './streamfiles/stream82.m3u8')
+      expect(calls[0]).toContain(
+        hash === RECORDED_HLS
+          ? '/streams/recorded/701/hls?mode=0&ss=0'
+          : '/streams/live/301/hls?mode=0',
+      )
+      expect(calls.some((url) => url.includes('/streams?isHalfWidth=true'))).toBe(true)
+    },
+  )
+
+  it.each([RECORDED_HLS, '/#/onair/watch?type=hls&channel=301&mode=0'])(
+    '[AC 3.1] confirms readiness from an updateStatus hint before the next interval for %s',
+    async (hash) => {
+      vi.useFakeTimers()
+      const listeners = new Map<RealtimeEventName, () => void>()
+      const { setEnabled } = mockHlsFetch({ streamId: 82, enabled: false })
+      renderPlayback({
+        hash,
+        realtimeConnectionFactory: () => ({
+          on: (event, listener) => {
+            listeners.set(event, listener)
+          },
+          off: (event) => {
+            listeners.delete(event)
+          },
+        }),
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      const player = screen.getByTestId('video-player-container')
+      expect(player).toHaveAttribute('data-playback-lifecycle-state', 'waiting')
+
+      setEnabled(true)
+      await act(async () => {
+        listeners.get('updateStatus')?.()
+        await vi.advanceTimersByTimeAsync(0)
+      })
+      expect(player).toHaveAttribute('data-playback-lifecycle-state', 'ready')
+      expect(player).toHaveAttribute('data-playback-playlist-url', './streamfiles/stream82.m3u8')
+    },
+  )
 
   it('[AC 3.2] stops the stream and cancels readiness polling when the player unmounts before readiness', async () => {
     vi.useFakeTimers()

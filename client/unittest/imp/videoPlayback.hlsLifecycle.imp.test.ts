@@ -38,7 +38,7 @@ describe('Video playback HLS lifecycle and direct stream constraints', () => {
       streamId: 81,
     })
 
-    await vi.advanceTimersByTimeAsync(1000)
+    await vi.advanceTimersByTimeAsync(0)
     expect(repository.fetchStreams).toHaveBeenCalledTimes(1)
     expect(controller.snapshot()).toMatchObject({ state: 'waiting' })
 

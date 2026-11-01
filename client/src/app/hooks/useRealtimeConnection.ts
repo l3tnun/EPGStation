@@ -21,6 +21,7 @@ import {
 } from '../realtimeInvalidation'
 
 export interface RealtimeConnectionInput {
+  onUpdateStatus?: () => void
   realtimeConnectionFactory: RealtimeConnectionFactory | undefined
   realtimeConnectionConnector: RealtimeConnectionConnector | undefined
   activeServerConfig: ActiveServerConfig
@@ -34,6 +35,7 @@ export interface RealtimeConnectionInput {
 }
 
 export function useRealtimeConnection({
+  onUpdateStatus,
   realtimeConnectionFactory,
   realtimeConnectionConnector,
   activeServerConfig,
@@ -168,6 +170,7 @@ export function useRealtimeConnection({
       }, 0)
     }
     const handleUpdateStatus = () => {
+      onUpdateStatus?.()
       // version の取得完了を待ってから invalidate すると、応答が返らない要求が 1 つあるだけで
       // 以後の updateStatus がすべてその地点で止まり、画面の更新が無言で行われなくなる。
       // 両方を行う点は変わらないが、待ち合わせはしない。
@@ -200,6 +203,7 @@ export function useRealtimeConnection({
     }
   }, [
     activeServerConfig,
+    onUpdateStatus,
     clearReconnectTimers,
     latestFullRouteRef,
     navigate,

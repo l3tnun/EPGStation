@@ -26,7 +26,7 @@
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 5.10, 5.11, 5.12, 5.13, 5.14, 5.15, 5.16, 5.17, 5.18, 5.19, 5.20, 5.21, 5.22_
 
 - [x] 5. Version refresh、Socket.IO connection、scroll history contract を実装する
-  - `/version` と `/config` を typed fetch wrapper で取得し、route change と Socket.IO `updateStatus` による refresh を TanStack Query invalidation/refetch に接続する。
+  - `/version` と `/config` を typed fetch wrapper で取得し、route change と Socket.IO `updateStatus` による refresh を TanStack Query invalidation/refetch に接続する。`updateStatus` は waiting 中の HLS readiness subscriber にも通知し、既存 refresh と独立して進める。
   - disconnect overlay、disconnect/reconnect snackbar、Dashboard 経由の previous full route restore、Socket.IO 初期化失敗 snackbar を実装する。
   - shared scroll history contract は routed screen が save/restore/done signal を利用でき、history restore の場合だけ保存済み scroll data を適用する。
   - history restore では data fetch と初期 DOM / renderer 準備の完了後、user-visible content を表示完了扱いにする前に scroll position を適用し、通常位置で一度表示してから scroll する flicker を発生させない。

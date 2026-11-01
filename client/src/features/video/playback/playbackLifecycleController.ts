@@ -18,12 +18,21 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
     if (previousStreamId !== null) {
       await this.stopStream(previousStreamId, false)
     }
+    if (!this.isCurrentGeneration(token)) {
+      return this.snapshot()
+    }
     this.abortController = new AbortController()
     this.setSnapshot({
       state: 'starting',
       streamId: null,
       errorMessage: null,
       snackbarText: null,
+    })
+
+    this.unsubscribeReadiness = this.subscribeReadiness?.(() => {
+      if (this.isCurrentGeneration(token)) {
+        this.requestReadinessCheck?.()
+      }
     })
 
     let streamId: HlsStreamId | null
@@ -146,27 +155,23 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
     return new Promise((resolve) => {
       let isSettling = false
       let hasCompleted = false
+      let checking = false
+      let checkAgain = false
       const completeWait = () => {
         if (hasCompleted) {
           return
         }
         isSettling = true
         hasCompleted = true
-        this.resolveReadinessWait = undefined
+        if (this.resolveReadinessWait === completeWait) {
+          this.resolveReadinessWait = undefined
+        }
         resolve()
       }
       this.resolveReadinessWait = completeWait
-      // resolveReady() only runs from poll()'s success branch below, which has already
-      // re-checked the generation and settling state right before calling it -- there is
-      // no await between those checks and this call, so both would always be redundant here.
       const resolveReady = () => {
         isSettling = true
-        this.readinessTimerId = clearTimer(this.readinessTimerId)
-        // waitForReadiness() always assigns readinessTimeoutId synchronously before this
-        // closure can run, so it is never undefined here; clearTimeout() on it is safe
-        // either way.
-        clearTimeout(this.readinessTimeoutId)
-        this.readinessTimeoutId = undefined
+        this.clearReadinessResources()
         this.setSnapshot({
           state: 'ready',
           streamId,
@@ -185,11 +190,9 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
           return
         }
         isSettling = true
-        this.readinessTimerId = clearTimer(this.readinessTimerId)
-        // See the equivalent comment in resolveReady(): readinessTimeoutId is always set
-        // by the time this closure can run.
-        clearTimeout(this.readinessTimeoutId)
-        this.readinessTimeoutId = undefined
+        this.clearReadinessResources()
+        this.abortController?.abort()
+        this.abortController = undefined
         this.keepTimerId = clearTimer(this.keepTimerId)
         await this.stopStream(streamId, false)
         if (this.isCurrentGeneration(token)) {
@@ -212,9 +215,6 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
       // That is a definite failure signal, unlike isEnabled staying false, so it is reported
       // immediately instead of waiting for readinessTimeoutMs.
       const resolveMissing = () => resolveTerminal(HLS_STREAM_LOST_MESSAGE)
-      // A stale generation's readiness timer/timeout are always cleared synchronously
-      // by clearAbortableResources() when the generation advances (see nextGeneration()),
-      // so poll() can never be invoked for a generation that is already stale at entry.
       const poll = async () => {
         try {
           const streams = await this.repository.fetchStreams(this.abortController?.signal)
@@ -237,15 +237,32 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
           // match found but not enabled yet: still starting server-side, keep waiting.
         } catch {
           await resolveFailure()
+        } finally {
+          checking = false
+          if (checkAgain) {
+            requestCheck()
+          }
         }
       }
-
-      this.readinessTimerId = setInterval(() => {
+      const requestCheck = () => {
+        if (isSettling || !this.isCurrentGeneration(token)) {
+          return
+        }
+        if (checking) {
+          checkAgain = true
+          return
+        }
+        checking = true
+        checkAgain = false
         void poll()
-      }, this.readinessPollMs)
+      }
+
+      this.requestReadinessCheck = requestCheck
+      this.readinessTimerId = setInterval(requestCheck, this.readinessPollMs)
       this.readinessTimeoutId = setTimeout(() => {
         void resolveFailure()
       }, this.readinessTimeoutMs)
+      requestCheck()
     })
   }
 }

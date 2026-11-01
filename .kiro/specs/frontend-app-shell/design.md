@@ -175,13 +175,13 @@ client/src/
 │   ├── titleBar/                  # TitleBar / EditTitleBar と contract
 │   ├── theme.ts、drawerLayout.ts、realtime.ts、realtimeInvalidation.ts、pwa.ts、settingsStorageAdapter.ts、browserAdapters.ts
 ├── features/                      # routed screen。screen 固有の menu / dialog / action は各 feature が所有する
-└── shared/                        # settings、AppSelect、ClearableTextField、AppPagination、LegacyPagination、ExtendedPagination
+└── shared/                        # settings、HLS readiness notifications、AppSelect、ClearableTextField、AppPagination、LegacyPagination、ExtendedPagination
 ```
 
 test:
 
 - `client/unittest/spec/appShell.{bootstrap,theme,drawerLayout,version,realtime,scrollHistory}.spec.test.tsx`（共通 helper は `unittest/spec/support/appShellSpecSupport.tsx`）、`navigation.{items,routeMove}.spec.test.tsx`、`titleBar.spec.test.tsx`、`uiProblem2Static.{select,inputs}.spec.test.ts`（`unittest/spec/support/staticSourceListing.ts`）。
-- `client/unittest/imp/appShell.*.imp.test.ts`（theme と document、drawer と PWA、API repository、`serverApiRequestsAndConfigAdapters`〈base path の末尾 slash・download 失敗・iOS の判定と live stream 設定の絞り込み・server と stream 設定の変換〉、config adapter、scroll history〈context の直接利用を含む〉、`serverConfigSelectorsDirect`〈iOS のアドレスバー対策の対象・server 設定の selector・録画済みの URL scheme〉、`shellSettingsSnapshotsEnvironment`〈browser 環境が無いときの shell 設定の snapshot と theme 設定の merge〉、`socketIoConnector`〈Socket.IO の接続〉、realtime）、`client/unittest/imp/api.basePathResolution.imp.test.ts`（API の base path の解決）、`navigation.imp.test.ts`、`navigation.itemListAndRouteMatching.imp.test.ts`（項目の一覧・route の一致・再生成 event）、`titleBar.imp.test.ts`、`viteConfig.imp.test.ts`。一覧は glob `client/unittest/imp/appShell.*.imp.test.ts` を正とする。
+- `client/unittest/imp/appShell.*.imp.test.ts`（theme と document、drawer と PWA、API repository、`serverApiRequestsAndConfigAdapters`〈base path の末尾 slash・download 失敗・iOS の判定と live stream 設定の絞り込み・server と stream 設定の変換〉、config adapter、scroll history〈context の直接利用を含む〉、`serverConfigSelectorsDirect`〈iOS のアドレスバー対策の対象・server 設定の selector・録画済みの URL scheme〉、`shellSettingsSnapshotsEnvironment`〈browser 環境が無いときの shell 設定の snapshot と theme 設定の merge〉、`socketIoConnector`〈Socket.IO の接続〉、realtime、HLS readiness subscriber への `updateStatus` 転送）、`client/unittest/imp/api.basePathResolution.imp.test.ts`（API の base path の解決）、`navigation.imp.test.ts`、`navigation.itemListAndRouteMatching.imp.test.ts`（項目の一覧・route の一致・再生成 event）、`titleBar.imp.test.ts`、`viteConfig.imp.test.ts`。一覧は glob `client/unittest/imp/appShell.*.imp.test.ts` を正とする。
 - e2e: `client/e2e/app-shell-{navigation,scroll,drawer}-workflow.spec.ts`（`e2e/support/appShellWorkflow.ts`）、`app-smoke.spec.ts`、`dark-ui-{controls,cards,guide,recorded,reserves}.spec.ts`（`e2e/support/darkUiExpectations.ts`、`uiAudit.ts`、`uiAuditColor.ts`）、`realtime-refresh-workflow.spec.ts` と `realtime-refresh-broadcast-workflow.spec.ts`（`e2e/support/realtimeHarness.ts`）。
 - visual: `client/visual/app-geometry.spec.ts`。
 - 本物の v3 server に繋ぐ e2e: `client/e2e/real-server/app.real.ts`（設定 `e2e/real-server/playwright.config.ts`、`e2e/real-server/support/{globalSetup,realServer}.ts`）。compile した server が配る client の build を、本物の API・Socket.IO・sqlite と手作りの tuner server で動かし、dashboard・番組表からの予約・別の client が足した予約の Socket.IO による一覧の更新・放映中・録画済み・録画中・エンコード・ルール・ストレージの画面、`subDirectory` の下での API と Socket.IO の path、service worker の登録と PWA を切ったときの manifest の除去を確かめる。通常の e2e の `page.route` + msw の合成の応答と対になる。`e2e/real-server/mock-contract.real.ts` は、通常の e2e の偽 API が返す JSON と本物の server の応答を、server が公開する API の定義（`/api/docs`）の応答の schema で検証し、偽 API が持たない field を記録する。
@@ -344,13 +344,15 @@ path を二重に結合しない。
 | EVENT    | socket.io initialize                         | socket initialize result                                                    | socket instance                                                                                      | null result shows `SocketIO の初期設定に失敗しました` (`color=error`)                                                |
 | EVENT    | dev proxy `/api/config` socketIOPort rewrite | React dev server receives backend config with a backend-only Socket.IO port | rewrite `socketIOPort` to the browser-facing dev server port before returning config to the browser  | no change to the client-side Socket.IO connector implementation is required; `/socket.io` proxy becomes usable from desktop and other terminals |
 | EVENT    | socket.io connect after disconnect           | previous full route                                                         | routed server state query invalidation, then two-step restore via Dashboard then previous full route | route restore (`navigate` call) の失敗を捕捉する notification は無い                                                              |
-| EVENT    | socket.io updateStatus                       | application state update                                                    | Socket.IO invalidation matrix の query を invalidate し、`refreshVersion({ notifyOnFailure: false })` で version も refresh する（version 取得失敗は通知しない）                                                     | `refreshVersion` の failure は snackbar を出さない                                                                |
+| EVENT    | socket.io updateStatus                       | application state update                                                    | waiting 中の HLS readiness subscriber へ通知し、Socket.IO invalidation matrix の query を invalidate し、`refreshVersion({ notifyOnFailure: false })` で version も refresh する（version 取得失敗は通知しない）                                                     | subscriber がない場合も既存処理を実行し、`refreshVersion` の failure は snackbar を出さない                                                                |
 
 #### Socket.IO query invalidation matrix
 
 各画面が自分の状態を取り直す責務を、App
 Shell の中央 invalidation 定義へ集約する。`updateStatus` は特定操作専用ではなくサーバ状態全体の変更通知であるため、
 `src/app/realtimeInvalidation.ts` を唯一の正本として次の query key を invalidate する。
+
+HLS readiness の通知経路は query invalidation matrix とは別の application instance 内 subscription とする。App Shell は安定した notifier を Context で提供し、`updateStatus` のたびに waiting 中の subscriber を同期的に呼び出す。通知は特定 stream の完了を保証しないため、subscriber は status API で自分の stream ID と enabled 状態を確認する。ready、失敗、stop、route leave、seek restart では unsubscribe し、非 HLS route と ready 後には readiness request を発行しない。version refresh と query invalidation は readiness check の完了を待たず、互いの failure で停止しない。
 
 | Event                               | Query key                            | 反映先                                                                |
 | ----------------------------------- | ------------------------------------ | --------------------------------------------------------------------- |
@@ -592,7 +594,7 @@ previous full route へ `replace` する 2 回の route change）の直前に `2
   出さず、その時点の scroll position のまま静かに再試行を終了する（App Shell はこの再試行を history restore 処理の
   失敗として扱わない）。screen 側の route change effect は top reset や window scroll restore を独自実装せず、App
   Shell の active page scroll container に委譲する。
-- version refresh は route change と Socket.IO `updateStatus` event で実行する。route change fetch
+- version refresh は route change と Socket.IO `updateStatus` event で実行する。`updateStatus` は waiting 中の HLS readiness subscriber にも通知し、readiness check と version refresh は互いの完了を待たない。route change fetch
   failure は snackbar で通知するが、Socket.IO `updateStatus` callback 側の failure は snackbar
   catch を持たない。
 - Navigation drawer header には version string 表示 slot を持ち、route change と Socket.IO `updateStatus` 後の version

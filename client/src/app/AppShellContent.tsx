@@ -1,4 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
+import {
+  createHlsReadinessNotifications,
+  HlsReadinessNotificationsContext,
+} from '@/shared/hlsReadinessNotifications'
 import { useCallback, useEffect, useMemo, type ReactNode } from 'react'
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import type { RoutedApiRepositories } from './appProps'
@@ -80,6 +84,7 @@ export function AppShellContent(props: AppShellContentProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const readinessNotifications = useMemo(() => createHlsReadinessNotifications(), [])
   const { activeSnackbar, showSnackbar, closeSnackbar, suppressedRouteSnackbarClosesRef } =
     useShellSnackbar(initialSnackbar)
   const suppressRouteSnackbarClose = useCallback(
@@ -145,6 +150,7 @@ export function AppShellContent(props: AppShellContentProps) {
     saveCurrentRouteScrollPosition,
   })
   const isDisconnected = useRealtimeConnection({
+    onUpdateStatus: readinessNotifications.notify,
     realtimeConnectionFactory,
     realtimeConnectionConnector,
     activeServerConfig,
@@ -234,44 +240,46 @@ export function AppShellContent(props: AppShellContentProps) {
 
   return (
     <ScrollHistoryProvider scrollHistory={scrollHistory}>
-      <AppShell
-        drawerLayout={drawerLayout}
-        navigationItems={navigationItems}
-        selectedNavigationItemId={selectedNavigationItem?.id}
-        onNavigationItemClick={handleNavigationItemClick}
-        onNavigationClose={() => {
-          onDrawerUserStateChange('userClosed')
-        }}
-        themeMode={themeMode}
-        drawerHeaderTitle={resolveDashboardTitle({ version: activeDashboardVersion })}
-        snackbar={activeSnackbar}
-        onSnackbarClose={closeSnackbar}
-        isDisconnected={isDisconnected}
-      >
-        <Routes location={routeLocationOverride}>
-          <Route
-            path="*"
-            element={
-              shouldDelayInitialRouteRender
-                ? null
-                : (children ?? (
-                    <AppRoutes
-                      {...props}
-                      activeServerConfig={activeServerConfig}
-                      activeDashboardVersion={activeDashboardVersion}
-                      onNavigationClick={onNavigationClick}
-                      showSnackbar={showSnackbar}
-                      suppressRouteSnackbarClose={suppressRouteSnackbarClose}
-                      onSettingsThemePreviewChange={onSettingsThemePreviewChange}
-                      onSettingsThemePreviewRestore={onSettingsThemePreviewRestore}
-                      onSettingsSaved={onSettingsSaved}
-                      osPrefersDark={osPrefersDark}
-                    />
-                  ))
-            }
-          />
-        </Routes>
-      </AppShell>
+      <HlsReadinessNotificationsContext.Provider value={readinessNotifications}>
+        <AppShell
+          drawerLayout={drawerLayout}
+          navigationItems={navigationItems}
+          selectedNavigationItemId={selectedNavigationItem?.id}
+          onNavigationItemClick={handleNavigationItemClick}
+          onNavigationClose={() => {
+            onDrawerUserStateChange('userClosed')
+          }}
+          themeMode={themeMode}
+          drawerHeaderTitle={resolveDashboardTitle({ version: activeDashboardVersion })}
+          snackbar={activeSnackbar}
+          onSnackbarClose={closeSnackbar}
+          isDisconnected={isDisconnected}
+        >
+          <Routes location={routeLocationOverride}>
+            <Route
+              path="*"
+              element={
+                shouldDelayInitialRouteRender
+                  ? null
+                  : (children ?? (
+                      <AppRoutes
+                        {...props}
+                        activeServerConfig={activeServerConfig}
+                        activeDashboardVersion={activeDashboardVersion}
+                        onNavigationClick={onNavigationClick}
+                        showSnackbar={showSnackbar}
+                        suppressRouteSnackbarClose={suppressRouteSnackbarClose}
+                        onSettingsThemePreviewChange={onSettingsThemePreviewChange}
+                        onSettingsThemePreviewRestore={onSettingsThemePreviewRestore}
+                        onSettingsSaved={onSettingsSaved}
+                        osPrefersDark={osPrefersDark}
+                      />
+                    ))
+              }
+            />
+          </Routes>
+        </AppShell>
+      </HlsReadinessNotificationsContext.Provider>
     </ScrollHistoryProvider>
   )
 }
