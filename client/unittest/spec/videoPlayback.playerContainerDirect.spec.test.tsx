@@ -60,6 +60,26 @@ describe('PlaybackPlayerContainer standalone contract', () => {
     expect(canvas).toHaveAttribute('data-visible', 'false')
   })
 
+  it('[AC 5.7] clears the held frame when paused after seeked and before the next frame callback', () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn(),
+    } as never)
+    const { player, canvas, video } = renderSeekableRecording()
+    video.requestVideoFrameCallback = vi.fn(() => 1)
+    Object.defineProperty(video, 'seeking', { configurable: true, value: false })
+    fireEvent.play(video)
+    fireEvent.keyDown(player, { key: 'ArrowRight' })
+    expect(video.currentTime).toBe(10)
+    expect(canvas).toHaveAttribute('data-visible', 'true')
+
+    fireEvent.seeked(video)
+    expect(video.requestVideoFrameCallback).toHaveBeenCalledOnce()
+    expect(canvas).toHaveAttribute('data-visible', 'true')
+
+    fireEvent.pause(video)
+    expect(canvas).toHaveAttribute('data-visible', 'false')
+  })
+
   it('[AC 5.7] continues a direct seek when frame drawing throws', () => {
     const drawImage = vi.fn(() => {
       throw new Error('Synthetic draw failure')

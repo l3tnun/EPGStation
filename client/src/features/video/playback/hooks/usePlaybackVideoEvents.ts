@@ -14,7 +14,7 @@ export interface PlaybackVideoEventsInput {
   seek: ReturnType<typeof usePlaybackSeek>
   seekFrame: Pick<
     ReturnType<typeof usePlaybackSeekFrame>,
-    'onCanPlay' | 'onPlaying' | 'onSeeked' | 'onError'
+    'onCanPlay' | 'onPause' | 'onPlaying' | 'onSeeked' | 'onError'
   >
   fullscreen: ReturnType<typeof usePlaybackFullscreen>
   areControlsBlocked: boolean
@@ -72,6 +72,7 @@ export function usePlaybackVideoEvents({
     onPause: () => {
       controls.clearControlsHideTimer()
       media.setIsPaused(true)
+      seekFrame.onPause()
       controls.setControlsVisible(!areControlsBlocked)
       controls.setIsCursorHidden(false)
     },

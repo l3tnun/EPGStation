@@ -53,6 +53,7 @@ function setup(
   }
   const seekFrame = {
     onCanPlay: vi.fn(),
+    onPause: vi.fn(),
     onPlaying: vi.fn(),
     onSeeked: vi.fn(),
     onError: vi.fn(),

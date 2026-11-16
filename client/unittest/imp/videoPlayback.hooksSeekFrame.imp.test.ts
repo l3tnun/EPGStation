@@ -202,6 +202,49 @@ describe('seek frame for playback formats', () => {
     },
   )
 
+  it('only clears on pause after the completed seek has a usable frame', () => {
+    const video = makeVideo()
+    const callbacks: VideoFrameRequestCallback[] = []
+    video.requestVideoFrameCallback = vi.fn((callback) => callbacks.push(callback))
+    const videoRef: MutableRefObject<HTMLVideoElement | null> = { current: video }
+    const isPausedRef = { current: false }
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn(),
+    } as never)
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame(videoRef, 'ready', 'initial', isPausedRef),
+    )
+    result.current.canvasRef.current = document.createElement('canvas')
+
+    act(() => result.current.capture())
+    act(() => result.current.onPause())
+    expect(result.current.visible).toBe(true)
+    act(() => result.current.onSeeked())
+    expect(callbacks).toHaveLength(1)
+
+    videoRef.current = null
+    act(() => result.current.onPause())
+    expect(result.current.visible).toBe(true)
+    videoRef.current = video
+
+    Object.defineProperty(video, 'seeking', { configurable: true, value: true })
+    act(() => result.current.onPause())
+    expect(result.current.visible).toBe(true)
+
+    Object.defineProperty(video, 'seeking', { value: false })
+    Object.defineProperty(video, 'readyState', { value: HTMLMediaElement.HAVE_METADATA })
+    act(() => result.current.onPause())
+    expect(result.current.visible).toBe(true)
+
+    Object.defineProperty(video, 'readyState', { value: HTMLMediaElement.HAVE_CURRENT_DATA })
+    act(() => result.current.onPause())
+    expect(result.current.visible).toBe(false)
+
+    act(() => result.current.capture())
+    act(() => callbacks[0](0, {} as VideoFrameCallbackMetadata))
+    expect(result.current.visible).toBe(true)
+  })
+
   it('ignores seek completion without an overlay or a usable video frame', () => {
     const video = makeVideo()
     const videoRef: MutableRefObject<HTMLVideoElement | null> = { current: video }

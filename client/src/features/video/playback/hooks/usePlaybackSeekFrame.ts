@@ -80,6 +80,18 @@ export function usePlaybackSeekFrame(
     })
   }, [clear, isPausedRef, videoRef])
 
+  const onPause = useCallback(() => {
+    const video = videoRef.current
+    if (
+      pendingFrameRef.current !== null &&
+      video !== null &&
+      !video.seeking &&
+      video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+    ) {
+      clear()
+    }
+  }, [clear, videoRef])
+
   const onCanPlay = useCallback(() => {
     if (isPausedRef.current) onSeeked()
   }, [isPausedRef, onSeeked])
@@ -91,5 +103,14 @@ export function usePlaybackSeekFrame(
     }
   }, [clear, lifecycleState])
 
-  return { canvasRef, visible, capture, onSeeked, onCanPlay, onPlaying: onSeeked, onError: clear }
+  return {
+    canvasRef,
+    visible,
+    capture,
+    onSeeked,
+    onCanPlay,
+    onPause,
+    onPlaying: onSeeked,
+    onError: clear,
+  }
 }
