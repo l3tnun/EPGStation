@@ -175,90 +175,107 @@ describe('Recorded detail Task 3 route, data, and actions', () => {
     vi.useRealTimers()
   })
 
-  it('[AC frontend-video-playback 5.4] defers recorded HLS stream recreation until the seek bar drag is committed', async () => {
-    const recordedRepository = createRecordedRepository()
-    const startedUrls: string[] = []
-    const enabledStreamIds: number[] = []
-    let nextStreamId = 90
-    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
-      const url = fetchInputUrl(input)
-      if (url.includes('/streams/recorded/701/hls')) {
-        startedUrls.push(url)
-        const streamId = nextStreamId++
-        enabledStreamIds.push(streamId)
-        return new Response(JSON.stringify({ streamId }))
+  it.each([{ captureFails: false }, { captureFails: true }])(
+    '[AC frontend-video-playback 5.4] [AC frontend-video-playback 5.7] recreates recorded HLS on committed seek when frame capture fails: $captureFails',
+    async ({ captureFails }) => {
+      const drawImage = vi.fn(() => {
+        if (captureFails) throw new Error('Synthetic draw failure')
+      })
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage } as never)
+      const recordedRepository = createRecordedRepository()
+      const startedUrls: string[] = []
+      const enabledStreamIds: number[] = []
+      let nextStreamId = 90
+      vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
+        const url = fetchInputUrl(input)
+        if (url.includes('/streams/recorded/701/hls')) {
+          startedUrls.push(url)
+          const streamId = nextStreamId++
+          enabledStreamIds.push(streamId)
+          return new Response(JSON.stringify({ streamId }))
+        }
+        if (url.includes('/streams?')) {
+          return new Response(
+            JSON.stringify({
+              items: enabledStreamIds.map((streamId) => ({ streamId, isEnable: true })),
+            }),
+          )
+        }
+
+        return new Response('{}')
+      })
+
+      window.history.replaceState(
+        null,
+        '',
+        '/#/recorded/streaming/701?streamingType=hls&mode=0&fileType=ts&recordedId=bad',
+      )
+      // HlsLifecycleController polls readiness every readinessPollMs (1000ms, see
+      // playbackLifecycleControllerBase.ts) via setInterval before the lifecycle state settles;
+      // fake timers must be active before render so they intercept that interval from creation.
+      vi.useFakeTimers()
+      render(
+        <App
+          settings={new DefaultSettingsFactory().create()}
+          apiRepository={createShellRepository()}
+          recordedApiRepository={recordedRepository}
+          navigationConfig={createPlaybackNavigationConfig()}
+          osPrefersDark={false}
+          viewportWidth={1440}
+          initialDrawerState="none"
+        />,
+      )
+
+      const player = screen.getByTestId('video-player-container')
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1000)
+      })
+      expect(player).toHaveAttribute('data-playback-lifecycle-state', 'ready')
+      vi.useRealTimers()
+      const video = document.querySelector('video')
+      expect(video).not.toBeNull()
+      if (video !== null) {
+        Object.defineProperties(video, {
+          duration: { configurable: true, value: 30 },
+          readyState: { configurable: true, value: HTMLMediaElement.HAVE_CURRENT_DATA },
+          videoWidth: { configurable: true, value: 1920 },
+          videoHeight: { configurable: true, value: 1080 },
+        })
+        fireEvent.loadedData(video)
+        fireEvent.durationChange(video)
       }
-      if (url.includes('/streams?')) {
-        return new Response(
-          JSON.stringify({
-            items: enabledStreamIds.map((streamId) => ({ streamId, isEnable: true })),
-          }),
-        )
-      }
+      await waitFor(() => {
+        expect(screen.getByLabelText('シーク')).toHaveAttribute('max', '600')
+      })
 
-      return new Response('{}')
-    })
+      const seekBar = screen.getByLabelText('シーク')
+      fireEvent.focus(seekBar)
+      fireEvent.pointerDown(seekBar)
+      fireEvent.input(seekBar, { target: { value: '120' } })
+      fireEvent.change(seekBar, { target: { value: '120' } })
 
-    window.history.replaceState(
-      null,
-      '',
-      '/#/recorded/streaming/701?streamingType=hls&mode=0&fileType=ts&recordedId=bad',
-    )
-    // HlsLifecycleController polls readiness every readinessPollMs (1000ms, see
-    // playbackLifecycleControllerBase.ts) via setInterval before the lifecycle state settles;
-    // fake timers must be active before render so they intercept that interval from creation.
-    vi.useFakeTimers()
-    render(
-      <App
-        settings={new DefaultSettingsFactory().create()}
-        apiRepository={createShellRepository()}
-        recordedApiRepository={recordedRepository}
-        navigationConfig={createPlaybackNavigationConfig()}
-        osPrefersDark={false}
-        viewportWidth={1440}
-        initialDrawerState="none"
-      />,
-    )
-
-    const player = screen.getByTestId('video-player-container')
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1000)
-    })
-    expect(player).toHaveAttribute('data-playback-lifecycle-state', 'ready')
-    vi.useRealTimers()
-    const video = document.querySelector('video')
-    expect(video).not.toBeNull()
-    if (video !== null) {
-      Object.defineProperty(video, 'duration', { configurable: true, value: 30 })
-      fireEvent.loadedData(video)
-      fireEvent.durationChange(video)
-    }
-    await waitFor(() => {
-      expect(screen.getByLabelText('シーク')).toHaveAttribute('max', '600')
-    })
-
-    const seekBar = screen.getByLabelText('シーク')
-    fireEvent.focus(seekBar)
-    fireEvent.pointerDown(seekBar)
-    fireEvent.input(seekBar, { target: { value: '120' } })
-    fireEvent.change(seekBar, { target: { value: '120' } })
-
-    expect(startedUrls).toEqual(['./api/streams/recorded/701/hls?mode=0&ss=0'])
-    expect(player).toHaveAttribute(
-      'data-playback-stream-start-url',
-      './api/streams/recorded/701/hls?mode=0&ss=0',
-    )
-
-    const changedSeekBar = screen.getByLabelText('シーク')
-    fireEvent.mouseUp(changedSeekBar)
-    fireEvent.pointerUp(changedSeekBar)
-
-    await waitFor(() => {
+      expect(startedUrls).toEqual(['./api/streams/recorded/701/hls?mode=0&ss=0'])
       expect(player).toHaveAttribute(
         'data-playback-stream-start-url',
-        './api/streams/recorded/701/hls?mode=0&ss=120',
+        './api/streams/recorded/701/hls?mode=0&ss=0',
       )
-    })
-    expect(startedUrls).toContain('./api/streams/recorded/701/hls?mode=0&ss=120')
-  })
+
+      const changedSeekBar = screen.getByLabelText('シーク')
+      fireEvent.mouseUp(changedSeekBar)
+      fireEvent.pointerUp(changedSeekBar)
+
+      await waitFor(() => {
+        expect(player).toHaveAttribute(
+          'data-playback-stream-start-url',
+          './api/streams/recorded/701/hls?mode=0&ss=120',
+        )
+      })
+      expect(startedUrls).toContain('./api/streams/recorded/701/hls?mode=0&ss=120')
+      expect(drawImage).toHaveBeenCalledOnce()
+      expect(screen.getByTestId('playback-seek-frame')).toHaveAttribute(
+        'data-visible',
+        String(!captureFails),
+      )
+    },
+  )
 })

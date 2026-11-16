@@ -22,11 +22,14 @@ describe('seek frame for playback formats', () => {
     const drawImage = vi.fn()
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage } as never)
     const videoRef = { current: video } as MutableRefObject<HTMLVideoElement | null>
-    const { result } = renderHook(() => usePlaybackSeekFrame(videoRef, 'ready'))
+    const isPausedRef = { current: false }
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame(videoRef, 'ready', 'initial', isPausedRef),
+    )
     result.current.canvasRef.current = document.createElement('canvas')
 
-    act(() => result.current.capture(false))
-    act(() => result.current.capture(false))
+    act(() => result.current.capture())
+    act(() => result.current.capture())
     expect(result.current.visible).toBe(true)
     expect(result.current.canvasRef.current?.width).toBe(1920)
     expect(drawImage).toHaveBeenCalledWith(video, 0, 0, 1920, 1080)
@@ -42,14 +45,19 @@ describe('seek frame for playback formats', () => {
       drawImage: vi.fn(),
     } as never)
     const videoRef = { current: makeVideo() } as MutableRefObject<HTMLVideoElement | null>
-    const { result, rerender } = renderHook(({ state }) => usePlaybackSeekFrame(videoRef, state), {
-      initialProps: { state: 'ready' as HlsLifecycleState },
-    })
+    const isPausedRef = { current: false }
+    const { result, rerender } = renderHook(
+      ({ state }) => usePlaybackSeekFrame(videoRef, state, 'initial', isPausedRef),
+      {
+        initialProps: { state: 'ready' as HlsLifecycleState },
+      },
+    )
     result.current.canvasRef.current = document.createElement('canvas')
-    act(() => result.current.capture(true))
+    isPausedRef.current = true
+    act(() => result.current.capture())
     act(() => result.current.onCanPlay())
     expect(result.current.visible).toBe(false)
-    act(() => result.current.capture(false))
+    act(() => result.current.capture())
     rerender({ state: 'error' })
     expect(result.current.visible).toBe(false)
   })
@@ -61,10 +69,14 @@ describe('seek frame for playback formats', () => {
       drawImage: vi.fn(),
     } as never)
     const videoRef = { current: video } as MutableRefObject<HTMLVideoElement | null>
-    const { result } = renderHook(() => usePlaybackSeekFrame(videoRef, 'ready'))
+    const isPausedRef = { current: false }
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame(videoRef, 'ready', 'initial', isPausedRef),
+    )
     result.current.canvasRef.current = document.createElement('canvas')
 
-    act(() => result.current.capture(true))
+    isPausedRef.current = true
+    act(() => result.current.capture())
     act(() => result.current.onSeeked())
 
     expect(result.current.visible).toBe(false)
@@ -74,9 +86,12 @@ describe('seek frame for playback formats', () => {
   it('keeps the normal player when a frame cannot be captured', () => {
     const getContext = vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null)
     const videoRef = { current: makeVideo() } as MutableRefObject<HTMLVideoElement | null>
-    const { result } = renderHook(() => usePlaybackSeekFrame(videoRef, 'ready'))
+    const isPausedRef = { current: false }
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame(videoRef, 'ready', 'initial', isPausedRef),
+    )
     result.current.canvasRef.current = document.createElement('canvas')
-    act(() => result.current.capture(false))
+    act(() => result.current.capture())
     expect(getContext).toHaveBeenCalledOnce()
     expect(result.current.visible).toBe(false)
   })
@@ -92,13 +107,130 @@ describe('seek frame for playback formats', () => {
       drawImage: vi.fn(),
     } as never)
     const videoRef = { current: video } as MutableRefObject<HTMLVideoElement | null>
-    const { result } = renderHook(() => usePlaybackSeekFrame(videoRef, 'ready'))
+    const isPausedRef = { current: false }
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame(videoRef, 'ready', 'initial', isPausedRef),
+    )
     result.current.canvasRef.current = document.createElement('canvas')
 
-    act(() => result.current.capture(false))
+    act(() => result.current.capture())
     act(() => result.current.onSeeked())
     expect(result.current.visible).toBe(true)
     act(() => callbacks[0](0, {} as VideoFrameCallbackMetadata))
+    expect(result.current.visible).toBe(false)
+  })
+
+  it.each(['onSeeked', 'onCanPlay'] as const)(
+    'clears on %s when playback was paused during the seek',
+    (event) => {
+      const video = makeVideo()
+      video.requestVideoFrameCallback = vi.fn(() => 1)
+      const drawImage = vi.fn()
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage } as never)
+      const isPausedRef = { current: false }
+      const { result } = renderHook(() =>
+        usePlaybackSeekFrame({ current: video }, 'ready', 'initial', isPausedRef),
+      )
+      result.current.canvasRef.current = document.createElement('canvas')
+
+      act(() => result.current.capture())
+      isPausedRef.current = true
+      act(() => result.current.capture())
+      expect(drawImage).toHaveBeenCalledOnce()
+      act(() => result.current[event]())
+
+      expect(result.current.visible).toBe(false)
+      expect(video.requestVideoFrameCallback).not.toHaveBeenCalled()
+    },
+  )
+
+  it('ignores obsolete frame notifications and only schedules one for the current seek', () => {
+    const video = makeVideo()
+    const callbacks: VideoFrameRequestCallback[] = []
+    video.requestVideoFrameCallback = vi.fn((callback) => callbacks.push(callback))
+    const drawImage = vi.fn()
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage } as never)
+    const isPausedRef = { current: false }
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame({ current: video }, 'ready', 'initial', isPausedRef),
+    )
+    result.current.canvasRef.current = document.createElement('canvas')
+
+    act(() => result.current.capture())
+    act(() => result.current.onSeeked())
+    act(() => result.current.onPlaying())
+    expect(callbacks).toHaveLength(1)
+
+    act(() => result.current.capture())
+    expect(drawImage).toHaveBeenCalledOnce()
+    act(() => callbacks[0](0, {} as VideoFrameCallbackMetadata))
+    expect(result.current.visible).toBe(true)
+
+    act(() => result.current.onSeeked())
+    act(() => result.current.onError())
+    act(() => result.current.capture())
+    expect(drawImage).toHaveBeenCalledTimes(2)
+    act(() => callbacks[1](0, {} as VideoFrameCallbackMetadata))
+    expect(result.current.visible).toBe(true)
+
+    act(() => result.current.onPlaying())
+    act(() => callbacks[2](0, {} as VideoFrameCallbackMetadata))
+    expect(result.current.visible).toBe(false)
+  })
+
+  it.each(['video', 'canvas', 'data', 'width', 'height'] as const)(
+    'skips frame capture when %s is missing',
+    (missing) => {
+      const video = makeVideo()
+      const videoRef = { current: missing === 'video' ? null : video }
+      const isPausedRef = { current: false }
+      const getContext = vi.spyOn(HTMLCanvasElement.prototype, 'getContext')
+      const { result } = renderHook(() =>
+        usePlaybackSeekFrame(videoRef, 'ready', 'initial', isPausedRef),
+      )
+      if (missing !== 'canvas') result.current.canvasRef.current = document.createElement('canvas')
+      if (missing === 'data') {
+        Object.defineProperty(video, 'readyState', { value: HTMLMediaElement.HAVE_METADATA })
+      }
+      if (missing === 'width') Object.defineProperty(video, 'videoWidth', { value: 0 })
+      if (missing === 'height') Object.defineProperty(video, 'videoHeight', { value: 0 })
+
+      act(() => result.current.capture())
+
+      expect(result.current.visible).toBe(false)
+      expect(getContext).not.toHaveBeenCalled()
+    },
+  )
+
+  it('ignores seek completion without an overlay or a usable video frame', () => {
+    const video = makeVideo()
+    const videoRef: MutableRefObject<HTMLVideoElement | null> = { current: video }
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn(),
+    } as never)
+    const isPausedRef = { current: false }
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame(videoRef, 'ready', 'initial', isPausedRef),
+    )
+    result.current.canvasRef.current = document.createElement('canvas')
+
+    act(() => result.current.onSeeked())
+    expect(result.current.visible).toBe(false)
+    act(() => result.current.capture())
+    videoRef.current = null
+    act(() => result.current.onSeeked())
+    expect(result.current.visible).toBe(true)
+
+    videoRef.current = video
+    Object.defineProperty(video, 'readyState', { value: HTMLMediaElement.HAVE_METADATA })
+    act(() => result.current.onSeeked())
+    expect(result.current.visible).toBe(true)
+    isPausedRef.current = true
+    act(() => result.current.onSeeked())
+    expect(result.current.visible).toBe(true)
+
+    Object.defineProperty(video, 'readyState', { value: HTMLMediaElement.HAVE_CURRENT_DATA })
+    act(() => result.current.onSeeked())
     expect(result.current.visible).toBe(false)
   })
 })

@@ -98,6 +98,13 @@ export function PlaybackPlayerContainer({
     lifecycleState: lifecycleSnapshot.state,
     recordedStreamDuration,
   })
+  const seekFrameSourceKey = JSON.stringify([
+    kind,
+    sourceKind,
+    streamingType,
+    mediaUrl,
+    streamStartUrl,
+  ])
   const {
     canvasRef: seekCanvasRef,
     visible: seekFrameVisible,
@@ -106,7 +113,7 @@ export function PlaybackPlayerContainer({
     onPlaying: clearSeekFrameOnPlaying,
     onSeeked: clearSeekFrameOnSeeked,
     onError: clearSeekFrameOnError,
-  } = usePlaybackSeekFrame(videoRef, lifecycleSnapshot.state)
+  } = usePlaybackSeekFrame(videoRef, lifecycleSnapshot.state, seekFrameSourceKey, media.isPausedRef)
   const isSubtitleRendererMounted =
     sourceKind === 'hls-stream' || streamingType === 'hls' || streamingType === 'm2tsll'
   const isMobilePlatform = useMemo(() => detectMobilePlatform(), [])
