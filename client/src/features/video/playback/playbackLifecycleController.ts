@@ -297,9 +297,7 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
       this.readinessTimeoutId = setTimeout(() => {
         void resolveFailure()
       }, this.readinessTimeoutMs)
-      this.acceptReady = () => {
-        if (!isSettling && this.isCurrentGeneration(token)) resolveReady()
-      }
+      this.acceptReady = resolveReady
       if (
         this.pendingReadyStreamId !== undefined &&
         areSameStreamId(this.pendingReadyStreamId, streamId)
