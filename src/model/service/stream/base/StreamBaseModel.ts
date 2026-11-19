@@ -73,6 +73,7 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
     protected fileDeleter: IHLSFileDeleterModel;
     /** `setOption` で渡された stream 生成 option。start() 前は null。 */
     protected processOption: T | null = null;
+    private hlsStartRequestId: string | undefined;
     /** `setOption` で渡された配信 mode。start() 前は null。 */
     protected configMode: number | null = null;
 
@@ -114,6 +115,7 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
      */
     public setOption(option: T, mode: number): void {
         this.processOption = option;
+        this.hlsStartRequestId = (option as { startRequestId?: string }).startRequestId;
         this.configMode = mode;
     }
 
@@ -486,6 +488,9 @@ abstract class StreamBaseModel<T> implements IStreamBaseModel<T> {
                 this.isEnableStream = true;
                 this.log.stream.info(`enable stream: ${streamId}`);
                 this.socketIO.notifyClient();
+                if (this.hlsStartRequestId !== undefined) {
+                    this.socketIO.notifyHlsReady(streamId, this.hlsStartRequestId);
+                }
             }
         }, 100);
     }

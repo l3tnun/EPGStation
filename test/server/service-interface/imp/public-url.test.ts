@@ -165,6 +165,24 @@ describe('Service Interface related-resource carrier delegation [SI-2.2/SI-2.3]'
         expect(response.json).toHaveBeenCalledWith({ streamId: 81 });
     });
 
+    it.each([
+        ['live', '{channelId}', { channelId: '11' }, 'startLiveHLSStream'],
+        ['recorded', '{videoFileId}', { videoFileId: '22' }, 'startRecordedHLSStream'],
+    ] as const)('accepts only a valid HLS start request ID for %s', async (kind, pathPart, params, method) => {
+        const start = vi.fn().mockResolvedValue(81);
+        vi.spyOn(modelContainer, 'get').mockReturnValue({ [method]: start });
+        const route = require(compiled('model', 'service', 'api', 'streams', kind, pathPart, 'hls.js')) as Record<string, Function>;
+        const response = { header: vi.fn(), json: vi.fn(), status: vi.fn() };
+        const startRequestId = '00000000-0000-4000-8000-000000000000';
+        await route.get({ params, query: { mode: '2', ss: '15', startRequestId } }, response);
+        expect(start).toHaveBeenCalledWith(expect.objectContaining({ startRequestId }));
+
+        start.mockClear();
+        await route.get({ params, query: { mode: '2', ss: '15', startRequestId: 'not-a-uuid' } }, response);
+        expect(response.status).toHaveBeenCalledWith(400);
+        expect(start).not.toHaveBeenCalled();
+    });
+
     it('passes encode body input and returns the owner queue id without queue decisions', async () => {
         const add = vi.fn().mockResolvedValue(91);
         vi.spyOn(modelContainer, 'get').mockReturnValue({ add });

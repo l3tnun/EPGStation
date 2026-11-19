@@ -1,10 +1,16 @@
 import { io as socketIoClient } from 'socket.io-client'
 
-export type RealtimeEventName = 'connect' | 'disconnect' | 'updateStatus' | 'updateEncode'
+export type RealtimeEventName =
+  'connect' | 'disconnect' | 'updateStatus' | 'updateEncode' | 'hlsReady'
+
+export interface HlsReadyEvent {
+  streamId: number
+  startRequestId: string
+}
 
 export interface RealtimeConnection {
-  on(eventName: RealtimeEventName, listener: () => void): void
-  off(eventName: RealtimeEventName, listener: () => void): void
+  on(eventName: RealtimeEventName, listener: (payload?: unknown) => void): void
+  off(eventName: RealtimeEventName, listener: (payload?: unknown) => void): void
   disconnect?(): void
 }
 

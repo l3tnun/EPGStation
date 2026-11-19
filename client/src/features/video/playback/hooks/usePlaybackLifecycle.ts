@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import Hls from 'hls.js'
+import { HlsReadyNotificationsContext } from '@/shared/hlsReadyNotifications'
 import type { ShellSnackbarState } from '@/app/AppShell'
 import type { PlaybackStreamingType, RecordedStreamingFileType } from '../playbackRoutes'
 import {
@@ -76,6 +77,7 @@ export function usePlaybackLifecycle({
   hasMountedVideoElement,
   onSnackbar,
 }: PlaybackLifecycleInput): PlaybackLifecycleState {
+  const hlsReadyNotifications = useContext(HlsReadyNotificationsContext)
   const [directMediaState, setDirectMediaState] = useState(() => ({
     baseUrl: mediaUrl,
     currentUrl: mediaUrl,
@@ -145,6 +147,7 @@ export function usePlaybackLifecycle({
 
     const controller = new HlsLifecycleController({
       repository: hlsRepository,
+      subscribeReady: hlsReadyNotifications?.subscribe,
       retryDelayMs: 500,
       startRetryCount: 1,
       onChange: setHlsLifecycleSnapshot,
@@ -160,7 +163,7 @@ export function usePlaybackLifecycle({
         },
       })
     }
-  }, [hlsRepository, lifecycleMode, onSnackbar])
+  }, [hlsRepository, lifecycleMode, onSnackbar, hlsReadyNotifications])
 
   const lifecycleSnapshot =
     lifecycleMode === 'hls-api' && hlsRepository !== null

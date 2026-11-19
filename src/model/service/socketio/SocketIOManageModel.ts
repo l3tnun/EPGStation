@@ -10,8 +10,8 @@ import ISocketIOManageModel from './ISocketIOManageModel.js';
 
 /**
  * `ISocketIOManageModel` の実装。socket.io server を各 `http.Server`（複数listen先ぶん）に
- * 被せて初期化し、client への状態変更通知を行う。短時間に連続で呼ばれても実際の emit は
- * 200ms に1回へ間引く（`notifyClient`/`notifyUpdateEncodeProgress` それぞれ独立に）。
+ * 被せて初期化し、client への状態変更通知を行う。`notifyClient` と
+ * `notifyUpdateEncodeProgress` はそれぞれ200msにまとめ、`notifyHlsReady` は直ちに送る。
  */
 @injectable()
 export default class SocketIOManageModel implements ISocketIOManageModel {
@@ -71,6 +71,16 @@ export default class SocketIOManageModel implements ISocketIOManageModel {
                     }
                 }
             }, 200);
+        }
+    }
+
+    public notifyHlsReady(streamId: number, startRequestId: string): void {
+        for (const io of this.ios) {
+            try {
+                io.sockets.emit('hlsReady', { streamId, startRequestId });
+            } catch (error: unknown) {
+                this.log.system.error(error);
+            }
         }
     }
 

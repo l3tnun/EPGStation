@@ -662,12 +662,14 @@ export interface AddManualEncodeProgramOption {
 export interface LiveStreamOption {
     channelId: ChannelId;
     mode: number; // config 設定
+    startRequestId?: string;
 }
 
 export interface RecordedStreanOption {
     videoFileId: VideoFileId;
     playPosition: number; // 再生位置 (秒)
     mode: number; // config 設定
+    startRequestId?: string;
 }
 /**
  * ライブストリーム情報

@@ -12,6 +12,7 @@ export type RecordedHLSStreamModelProvider = () => Promise<IRecordedStreamBaseMo
  */
 export interface RecordedStreamOption {
     videoFileId: apid.VideoFileId;
+    startRequestId?: string;
     playPosition: number; // 再生位置(秒)
     cmd: string;
 }

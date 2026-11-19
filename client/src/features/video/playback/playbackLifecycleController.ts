@@ -8,10 +8,49 @@ import {
   clearTimer,
   type HlsLifecycleSnapshot,
   type HlsStreamId,
+  type HlsLifecycleControllerOptions,
 } from './playbackLifecycleTypes'
 import { HlsLifecycleControllerBase } from './playbackLifecycleControllerBase'
 
 export class HlsLifecycleController extends HlsLifecycleControllerBase {
+  private readonly subscribeReady?: HlsLifecycleControllerOptions['subscribeReady']
+  private unsubscribeReady: (() => void) | undefined
+  private activeRequestId: string | undefined
+  private pendingReadyStreamId: HlsStreamId | undefined
+  private acceptReady: (() => void) | undefined
+
+  constructor(options: HlsLifecycleControllerOptions) {
+    super(options)
+    this.subscribeReady = options.subscribeReady
+  }
+
+  protected override clearAbortableResources(): void {
+    this.clearReadySubscription()
+    super.clearAbortableResources()
+  }
+
+  private clearReadySubscription(): void {
+    this.unsubscribeReady?.()
+    this.unsubscribeReady = undefined
+    this.activeRequestId = undefined
+    this.pendingReadyStreamId = undefined
+    this.acceptReady = undefined
+  }
+
+  private createRequestId(): string {
+    const bytes = globalThis.crypto.getRandomValues(new Uint8Array(16))
+    bytes[6] = (bytes[6] & 0x0f) | 0x40
+    bytes[8] = (bytes[8] & 0x3f) | 0x80
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('')
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+  }
+
+  private startAttempt() {
+    this.activeRequestId = this.subscribeReady === undefined ? undefined : this.createRequestId()
+    this.pendingReadyStreamId = undefined
+    return this.repository.start(this.abortController?.signal, this.activeRequestId)
+  }
+
   async start(): Promise<HlsLifecycleSnapshot> {
     const previousStreamId = this.current.streamId
     const token = this.nextGeneration()
@@ -26,11 +65,22 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
       snackbarText: null,
     })
 
+    this.unsubscribeReady = this.subscribeReady?.((event) => {
+      if (!this.isCurrentGeneration(token) || event.startRequestId !== this.activeRequestId) return
+      this.pendingReadyStreamId = event.streamId
+      if (
+        this.current.streamId !== null &&
+        areSameStreamId(event.streamId, this.current.streamId)
+      ) {
+        this.acceptReady?.()
+      }
+    })
+
     let streamId: HlsStreamId | null
     try {
       streamId =
         this.startRetryCount <= 0
-          ? (await this.repository.start(this.abortController.signal)).streamId
+          ? (await this.startAttempt()).streamId
           : await this.startWithRetry(token)
     } catch {
       if (this.isCurrentGeneration(token)) {
@@ -87,7 +137,7 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
         throw lastError ?? new Error('HLS stream start aborted')
       }
       try {
-        return (await this.repository.start(this.abortController?.signal)).streamId
+        return (await this.startAttempt()).streamId
       } catch (error) {
         lastError = error
         if (attempt >= this.startRetryCount) {
@@ -156,11 +206,11 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
         resolve()
       }
       this.resolveReadinessWait = completeWait
-      // resolveReady() only runs from poll()'s success branch below, which has already
-      // re-checked the generation and settling state right before calling it -- there is
-      // no await between those checks and this call, so both would always be redundant here.
+      // Both the notification handler and the status check verify the current generation
+      // before marking this stream ready.
       const resolveReady = () => {
         isSettling = true
+        this.clearReadySubscription()
         this.readinessTimerId = clearTimer(this.readinessTimerId)
         // waitForReadiness() always assigns readinessTimeoutId synchronously before this
         // closure can run, so it is never undefined here; clearTimeout() on it is safe
@@ -185,6 +235,7 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
           return
         }
         isSettling = true
+        this.clearReadySubscription()
         this.readinessTimerId = clearTimer(this.readinessTimerId)
         // See the equivalent comment in resolveReady(): readinessTimeoutId is always set
         // by the time this closure can run.
@@ -246,6 +297,13 @@ export class HlsLifecycleController extends HlsLifecycleControllerBase {
       this.readinessTimeoutId = setTimeout(() => {
         void resolveFailure()
       }, this.readinessTimeoutMs)
+      this.acceptReady = resolveReady
+      if (
+        this.pendingReadyStreamId !== undefined &&
+        areSameStreamId(this.pendingReadyStreamId, streamId)
+      ) {
+        this.acceptReady()
+      }
     })
   }
 }

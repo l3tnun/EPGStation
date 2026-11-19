@@ -31,6 +31,24 @@ const makeModel = (streamFilePath: string, log = logger()) =>
  * 読み込み中に世代が替わった字幕 playlist の更新は書き込まずに捨てる。
  */
 describe('StreamBaseModel readiness generation (unittest/imp)', () => {
+    it('notifies the matching HLS start request when its playlist and media are ready', async () => {
+        vi.useFakeTimers();
+        const model = makeModel('synthetic-stream-root');
+        const notifyClient = vi.fn();
+        const notifyHlsReady = vi.fn();
+        model.socketIO = { notifyClient, notifyHlsReady };
+        model.fileDeleter.listExact = vi.fn(async () => ['stream5.m3u8', 'stream5-0.ts', 'stream5-1.ts']);
+        model.setOption({ channelId: 1, cmd: '%NODE%', startRequestId: '12345678-1234-4234-8234-123456789abc' }, 0);
+
+        model.startCheckStreamEnable(5);
+        await vi.advanceTimersByTimeAsync(100);
+
+        expect(model.getInfo().isEnable).toBe(true);
+        expect(notifyClient).toHaveBeenCalledOnce();
+        expect(notifyHlsReady).toHaveBeenCalledExactlyOnceWith(5, '12345678-1234-4234-8234-123456789abc');
+        expect(vi.getTimerCount()).toBe(0);
+    });
+
     it('[MD-10.2] keeps the first readiness check for a non-HLS stream and ignores a second start request', () => {
         vi.useFakeTimers();
         const log = logger();

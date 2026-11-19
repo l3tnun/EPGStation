@@ -2481,7 +2481,7 @@ export const COVERAGE_EXCLUSION_AUTHORIZATIONS = Object.freeze([
     Object.freeze({
         alternativeOwnerEntries: Object.freeze(['test/server/media-delivery/**/*.test.ts']),
         boundFunctions: Object.freeze([
-            Object.freeze({ codeSha256: 'f4e285b7a54146a167aaff6939ea0bb13f75a3cf32c9e33d3b7abbd11b58715b', name: 'StreamBaseModel.startCheckStreamEnable' }),
+            Object.freeze({ codeSha256: '8f28a26222a754074b830e400b199515a7fbb821381022622b6b25c57f2ba5ea', name: 'StreamBaseModel.startCheckStreamEnable' }),
         ]),
         branchAnchors: Object.freeze([
             Object.freeze({

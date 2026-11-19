@@ -309,6 +309,18 @@ describe('HLS lifecycle repository requests', () => {
     expect(list.fetcher).toHaveBeenCalledWith('/base/streams', { signal })
   })
 
+  it('adds a request ID to a start URL without a query string', async () => {
+    const signal = new AbortController().signal
+    const requestId = '00000000-0000-4000-8000-000000000007'
+    const { fetcher, repo } = repository({ ok: true, body: { streamId: 7 } })
+
+    await expect(repo.start(signal, requestId)).resolves.toEqual({ streamId: 7 })
+    expect(fetcher).toHaveBeenCalledExactlyOnceWith(
+      `/base/streams/1/hls?startRequestId=${requestId}`,
+      { signal },
+    )
+  })
+
   it('sends keep as PUT and stop as DELETE and succeeds on an ok response', async () => {
     const { fetcher, repo } = repository({ ok: true })
 

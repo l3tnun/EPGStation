@@ -46,7 +46,7 @@ Video playback は live watch、recorded direct watch、recorded streaming watch
 6. recorded info card fetch failure は playback 非 fatal とし、`番組情報取得に失敗` を snackbar で通知する。live info card fetch と `ストリーム情報取得に失敗` snackbar は `frontend-onair` が所有する。
 7. recorded display data がない場合、EPGStation フロントエンドは recorded info card を描画しない。
 8. recorded direct watch route は raw video API source を使うが、通常 entrypoint では encoded file かつ `isPreferredPlayingOnWeb=true` の場合だけ生成される。
-9. HLS playback の readiness polling は `GET /streams?isHalfWidth=<isHalfWidthDisplayed>` を使い、対象 stream が enabled になるまで timer で確認する。`isHalfWidthDisplayed` は settings-storage の channel display contract から読む。
+9. HLS playback は、現在の開始要求と stream の識別子が一致する `hlsReady` を受信した時点で再生準備を完了する。通知が届かない場合は、`GET /streams?isHalfWidth=<isHalfWidthDisplayed>` による1秒間隔の確認を継続する。`isHalfWidthDisplayed` は settings-storage の channel display contract から読む。
 10. React dev server 経由で HLS playback を確認するとき、EPGStation フロントエンドは `/streamfiles/stream:streamId.m3u8` を backend へ proxy し、playlist response が Vite SPA fallback HTML ではなく HLS manifest (`#EXTM3U`) になる構成を維持する。
 11. recorded info card は `name` が無い場合タイトルを空文字として表示し、`startAt` または `endAt` が無い場合は時間帯行を、`channelName` が無い場合はチャンネル名行を描画しない。
 

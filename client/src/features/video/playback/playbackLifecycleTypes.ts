@@ -16,7 +16,7 @@ export interface HlsStreamStatus {
 }
 
 export interface HlsLifecycleRepository {
-  start(signal?: AbortSignal): Promise<{ streamId: HlsStreamId | null }>
+  start(signal?: AbortSignal, startRequestId?: string): Promise<{ streamId: HlsStreamId | null }>
   fetchStreams(signal?: AbortSignal): Promise<readonly HlsStreamStatus[]>
   keep(streamId: HlsStreamId): Promise<void>
   stop(streamId: HlsStreamId): Promise<void>
@@ -34,6 +34,9 @@ export interface HlsLifecycleSnapshot {
 
 export interface HlsLifecycleControllerOptions {
   repository: HlsLifecycleRepository
+  subscribeReady?: (
+    listener: (event: { streamId: HlsStreamId; startRequestId: string }) => void,
+  ) => () => void
   readinessPollMs?: number
   readinessTimeoutMs?: number
   keepIntervalMs?: number

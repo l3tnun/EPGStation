@@ -824,6 +824,7 @@ sequenceDiagram
 
 -   通常の状態更新は、最初の通知から200ミリ秒以内の同種通知を一つの `updateStatus` にまとめる。
 -   エンコード進捗更新は、最初の通知から200ミリ秒以内の同種通知を一つの `updateEncode` にまとめる。
+-   `hlsReady` は `{ streamId, startRequestId }` を含め、準備判定の成立時に集約待ちなしで送る。開始要求に識別子がない場合は送らない。
 -   どちらも本文を付けない。Web client は必要な API を再取得する。
 -   切断中の通知を保存せず、再接続後に再送しない。
 -   各 delayed callback は対応する timer state を一回だけ `null` へ戻してから、構成済み Socket.IO destination を順に処理

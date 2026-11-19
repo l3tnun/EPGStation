@@ -190,6 +190,7 @@ Web 画面、公開API、画像・映像、動画アップロード、API 文書
 5. The Web・API・リアルタイム通知提供機能 shall `updateStatus` と `updateEncode` へ個別の変更内容を含めない
 6. If 利用者が切断している間に通知が発生したとき, the Web・API・リアルタイム通知提供機能 shall 通知を保存または再送しな
    い
+7. When ライブまたは録画済み HLS の開始要求に有効な `startRequestId` が含まれ、配信準備が完了したとき, the Web・API・リアルタイム通知提供機能 shall `streamId` と `startRequestId` を含む `hlsReady` を200ミリ秒の集約待ちなしで送る
 
 ### Requirement 8: HTTP・HTTPS と接続元条件
 

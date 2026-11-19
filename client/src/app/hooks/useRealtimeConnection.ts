@@ -12,6 +12,7 @@ import {
   type RealtimeConnectionConfig,
   type RealtimeConnectionConnector,
   type RealtimeConnectionFactory,
+  type HlsReadyEvent,
 } from '../realtime'
 import {
   REALTIME_RECONNECT_QUERY_KEYS,
@@ -21,6 +22,7 @@ import {
 } from '../realtimeInvalidation'
 
 export interface RealtimeConnectionInput {
+  onHlsReady?: (event: HlsReadyEvent) => void
   realtimeConnectionFactory: RealtimeConnectionFactory | undefined
   realtimeConnectionConnector: RealtimeConnectionConnector | undefined
   activeServerConfig: ActiveServerConfig
@@ -34,6 +36,7 @@ export interface RealtimeConnectionInput {
 }
 
 export function useRealtimeConnection({
+  onHlsReady,
   realtimeConnectionFactory,
   realtimeConnectionConnector,
   activeServerConfig,
@@ -185,21 +188,34 @@ export function useRealtimeConnection({
         queryKeys: REALTIME_UPDATE_ENCODE_QUERY_KEYS,
       })
     }
+    const handleHlsReady = (payload?: unknown) => {
+      if (
+        typeof payload === 'object' &&
+        payload !== null &&
+        typeof (payload as HlsReadyEvent).streamId === 'number' &&
+        typeof (payload as HlsReadyEvent).startRequestId === 'string'
+      ) {
+        onHlsReady?.(payload as HlsReadyEvent)
+      }
+    }
 
     connection.on('disconnect', handleDisconnect)
     connection.on('connect', handleConnect)
     connection.on('updateStatus', handleUpdateStatus)
     connection.on('updateEncode', handleUpdateEncode)
+    connection.on('hlsReady', handleHlsReady)
 
     return () => {
       connection?.off('disconnect', handleDisconnect)
       connection?.off('connect', handleConnect)
       connection?.off('updateStatus', handleUpdateStatus)
       connection?.off('updateEncode', handleUpdateEncode)
+      connection?.off('hlsReady', handleHlsReady)
       connection?.disconnect?.()
     }
   }, [
     activeServerConfig,
+    onHlsReady,
     clearReconnectTimers,
     latestFullRouteRef,
     navigate,

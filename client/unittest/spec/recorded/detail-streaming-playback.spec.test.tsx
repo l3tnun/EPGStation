@@ -243,7 +243,10 @@ describe('Recorded detail Task 3 route, data, and actions', () => {
     fireEvent.input(seekBar, { target: { value: '120' } })
     fireEvent.change(seekBar, { target: { value: '120' } })
 
-    expect(startedUrls).toEqual(['./api/streams/recorded/701/hls?mode=0&ss=0'])
+    expect(startedUrls).toHaveLength(1)
+    expect(startedUrls[0]).toMatch(
+      /^\.\/api\/streams\/recorded\/701\/hls\?mode=0&ss=0&startRequestId=[0-9a-f-]+$/u,
+    )
     expect(player).toHaveAttribute(
       'data-playback-stream-start-url',
       './api/streams/recorded/701/hls?mode=0&ss=0',
@@ -259,6 +262,9 @@ describe('Recorded detail Task 3 route, data, and actions', () => {
         './api/streams/recorded/701/hls?mode=0&ss=120',
       )
     })
-    expect(startedUrls).toContain('./api/streams/recorded/701/hls?mode=0&ss=120')
+    expect(startedUrls).toHaveLength(2)
+    expect(startedUrls[1]).toMatch(
+      /^\.\/api\/streams\/recorded\/701\/hls\?mode=0&ss=120&startRequestId=[0-9a-f-]+$/u,
+    )
   })
 })

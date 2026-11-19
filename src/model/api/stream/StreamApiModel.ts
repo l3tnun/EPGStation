@@ -192,6 +192,7 @@ export default class StreamApiModel implements IStreamApiModel {
             {
                 channelId: option.channelId,
                 cmd: conf.cmd,
+                startRequestId: option.startRequestId,
             },
             option.mode,
         );
@@ -277,6 +278,7 @@ export default class StreamApiModel implements IStreamApiModel {
                             cmd: config.cmd,
                             playPosition: source.playPosition,
                             videoFileId: source.videoFileId,
+                            startRequestId: option.startRequestId,
                         },
                         option.mode,
                     );

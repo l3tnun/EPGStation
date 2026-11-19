@@ -10,12 +10,22 @@ import * as api from '../../../../api.js';
  */
 export const get: Operation = async (req, res) => {
     const streamApiModel = container.get<IStreamApiModel>('IStreamApiModel');
+    const startRequestId = req.query.startRequestId;
+    if (
+        startRequestId !== undefined &&
+        (typeof startRequestId !== 'string' ||
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(startRequestId))
+    ) {
+        api.responseError(res, { code: 400, message: 'Bad Request' });
+        return;
+    }
 
     try {
         const streamId = await streamApiModel.startRecordedHLSStream({
             videoFileId: parseInt(api.pathParam(req, 'videoFileId'), 10),
             playPosition: parseInt(req.query.ss as string, 10),
             mode: parseInt(req.query.mode as string, 10),
+            ...(startRequestId === undefined ? {} : { startRequestId }),
         });
         api.responseJSON(res, 200, {
             streamId: streamId,
@@ -38,6 +48,15 @@ get.apiDoc = {
         },
         {
             $ref: '#/components/parameters/StreamMode',
+        },
+        {
+            name: 'startRequestId',
+            in: 'query',
+            required: false,
+            schema: {
+                type: 'string',
+                pattern: '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$',
+            },
         },
     ],
     responses: {

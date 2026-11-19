@@ -23,8 +23,12 @@ export function createFetchHlsLifecycleRepository({
   const streamApiBasePath = streamStartUrl.split('/streams/')[0] || './api'
 
   return {
-    async start(signal) {
-      const response = await fetcher(streamStartUrl, { signal })
+    async start(signal, startRequestId) {
+      const url =
+        startRequestId === undefined
+          ? streamStartUrl
+          : `${streamStartUrl}${streamStartUrl.includes('?') ? '&' : '?'}startRequestId=${encodeURIComponent(startRequestId)}`
+      const response = await fetcher(url, { signal })
       if (!response.ok) {
         throw new Error('HLS stream start failed')
       }

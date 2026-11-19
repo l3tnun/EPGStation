@@ -228,7 +228,7 @@ describe('HLS artifact allocation filesystem boundary', () => {
         vi.useFakeTimers();
         const dir = mkdtempSync(join(tmpdir(), 'epg-hls-readiness-'));
         dirs.push(dir);
-        const socket = { notifyClient: vi.fn() };
+        const socket = { notifyClient: vi.fn(), notifyHlsReady: vi.fn() };
         const index = new HLSFileDeleterModel({ getLogger: logger });
         const originalListExact = index.listExact.bind(index);
         let finishFirstScan: (() => void) | undefined;
@@ -253,7 +253,7 @@ describe('HLS artifact allocation filesystem boundary', () => {
             { getServiceStream: vi.fn() },
             socket,
         );
-        model.setOption({ channelId: 1, cmd: '%NODE%' }, 0);
+        model.setOption({ channelId: 1, cmd: '%NODE%', startRequestId: '12345678-1234-4234-8234-123456789abc' }, 0);
         writeFileSync(join(dir, 'stream2.m3u8'), '#EXTM3U');
         writeFileSync(join(dir, 'stream2-0.ts'), 'a');
         writeFileSync(join(dir, 'stream20-0.ts'), 'adjacent');
@@ -264,6 +264,7 @@ describe('HLS artifact allocation filesystem boundary', () => {
         await Promise.resolve();
         expect(model.getInfo().isEnable).toBe(false);
         expect(socket.notifyClient).not.toHaveBeenCalled();
+        expect(socket.notifyHlsReady).not.toHaveBeenCalled();
 
         writeFileSync(join(dir, 'stream2-1.ts'), 'b');
         const ready = new Promise<void>(resolve => socket.notifyClient.mockImplementationOnce(resolve));
@@ -272,6 +273,7 @@ describe('HLS artifact allocation filesystem boundary', () => {
 
         expect(model.getInfo().isEnable).toBe(true);
         expect(socket.notifyClient).toHaveBeenCalledOnce();
+        expect(socket.notifyHlsReady).toHaveBeenCalledExactlyOnceWith(2, '12345678-1234-4234-8234-123456789abc');
         expect(vi.getTimerCount()).toBe(0);
         index.setOption({ streamFilePath: dir, streamId: 2 });
         await model.stop();

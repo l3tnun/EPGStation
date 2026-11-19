@@ -379,7 +379,8 @@ result だけを共有する。
   builder の責務であり、`playbackMedia.ts` の `basePath`（既定 `'./api'`）と結合しない。base path / subdir /
   origin の解決は media URL builder 側で行い、tracked docs に環境固有 URL を固定しない。
 - React dev server で実環境 HLS を確認する場合、`/api` と `/socket.io` だけでなく `/streamfiles` も backend へ proxy する。`/streamfiles/stream:streamId.m3u8` が Vite SPA fallback の HTML を返す状態は HLS 再生不能の実原因になるため、dev server smoke / 実ブラウザ確認では playlist response の先頭が `#EXTM3U` であることを確認する。
-- HLS readiness polling は `GET /streams?isHalfWidth=<setting>` で stream
+- HLS start request は開始要求の UUID を server に渡す。Socket.IO の `hlsReady` が同じ UUID と stream ID を通知すると、対象 stream の readiness wait を完了する。通知が開始応答より先に届いた場合も、ID を照合して保持する。通知を受け取れない場合は 1 秒間隔の状態確認を続ける。route 変更・シーク再開始時は通知購読を解除し、古い通知は generation token で無視する。
+- HLS readiness の状態確認は `GET /streams?isHalfWidth=<setting>` で stream
   status を取得し、対象 stream の状態を 3 通りに判定する（`playbackLifecycleController.ts`
   waitForReadiness()）。`isHalfWidthDisplayed` は settings-storage から読み、
   `WatchOnAirPage.tsx` が readiness URL の query へ反映する（`playbackMedia.ts` の `readinessUrl`

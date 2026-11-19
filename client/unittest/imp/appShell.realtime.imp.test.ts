@@ -1,6 +1,16 @@
 import { readFileSync } from 'node:fs'
+import { QueryClient } from '@tanstack/react-query'
+import { renderHook } from '@testing-library/react'
+import {
+  useRealtimeConnection,
+  type RealtimeConnectionInput,
+} from '@/app/hooks/useRealtimeConnection'
+import { UNLOADED_NAVIGATION_CONFIG } from '@/app/navigation'
 import { describe, expect, it, vi } from 'vitest'
-import { createSocketIoRealtimeConnector as createSocketIoRealtimeConnectionConnector } from '@/app/realtime'
+import {
+  createSocketIoRealtimeConnector as createSocketIoRealtimeConnectionConnector,
+  type RealtimeConnection,
+} from '@/app/realtime'
 import {
   REALTIME_RECONNECT_QUERY_KEYS,
   REALTIME_UPDATE_ENCODE_QUERY_KEYS,
@@ -9,14 +19,60 @@ import {
 
 describe('App Shell Socket.IO realtime connector implementation edges', () => {
   it('subscribes only to Socket.IO events the server actually emits', () => {
-    // `src/model/service/socketio/SocketIOManageModel.ts` emits `updateStatus` and `updateEncode`
-    // and nothing else. Subscribing to a name the server never emits, and driving tests through
-    // it, covers a path that cannot occur against a real server.
     const source = readFileSync('src/app/realtime.ts', 'utf8')
     const union = /export type RealtimeEventName =\s*([^\n]*(?:\n[^\n]*)?)/u.exec(source)?.[1] ?? ''
     const names = [...union.matchAll(/'([^']+)'/gu)].map((match) => match[1])
 
-    expect(names).toStrictEqual(['connect', 'disconnect', 'updateStatus', 'updateEncode'])
+    expect(names).toStrictEqual([
+      'connect',
+      'disconnect',
+      'updateStatus',
+      'updateEncode',
+      'hlsReady',
+    ])
+  })
+
+  it('forwards valid HLS readiness events from Socket.IO and ignores malformed payloads', () => {
+    const connection = { on: vi.fn<RealtimeConnection['on']>(), off: vi.fn() }
+    const onHlsReady = vi.fn()
+    const input: RealtimeConnectionInput = {
+      realtimeConnectionFactory: () => connection,
+      realtimeConnectionConnector: undefined,
+      activeServerConfig: UNLOADED_NAVIGATION_CONFIG,
+      location: { pathname: '/', search: '', hash: '', state: null, key: 'initial' },
+      queryClient: new QueryClient(),
+      navigate: vi.fn(),
+      showSnackbar: vi.fn(),
+      refreshVersion: vi.fn(async () => undefined),
+      latestFullRouteRef: { current: '/' },
+      suppressedRouteSnackbarClosesRef: { current: 0 },
+    }
+    const { rerender } = renderHook<boolean, { listener: RealtimeConnectionInput['onHlsReady'] }>(
+      ({ listener }) => useRealtimeConnection({ ...input, onHlsReady: listener }),
+      { initialProps: { listener: onHlsReady } },
+    )
+    const findHandler = () => connection.on.mock.calls.find(([event]) => event === 'hlsReady')?.[1]
+    const handleReady = findHandler()
+    if (handleReady === undefined) throw new Error('The HLS readiness handler was not registered')
+
+    handleReady('invalid')
+    handleReady(null)
+    handleReady({ streamId: '7', startRequestId: '00000000-0000-4000-8000-000000000007' })
+    handleReady({ streamId: 7 })
+    expect(onHlsReady).not.toHaveBeenCalled()
+
+    const payload = { streamId: 7, startRequestId: '00000000-0000-4000-8000-000000000007' }
+    handleReady(payload)
+    expect(onHlsReady).toHaveBeenCalledExactlyOnceWith(payload)
+
+    connection.on.mockClear()
+    rerender({ listener: undefined })
+    expect(connection.off).toHaveBeenCalledWith('hlsReady', handleReady)
+    const handleWithoutListener = findHandler()
+    if (handleWithoutListener === undefined)
+      throw new Error('The HLS readiness handler was not registered')
+    handleWithoutListener(payload)
+    expect(onHlsReady).toHaveBeenCalledOnce()
   })
 
   it('keeps the realtime event to query invalidation matrix explicit and comprehensive', () => {

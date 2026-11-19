@@ -624,7 +624,7 @@ describe('Service Interface public contract [SI-2.1/SI-2.2/SI-2.3]', () => {
             recorded,
             '33b1c5b2a9f5293d99e4021d7b35f56af99cd1b1973dcfc9667a71b7ef7684c1',
         ],
-        ['encode/storage/stream', media, '1f837c5e4db017f276e471accf47096cdb3dbf7a866378e08f126e0dfc4b87ce'],
+        ['encode/storage/stream', media, '6902d33a75bc704c89fa2669b799f10e5a1280ff81c4208401bb11870b657b1e'],
     ] as const)(
         '%s route group retains its complete method/path and OpenAPI response inventory',
         (_name, contracts, fingerprint) => {

@@ -11,6 +11,7 @@ export type LiveHLSStreamModelProvider = () => Promise<ILiveStreamBaseModel>;
  */
 export interface LiveStreamOption {
     channelId: apid.ChannelId;
+    startRequestId?: string;
     /** エンコードコマンド。未指定の場合は mirakurun の stream をそのまま横流しする。 */
     cmd?: string;
 }
