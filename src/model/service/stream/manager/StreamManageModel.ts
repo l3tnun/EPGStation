@@ -212,9 +212,13 @@ class StreamManageModel implements IStreamManageModel {
                 let adopted = false;
                 let stream: IRecordedStreamBaseModel | null = null;
                 try {
-                    delivery = await consumer.acquireAndOpen(option.videoFileId, option.playPosition, () =>
-                        this.canSettleStart(active),
-                    );
+                    const isActive = () => this.canSettleStart(active);
+                    delivery =
+                        option.pendingInfoType === 'RecordedHLS'
+                            ? await consumer.acquireAndOpen(option.videoFileId, option.playPosition, isActive, {
+                                  cacheVideoInfo: true,
+                              })
+                            : await consumer.acquireAndOpen(option.videoFileId, option.playPosition, isActive);
                     if (this.canSettleStart(active) === false) {
                         await this.releaseUnadoptedRecordedDeliveryAfterFailure(delivery, active.id);
                         return;

@@ -1,4 +1,4 @@
-import { open } from 'fs/promises';
+import { open, stat } from 'fs/promises';
 import type { FileHandle } from 'fs/promises';
 import { inject, injectable, unmanaged } from 'inversify';
 import { Readable } from 'stream';
@@ -193,6 +193,41 @@ class OpenedPlaybackSource implements OpenedRecordedPlaybackSource {
  */
 @injectable()
 export default class RecordedPlaybackSourceProvider implements IRecordedPlaybackSourceProvider {
+    private static readonly videoInfoCacheLimit = 128;
+    private readonly videoInfoCache = new Map<string, { fingerprint: string; info: VideoInfo }>();
+
+    private async videoFingerprint(inputPath: string): Promise<string | null> {
+        const attrs = await stat(inputPath, { bigint: true }).catch(() => null);
+        if (attrs === null || !attrs.isFile()) return null;
+        return [attrs.dev, attrs.ino, attrs.size, attrs.mtimeNs, attrs.ctimeNs].join(':');
+    }
+
+    private async getCachedVideoInfo(inputPath: string): Promise<VideoInfo> {
+        const fingerprint = await this.videoFingerprint(inputPath);
+        const cached = this.videoInfoCache.get(inputPath);
+        if (fingerprint !== null && cached?.fingerprint === fingerprint) {
+            this.videoInfoCache.delete(inputPath);
+            this.videoInfoCache.set(inputPath, cached);
+            return cached.info;
+        }
+
+        this.videoInfoCache.delete(inputPath);
+        const info = await this.videoUtil.getInfo(inputPath);
+        if (
+            fingerprint !== null &&
+            [info.duration, info.size, info.bitRate].every(value => Number.isFinite(value) && value > 0) &&
+            (await this.videoFingerprint(inputPath)) === fingerprint
+        ) {
+            this.videoInfoCache.delete(inputPath);
+            this.videoInfoCache.set(inputPath, { fingerprint, info });
+            if (this.videoInfoCache.size > RecordedPlaybackSourceProvider.videoInfoCacheLimit) {
+                const oldest = this.videoInfoCache.keys().next();
+                if (!oldest.done) this.videoInfoCache.delete(oldest.value);
+            }
+        }
+        return info;
+    }
+
     /**
      * @param videoFileDB ビデオファイル情報の検索に使う。
      * @param recordedDB 録画情報（録画中かどうか等）の検索に使う。
@@ -268,7 +303,10 @@ export default class RecordedPlaybackSourceProvider implements IRecordedPlayback
 
         let videoInfo: VideoInfo;
         try {
-            videoInfo = await this.videoUtil.getInfo(inputPath);
+            videoInfo =
+                option?.cacheVideoInfo === true && recorded.isRecording === false
+                    ? await this.getCachedVideoInfo(inputPath)
+                    : await this.videoUtil.getInfo(inputPath);
         } catch (error: unknown) {
             // 動画情報を使わない直接配信では、取得の失敗（外部処理の起動行や実pathを含む文言）を呼び出し元へ伝えない。
             if (option?.allowMissingVideoInfo !== true) {

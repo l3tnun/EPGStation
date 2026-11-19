@@ -36,11 +36,11 @@ const RecordedPlaybackSourceProvider = (
                 videoFileId: number,
                 expectedRecordedId: number,
                 playPosition: number,
+                option?: { cacheVideoInfo?: boolean },
             ): Promise<{
                 readonly state: string;
                 adopt():
-                    | { readonly status: 'adopted'; readonly source: Record<string, any> }
-                    | { readonly status: 'stale' };
+                    { readonly status: 'adopted'; readonly source: Record<string, any> } | { readonly status: 'stale' };
                 disposeBeforeAdoption(): Promise<void>;
             }>;
             resolveRecordedId(videoFileId: number): Promise<number>;

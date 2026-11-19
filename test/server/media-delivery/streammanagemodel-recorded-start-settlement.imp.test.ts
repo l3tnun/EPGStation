@@ -115,6 +115,19 @@ describe('StreamManageModel recorded start settlement (unittest/imp)', () => {
         expect(delivery.release).not.toHaveBeenCalled();
     });
 
+    it('requests reusable video information when starting a recorded HLS stream', async () => {
+        const delivery = makeDelivery();
+        const consumer = { acquireAndOpen: vi.fn(async () => delivery) };
+        const stream = fakeStream({ type: 'RecordedHLS' });
+        const manager = makeManager(consumer);
+
+        await manager.startRecorded(async () => stream, recordedStartOption({ pendingInfoType: 'RecordedHLS' }));
+
+        expect(consumer.acquireAndOpen).toHaveBeenCalledExactlyOnceWith(31, 0, expect.any(Function), {
+            cacheVideoInfo: true,
+        });
+    });
+
     it('[MD-10.2] acquireRecordedDelivery releases the delivery and rejects StreamStartStopped when the caller became inactive', async () => {
         const delivery = makeDelivery();
         let active = true;

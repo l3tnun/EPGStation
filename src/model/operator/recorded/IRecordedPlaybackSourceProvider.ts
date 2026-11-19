@@ -116,4 +116,6 @@ export default interface IRecordedPlaybackSourceProvider {
 export interface RecordedPlaybackOpenOption {
     /** 動画情報（ffprobe）の取得失敗を許し、`NaN`の動画情報で続けるか。 */
     readonly allowMissingVideoInfo?: boolean;
+    /** 録画済みHLSの入力で、同一ファイルの動画情報を再利用する。 */
+    readonly cacheVideoInfo?: boolean;
 }
