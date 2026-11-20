@@ -165,6 +165,59 @@ describe('seek frame for playback formats', () => {
     expect(result.current.visible).toBe(false)
   })
 
+  it('keeps the held frame while the video is missing at loadstart and resumes watching after it returns', () => {
+    const video = makeVideo()
+    const callbacks: VideoFrameRequestCallback[] = []
+    video.requestVideoFrameCallback = vi.fn((callback) => callbacks.push(callback))
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn(),
+    } as never)
+    const videoRef: MutableRefObject<HTMLVideoElement | null> = { current: video }
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame(videoRef, 'ready', 'initial', { current: false }),
+    )
+    result.current.canvasRef.current = document.createElement('canvas')
+
+    act(() => result.current.capture())
+    act(() => result.current.onLoadStart())
+    expect(callbacks).toHaveLength(1)
+
+    videoRef.current = null
+    expect(() => act(() => result.current.onLoadStart())).not.toThrow()
+    expect(result.current.visible).toBe(true)
+    act(() => callbacks[0](0, {} as VideoFrameCallbackMetadata))
+    expect(result.current.visible).toBe(true)
+
+    videoRef.current = video
+    act(() => result.current.onLoadStart())
+    expect(callbacks).toHaveLength(2)
+    act(() => callbacks[1](0, {} as VideoFrameCallbackMetadata))
+    expect(result.current.visible).toBe(false)
+  })
+
+  it('keeps the held frame on loadstart without frame callbacks and clears it when seeked has current data', () => {
+    const video = makeVideo()
+    Object.defineProperty(video, 'requestVideoFrameCallback', { value: undefined })
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn(),
+    } as never)
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame({ current: video }, 'ready', 'initial', { current: false }),
+    )
+    result.current.canvasRef.current = document.createElement('canvas')
+
+    act(() => result.current.capture())
+    Object.defineProperty(video, 'readyState', { value: HTMLMediaElement.HAVE_METADATA })
+    expect(() => act(() => result.current.onLoadStart())).not.toThrow()
+    expect(result.current.visible).toBe(true)
+
+    act(() => result.current.onSeeked())
+    expect(result.current.visible).toBe(true)
+    Object.defineProperty(video, 'readyState', { value: HTMLMediaElement.HAVE_CURRENT_DATA })
+    act(() => result.current.onSeeked())
+    expect(result.current.visible).toBe(false)
+  })
+
   it.each(['onSeeked', 'onCanPlay'] as const)(
     'clears on %s when playback was paused during the seek',
     (event) => {
