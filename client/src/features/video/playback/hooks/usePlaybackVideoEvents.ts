@@ -14,7 +14,7 @@ export interface PlaybackVideoEventsInput {
   seek: ReturnType<typeof usePlaybackSeek>
   seekFrame: Pick<
     ReturnType<typeof usePlaybackSeekFrame>,
-    'onCanPlay' | 'onPause' | 'onPlaying' | 'onSeeked' | 'onError'
+    'onCanPlay' | 'onLoadStart' | 'onPause' | 'onPlaying' | 'onSeeked' | 'onError'
   >
   fullscreen: ReturnType<typeof usePlaybackFullscreen>
   areControlsBlocked: boolean
@@ -68,7 +68,10 @@ export function usePlaybackVideoEvents({
       // once metadata has loaded -- see requirements.md 13a and playbackShellSupport.ts.
       fullscreen.refreshPictureInPictureSupport()
     },
-    onLoadStart: () => fullscreen.refreshPictureInPictureSupport(),
+    onLoadStart: () => {
+      seekFrame.onLoadStart()
+      fullscreen.refreshPictureInPictureSupport()
+    },
     onPause: () => {
       controls.clearControlsHideTimer()
       media.setIsPaused(true)

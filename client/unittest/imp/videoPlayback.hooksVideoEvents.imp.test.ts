@@ -53,6 +53,7 @@ function setup(
   }
   const seekFrame = {
     onCanPlay: vi.fn(),
+    onLoadStart: vi.fn(),
     onPause: vi.fn(),
     onPlaying: vi.fn(),
     onSeeked: vi.fn(),
@@ -191,7 +192,7 @@ describe('usePlaybackVideoEvents contract', () => {
   })
 
   it('[AC 4.13a] re-evaluates Picture-in-Picture support on emptied and loadstart (media source replaced)', () => {
-    const { result, fullscreen } = setup()
+    const { result, fullscreen, seekFrame } = setup()
 
     act(() => {
       result.current.videoEvents.onEmptied()
@@ -202,6 +203,7 @@ describe('usePlaybackVideoEvents contract', () => {
       result.current.videoEvents.onLoadStart()
     })
     expect(fullscreen.refreshPictureInPictureSupport).toHaveBeenCalledTimes(2)
+    expect(seekFrame.onLoadStart).toHaveBeenCalledOnce()
   })
 
   it('[AC 4.16] hides controls and cursor on pause unless controls are blocked', () => {

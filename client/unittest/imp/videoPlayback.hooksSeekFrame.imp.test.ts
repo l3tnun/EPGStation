@@ -120,6 +120,51 @@ describe('seek frame for playback formats', () => {
     expect(result.current.visible).toBe(false)
   })
 
+  it('clears the overlay when the new source presents its first frame before playing', () => {
+    const video = makeVideo()
+    const callbacks: VideoFrameRequestCallback[] = []
+    video.requestVideoFrameCallback = vi.fn((callback) => callbacks.push(callback))
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn(),
+    } as never)
+    const isPausedRef = { current: false }
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame({ current: video }, 'ready', 'initial', isPausedRef),
+    )
+    result.current.canvasRef.current = document.createElement('canvas')
+
+    act(() => result.current.capture())
+    act(() => result.current.onLoadStart())
+    expect(callbacks).toHaveLength(1)
+    act(() => callbacks[0](0, {} as VideoFrameCallbackMetadata))
+    expect(result.current.visible).toBe(false)
+    act(() => result.current.onPlaying())
+    expect(callbacks).toHaveLength(1)
+  })
+
+  it('ignores a frame callback from the source replaced at loadstart', () => {
+    const video = makeVideo()
+    const callbacks: VideoFrameRequestCallback[] = []
+    video.requestVideoFrameCallback = vi.fn((callback) => callbacks.push(callback))
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn(),
+    } as never)
+    const isPausedRef = { current: false }
+    const { result } = renderHook(() =>
+      usePlaybackSeekFrame({ current: video }, 'ready', 'initial', isPausedRef),
+    )
+    result.current.canvasRef.current = document.createElement('canvas')
+
+    act(() => result.current.capture())
+    act(() => result.current.onLoadStart())
+    act(() => result.current.onLoadStart())
+    expect(callbacks).toHaveLength(2)
+    act(() => callbacks[0](0, {} as VideoFrameCallbackMetadata))
+    expect(result.current.visible).toBe(true)
+    act(() => callbacks[1](0, {} as VideoFrameCallbackMetadata))
+    expect(result.current.visible).toBe(false)
+  })
+
   it.each(['onSeeked', 'onCanPlay'] as const)(
     'clears on %s when playback was paused during the seek',
     (event) => {

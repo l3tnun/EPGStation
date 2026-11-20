@@ -61,6 +61,23 @@ export function usePlaybackSeekFrame(
     }
   }, [invalidateFrame, videoRef])
 
+  const watchNextFrame = useCallback(() => {
+    if (!visibleRef.current || isPausedRef.current || pendingFrameRef.current !== null) return
+    const video = videoRef.current
+    if (video === null || typeof video.requestVideoFrameCallback !== 'function') return
+
+    const frame = Symbol()
+    pendingFrameRef.current = frame
+    video.requestVideoFrameCallback(() => {
+      if (pendingFrameRef.current === frame) clear()
+    })
+  }, [clear, isPausedRef, videoRef])
+
+  const onLoadStart = useCallback(() => {
+    invalidateFrame()
+    watchNextFrame()
+  }, [invalidateFrame, watchNextFrame])
+
   const onSeeked = useCallback(() => {
     if (!visibleRef.current) return
     const video = videoRef.current
@@ -71,14 +88,8 @@ export function usePlaybackSeekFrame(
       }
       return
     }
-    if (pendingFrameRef.current !== null) return
-
-    const frame = Symbol()
-    pendingFrameRef.current = frame
-    video.requestVideoFrameCallback(() => {
-      if (pendingFrameRef.current === frame) clear()
-    })
-  }, [clear, isPausedRef, videoRef])
+    watchNextFrame()
+  }, [clear, isPausedRef, videoRef, watchNextFrame])
 
   const onPause = useCallback(() => {
     const video = videoRef.current
@@ -107,6 +118,7 @@ export function usePlaybackSeekFrame(
     canvasRef,
     visible,
     capture,
+    onLoadStart,
     onSeeked,
     onCanPlay,
     onPause,

@@ -110,6 +110,7 @@ export function PlaybackPlayerContainer({
     visible: seekFrameVisible,
     capture: captureSeekFrame,
     onCanPlay: clearSeekFrameOnCanPlay,
+    onLoadStart: watchSeekFrameOnLoadStart,
     onPause: clearSeekFrameOnPause,
     onPlaying: clearSeekFrameOnPlaying,
     onSeeked: clearSeekFrameOnSeeked,
@@ -224,6 +225,7 @@ export function PlaybackPlayerContainer({
     shouldClearLoadingOnPlaybackEvent: streamingType !== 'm2tsll',
     seekFrame: {
       onCanPlay: clearSeekFrameOnCanPlay,
+      onLoadStart: watchSeekFrameOnLoadStart,
       onPause: clearSeekFrameOnPause,
       onPlaying: clearSeekFrameOnPlaying,
       onSeeked: clearSeekFrameOnSeeked,

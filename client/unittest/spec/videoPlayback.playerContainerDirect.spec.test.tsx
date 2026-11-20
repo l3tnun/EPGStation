@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { PlaybackPlayerContainer } from '@/features/video/playback/PlaybackShell'
 import { stubMediaPlayback } from './support/videoPlaybackSpecSupport'
@@ -78,6 +78,25 @@ describe('PlaybackPlayerContainer standalone contract', () => {
 
     fireEvent.pause(video)
     expect(canvas).toHaveAttribute('data-visible', 'false')
+  })
+
+  it('[AC 5.7] reveals the first frame of a new source before playing', () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({
+      drawImage: vi.fn(),
+    } as never)
+    const { player, canvas, video } = renderSeekableRecording()
+    const callbacks: VideoFrameRequestCallback[] = []
+    video.requestVideoFrameCallback = vi.fn((callback) => callbacks.push(callback))
+
+    fireEvent.play(video)
+    fireEvent.keyDown(player, { key: 'ArrowRight' })
+    expect(canvas).toHaveAttribute('data-visible', 'true')
+    fireEvent.loadStart(video)
+    expect(callbacks).toHaveLength(1)
+    act(() => callbacks[0](0, {} as VideoFrameCallbackMetadata))
+    expect(canvas).toHaveAttribute('data-visible', 'false')
+    fireEvent.playing(video)
+    expect(callbacks).toHaveLength(1)
   })
 
   it('[AC 5.7] continues a direct seek when frame drawing throws', () => {
