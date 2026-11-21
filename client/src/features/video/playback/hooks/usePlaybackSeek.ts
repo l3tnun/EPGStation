@@ -22,6 +22,7 @@ export interface PlaybackSeekInput {
   activeBaseSeekSeconds: number
   activePlaybackStartUrl: string | undefined
   restartPlaybackAt: (nextUrl: string) => void
+  onBeforeSeek?: (wasPaused: boolean) => void
 }
 
 export function usePlaybackSeek({
@@ -37,6 +38,7 @@ export function usePlaybackSeek({
   activeBaseSeekSeconds,
   activePlaybackStartUrl,
   restartPlaybackAt,
+  onBeforeSeek,
 }: PlaybackSeekInput) {
   const [pendingSeekTime, setPendingSeekTime] = useState<number | null>(null)
   const pendingSeekTimeRef = useRef<number | null>(null)
@@ -52,6 +54,7 @@ export function usePlaybackSeek({
       }
 
       if (kind !== 'recorded-streaming') {
+        onBeforeSeek?.(isPausedRef.current)
         video.currentTime = normalizedTime
         setCurrentTime(normalizedTime)
         return
@@ -61,6 +64,7 @@ export function usePlaybackSeek({
         Number.isFinite(video.duration) && video.duration > 0 ? video.duration : duration
       const relativeTime = normalizedTime - activeBaseSeekSeconds
       if (relativeTime >= 0 && relativeTime <= segmentDuration) {
+        onBeforeSeek?.(isPausedRef.current)
         video.currentTime = relativeTime
         setCurrentTime(normalizedTime)
         return
@@ -76,6 +80,8 @@ export function usePlaybackSeek({
         wasPaused: isPausedRef.current,
       }
 
+      onBeforeSeek?.(isPausedRef.current)
+
       restartPlaybackAt(
         rebuildDirectStreamUrlForSeek(
           activePlaybackStartUrl,
@@ -90,6 +96,7 @@ export function usePlaybackSeek({
       duration,
       isPausedRef,
       kind,
+      onBeforeSeek,
       restartPlaybackAt,
       resumeAfterRestartRef,
       setCurrentTime,
@@ -177,6 +184,8 @@ export function usePlaybackSeek({
       playbackRate: video.playbackRate,
       wasPaused: isPausedRef.current,
     }
+
+    onBeforeSeek?.(isPausedRef.current)
 
     restartPlaybackAt(rebuildDirectStreamUrlForSeek(currentStartUrl, nextSeekSeconds))
   }

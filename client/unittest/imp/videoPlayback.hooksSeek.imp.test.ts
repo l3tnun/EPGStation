@@ -42,6 +42,7 @@ function setup(
     duration?: number
     effectiveDuration?: number
     currentTime?: number
+    onBeforeSeek?: (wasPaused: boolean) => void
   } = {},
 ) {
   const videoRef = overrides.videoRef ?? ref<HTMLVideoElement | null>(null)
@@ -65,6 +66,7 @@ function setup(
         activeBaseSeekSeconds: overrides.activeBaseSeekSeconds ?? 0,
         activePlaybackStartUrl: overrides.activePlaybackStartUrl,
         restartPlaybackAt,
+        onBeforeSeek: overrides.onBeforeSeek,
       }),
     {
       initialProps: {
@@ -119,6 +121,32 @@ describe('usePlaybackSeek seekBy contract', () => {
 
     expect(video.currentTime).toBe(10)
     expect(setCurrentTime).toHaveBeenCalledWith(10)
+  })
+
+  it.each(['recorded-direct', 'live'])('captures a frame before %s in-place seeking', (kind) => {
+    const video = makeVideo({ currentTime: 5 })
+    const capture = vi.fn()
+    const { result } = setup({ videoRef: ref(video), kind, onBeforeSeek: capture })
+    act(() => result.current.seekBy(10))
+    expect(capture).toHaveBeenCalledExactlyOnceWith(false)
+    expect(video.currentTime).toBe(10)
+  })
+
+  it.each(['hls', 'webm', 'mp4'])('captures a frame before %s stream restart', (format) => {
+    const video = makeVideo({ currentTime: 5, duration: 60 })
+    const capture = vi.fn()
+    const { result, restartPlaybackAt } = setup({
+      videoRef: ref(video),
+      kind: 'recorded-streaming',
+      activeBaseSeekSeconds: 100,
+      activePlaybackStartUrl: `./api/streams/recorded/1/${format}?mode=0&ss=100`,
+      currentTime: 105,
+      effectiveDuration: 500,
+      onBeforeSeek: capture,
+    })
+    act(() => result.current.seekBy(100))
+    expect(capture).toHaveBeenCalledExactlyOnceWith(false)
+    expect(restartPlaybackAt).toHaveBeenCalledOnce()
   })
 
   it('[AC 5.3] seeks within the current recorded-streaming segment relative to the segment start', () => {

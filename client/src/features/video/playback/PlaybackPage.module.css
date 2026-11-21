@@ -58,6 +58,23 @@
   width: 100%;
 }
 
+.seekFrame {
+  background: #000;
+  height: 100%;
+  left: 0;
+  object-fit: contain;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  visibility: hidden;
+  width: 100%;
+  z-index: 1;
+}
+
+.seekFrame[data-visible='true'] {
+  visibility: visible;
+}
+
 .loadingIndicator {
   height: 50px;
   left: 50%;

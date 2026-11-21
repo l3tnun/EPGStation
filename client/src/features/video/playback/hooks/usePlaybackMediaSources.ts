@@ -15,6 +15,7 @@ export interface PlaybackMediaSourcesInput {
   effectiveMediaUrl: string | undefined
   usesHlsJsMediaSource: boolean
   usesMpegtsMediaSource: boolean
+  onFatalHlsError?: () => void
 }
 
 export function usePlaybackMediaSources({
@@ -23,6 +24,7 @@ export function usePlaybackMediaSources({
   effectiveMediaUrl,
   usesHlsJsMediaSource,
   usesMpegtsMediaSource,
+  onFatalHlsError,
 }: PlaybackMediaSourcesInput) {
   const hlsPlayerRef = useRef<Hls | null>(null)
   const mpegtsPlayerRef = useRef<ReturnType<typeof Mpegts.createPlayer> | null>(null)
@@ -37,6 +39,9 @@ export function usePlaybackMediaSources({
 
     const hls = new Hls()
     hlsPlayerRef.current = hls
+    hls.on(Hls.Events.ERROR, (_event, data) => {
+      if (data.fatal) onFatalHlsError?.()
+    })
     const detachSubtitleBridge = attachHlsSubtitleMetadataBridge({
       hls: hls as unknown as HlsMetadataEventSource,
       getSubtitleAdapter: () => subtitleAdapterRef.current,
@@ -57,7 +62,7 @@ export function usePlaybackMediaSources({
       // always still this closure's own `hls` here.
       hlsPlayerRef.current = null
     }
-  }, [effectiveMediaUrl, subtitleAdapterRef, usesHlsJsMediaSource, videoRef])
+  }, [effectiveMediaUrl, onFatalHlsError, subtitleAdapterRef, usesHlsJsMediaSource, videoRef])
 
   useEffect(() => {
     const video = videoRef.current

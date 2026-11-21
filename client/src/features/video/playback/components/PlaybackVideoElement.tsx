@@ -14,6 +14,7 @@ export interface PlaybackVideoElementProps {
   onPlay: () => void
   onPlaying: () => void
   onSeeking: () => void
+  onSeeked: () => void
   onTimeUpdate: () => void
   onVolumeChange: () => void
 }
@@ -32,6 +33,7 @@ export function PlaybackVideoElement({
   onPlay,
   onPlaying,
   onSeeking,
+  onSeeked,
   onTimeUpdate,
   onVolumeChange,
 }: PlaybackVideoElementProps) {
@@ -53,6 +55,7 @@ export function PlaybackVideoElement({
       onPlay={onPlay}
       onPlaying={onPlaying}
       onSeeking={onSeeking}
+      onSeeked={onSeeked}
       onTimeUpdate={onTimeUpdate}
       onVolumeChange={onVolumeChange}
     />

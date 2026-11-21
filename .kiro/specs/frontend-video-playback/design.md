@@ -409,6 +409,7 @@ result だけを共有する。
   `ストリーム停止に失敗` snackbar を表示する。
 - recorded HLS/WebM/MP4 の out-of-range seek restart では restart 前の playback rate と paused/playing
   state を維持し、restart 後に再適用する。WebM/MP4 stream URL も restart 時の seek second を `ss` query として送る。
+- シーク直前に取得できる映像フレームを player の canvas に保持する。HLS、WebM、MP4 と直接再生の in-range seek と out-of-range seek restart に適用する。再生中は次の映像フレームを表示できる時点で canvas を消す。新しい media の loadstart 時点で次の frame callback を予約し、最初の映像フレームが playing より先に届いてもそのフレームで canvas を消す。seeked / playing でも予約がない場合に同じ判定を行う。一時停止中は seeked / canplay でシーク先のフレームを表示できる状態になれば消し、次の frame callback を待たない。一時停止の判定にはイベント発生時のプレイヤーの状態を使う。seeked の後にフレームの提示を待っている間に pause が発生した場合も、シークが完了してシーク先の映像データが利用可能なら canvas を消す。同一媒体の配信再生成では保持を続け、別の再生対象へ切り替えた場合は canvas を消す。新しい loadstart または次のシークが始まったら以前に予約した frame callback を無効化する。フレーム取得不能時は通常の読み込み表示にする。video 要素の error、HLS lifecycle の error、hls.js の fatal error でも canvas を消す。
 
 ### WebM / MP4 / M2TS-LL と shared player controls
 

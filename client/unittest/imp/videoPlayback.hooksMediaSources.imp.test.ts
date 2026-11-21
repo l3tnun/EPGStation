@@ -15,6 +15,7 @@ function setup(overrides: {
   effectiveMediaUrl?: string
   usesHlsJsMediaSource?: boolean
   usesMpegtsMediaSource?: boolean
+  onFatalHlsError?: () => void
 }) {
   const videoRef = overrides.videoRef ?? ref<HTMLVideoElement | null>(null)
   const subtitleAdapterRef =
@@ -32,6 +33,7 @@ function setup(overrides: {
         effectiveMediaUrl: props.effectiveMediaUrl,
         usesHlsJsMediaSource: props.usesHlsJsMediaSource,
         usesMpegtsMediaSource: props.usesMpegtsMediaSource,
+        onFatalHlsError: overrides.onFatalHlsError,
       }),
     {
       initialProps: {
@@ -105,6 +107,27 @@ describe('usePlaybackMediaSources HLS contract', () => {
     unmount()
     expect(destroy).toHaveBeenCalled()
     video.remove()
+  })
+
+  it('clears a held seek frame on a fatal hls.js error only', () => {
+    const video = document.createElement('video')
+    const onFatalHlsError = vi.fn()
+    const subscribe = vi.spyOn(Hls.prototype, 'on')
+    const { unmount } = setup({
+      videoRef: ref(video),
+      effectiveMediaUrl: './streamfiles/stream1.m3u8',
+      usesHlsJsMediaSource: true,
+      onFatalHlsError,
+    })
+    const handler = subscribe.mock.calls.find(
+      (call) => call[0] === Hls.Events.ERROR && call.length === 2,
+    )?.[1] as ((event: string, data: { fatal: boolean }) => void) | undefined
+    expect(handler).toBeDefined()
+    act(() => handler?.(Hls.Events.ERROR, { fatal: false }))
+    expect(onFatalHlsError).not.toHaveBeenCalled()
+    act(() => handler?.(Hls.Events.ERROR, { fatal: true }))
+    expect(onFatalHlsError).toHaveBeenCalledOnce()
+    unmount()
   })
 
   it('[AC 3.6] logs (does not throw) when the autoplay after HLS manifest parsed rejects', async () => {

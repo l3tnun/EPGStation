@@ -4,6 +4,7 @@ import type { usePlaybackControlsVisibility } from './usePlaybackControlsVisibil
 import type { usePlaybackFullscreen } from './usePlaybackFullscreen'
 import type { usePlaybackMediaElement } from './usePlaybackMediaElement'
 import type { usePlaybackSeek } from './usePlaybackSeek'
+import type { usePlaybackSeekFrame } from './usePlaybackSeekFrame'
 import type { usePlaybackSubtitles } from './usePlaybackSubtitles'
 
 export interface PlaybackVideoEventsInput {
@@ -11,6 +12,10 @@ export interface PlaybackVideoEventsInput {
   controls: ReturnType<typeof usePlaybackControlsVisibility>
   subtitles: ReturnType<typeof usePlaybackSubtitles>
   seek: ReturnType<typeof usePlaybackSeek>
+  seekFrame: Pick<
+    ReturnType<typeof usePlaybackSeekFrame>,
+    'onCanPlay' | 'onLoadStart' | 'onPause' | 'onPlaying' | 'onSeeked' | 'onError'
+  >
   fullscreen: ReturnType<typeof usePlaybackFullscreen>
   areControlsBlocked: boolean
   areControlsSuppressed: boolean
@@ -23,6 +28,7 @@ export function usePlaybackVideoEvents({
   controls,
   subtitles,
   seek,
+  seekFrame,
   fullscreen,
   areControlsBlocked,
   areControlsSuppressed,
@@ -37,6 +43,7 @@ export function usePlaybackVideoEvents({
 
   const videoEvents = {
     onCanPlay: () => {
+      seekFrame.onCanPlay()
       media.setIsMediaElementLoading(false)
       media.setHasMediaReachedCanPlay(true)
       if (media.isPausedRef.current && !areControlsSuppressed && !suppressCanPlayControlsVisible) {
@@ -49,6 +56,7 @@ export function usePlaybackVideoEvents({
       media.handleDurationChange()
     },
     onError: () => {
+      seekFrame.onError()
       media.setIsMediaElementLoading(media.areControlsWaitingForCanPlay)
     },
     onEmptied: () => fullscreen.refreshPictureInPictureSupport(),
@@ -60,10 +68,14 @@ export function usePlaybackVideoEvents({
       // once metadata has loaded -- see requirements.md 13a and playbackShellSupport.ts.
       fullscreen.refreshPictureInPictureSupport()
     },
-    onLoadStart: () => fullscreen.refreshPictureInPictureSupport(),
+    onLoadStart: () => {
+      seekFrame.onLoadStart()
+      fullscreen.refreshPictureInPictureSupport()
+    },
     onPause: () => {
       controls.clearControlsHideTimer()
       media.setIsPaused(true)
+      seekFrame.onPause()
       controls.setControlsVisible(!areControlsBlocked)
       controls.setIsCursorHidden(false)
     },
@@ -72,8 +84,12 @@ export function usePlaybackVideoEvents({
       clearLoadingOnPlaybackEvent()
       controls.scheduleControlsHide({ force: true })
     },
-    onPlaying: clearLoadingOnPlaybackEvent,
+    onPlaying: () => {
+      seekFrame.onPlaying()
+      clearLoadingOnPlaybackEvent()
+    },
     onSeeking: seek.handleSeeking,
+    onSeeked: seekFrame.onSeeked,
     onTimeUpdate: seek.handleTimeUpdate,
     onVolumeChange: media.handleVolumeChange,
   }

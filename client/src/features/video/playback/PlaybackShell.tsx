@@ -17,6 +17,7 @@ import { usePlaybackLifecycle } from './hooks/usePlaybackLifecycle'
 import { usePlaybackMediaElement } from './hooks/usePlaybackMediaElement'
 import { usePlaybackMediaSources } from './hooks/usePlaybackMediaSources'
 import { usePlaybackSeek } from './hooks/usePlaybackSeek'
+import { usePlaybackSeekFrame } from './hooks/usePlaybackSeekFrame'
 import { usePlaybackSubtitles } from './hooks/usePlaybackSubtitles'
 import { usePlaybackVideoEvents } from './hooks/usePlaybackVideoEvents'
 import { usePlaybackWaitingStatus } from './hooks/usePlaybackWaitingStatus'
@@ -97,6 +98,24 @@ export function PlaybackPlayerContainer({
     lifecycleState: lifecycleSnapshot.state,
     recordedStreamDuration,
   })
+  const seekFrameSourceKey = JSON.stringify([
+    kind,
+    sourceKind,
+    streamingType,
+    mediaUrl,
+    streamStartUrl,
+  ])
+  const {
+    canvasRef: seekCanvasRef,
+    visible: seekFrameVisible,
+    capture: captureSeekFrame,
+    onCanPlay: clearSeekFrameOnCanPlay,
+    onLoadStart: watchSeekFrameOnLoadStart,
+    onPause: clearSeekFrameOnPause,
+    onPlaying: clearSeekFrameOnPlaying,
+    onSeeked: clearSeekFrameOnSeeked,
+    onError: clearSeekFrameOnError,
+  } = usePlaybackSeekFrame(videoRef, lifecycleSnapshot.state, seekFrameSourceKey, media.isPausedRef)
   const isSubtitleRendererMounted =
     sourceKind === 'hls-stream' || streamingType === 'hls' || streamingType === 'm2tsll'
   const isMobilePlatform = useMemo(() => detectMobilePlatform(), [])
@@ -115,6 +134,7 @@ export function PlaybackPlayerContainer({
     effectiveMediaUrl,
     usesHlsJsMediaSource: lifecycle.usesHlsJsMediaSource,
     usesMpegtsMediaSource: lifecycle.usesMpegtsMediaSource,
+    onFatalHlsError: clearSeekFrameOnError,
   })
   const subtitles = usePlaybackSubtitles({
     videoRef,
@@ -183,6 +203,7 @@ export function PlaybackPlayerContainer({
     activeBaseSeekSeconds: lifecycle.activeBaseSeekSeconds,
     activePlaybackStartUrl: lifecycle.activePlaybackStartUrl,
     restartPlaybackAt: lifecycle.restartPlaybackAt,
+    onBeforeSeek: captureSeekFrame,
   })
   const volumeLabel = resolveVolumeControlLabel({ volume: media.volume, muted: media.muted })
   const volumeIcon = resolveVolumeControlIcon({ volume: media.volume, muted: media.muted })
@@ -202,6 +223,14 @@ export function PlaybackPlayerContainer({
     areControlsSuppressed,
     suppressCanPlayControlsVisible,
     shouldClearLoadingOnPlaybackEvent: streamingType !== 'm2tsll',
+    seekFrame: {
+      onCanPlay: clearSeekFrameOnCanPlay,
+      onLoadStart: watchSeekFrameOnLoadStart,
+      onPause: clearSeekFrameOnPause,
+      onPlaying: clearSeekFrameOnPlaying,
+      onSeeked: clearSeekFrameOnSeeked,
+      onError: clearSeekFrameOnError,
+    },
   })
 
   return (
@@ -243,6 +272,13 @@ export function PlaybackPlayerContainer({
         assignVideoRef={assignVideoRef}
         src={lifecycle.videoElementSrc}
         {...videoEvents}
+      />
+      <canvas
+        ref={seekCanvasRef}
+        aria-hidden="true"
+        className={styles.seekFrame}
+        data-visible={String(seekFrameVisible)}
+        data-testid="playback-seek-frame"
       />
       {isPlayerLoading ? (
         <div

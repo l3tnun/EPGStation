@@ -70,6 +70,7 @@ Video playback は live watch、recorded direct watch、recorded streaming watch
 12. live M2TS-LL は mpegts.js の MSE live playback support を必要とし、dialog preflight 未対応時は `再生に対応していません`、player 内未対応時は `非対応ブラウザーです。`、video element 欠落時は `video 要素がありません。` を表示する。video element 欠落は `PlaybackVideoElement` が常に `video` を描画するため画面からは到達しない防御的分岐で、`unittest/imp` が readiness 関数を直接呼んで検証する。
 13. in-progress recording の recorded streaming では、duration が確定しない間も `/videos/:videoFileId/duration` の取得値に取得後経過秒を加えた推定総尺を使い、synthetic 1 秒 timeupdate ごとに current time / duration display と seek max を更新する。録画中の time display が `00:00/10:00` などの固定総尺で止まり続ける状態を禁止する。
 14. live M2TS-LL は origin を含む absolute media URL を mpegts.js に渡す。sub directory 配下で動作する場合も `/api/streams/live/:channelId/m2tsll?mode=<mode>` を origin + sub directory で解決し、relative URL のまま渡してはならない。
+15. シーク可能な再生形式では、シーク直前の映像フレームを取得できる場合、同一媒体内のシークと新しい配信への切替のどちらでも、次の映像を表示できるまでそのフレームを player 上に保持する。HLS、WebM、MP4、直接再生に共通とし、フレームを取得できない場合は通常の読み込み表示を使用する。エラー時には保持画像を消す。
 
 ### 要求 4: subtitle と player setting
 

@@ -35,3 +35,7 @@
   - _Requirements: 1.1-1.13, 2.1-2.11, 3.1-3.14, 4.1-4.19, 5.1-5.6_
 - [x] 6. live/recorded HLS lifecycle、recorded WebM/MP4 absolute seek resume、Android mobile tap-to-hide controls、fullscreen landscape lock、standalone rotation button の regression guard を検証する。
   - _Requirements: 3.1-3.8, 3.11, 4.6-4.6d, 4.16a, 4.19, 5.1-5.6_
+
+- [x] 7. 再生形式に共通のシーク中フレーム表示を実装する。
+  - シーク直前の映像を canvas に保持し、次の映像を表示できる時点で消す。HLS、WebM、MP4、直接再生を対象に、取得不能時とエラー時の表示を検証する。
+  - _Requirements: 3.15_
